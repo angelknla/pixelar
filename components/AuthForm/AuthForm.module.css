@@ -1,0 +1,70 @@
+.section {
+  width: 100%;
+  max-width: 28rem;
+  margin: 3rem auto;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.section h1 {
+  margin-bottom: 2rem;
+  font-size: 2.4rem;
+  line-height: 1.05;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.5rem;
+}
+.form label {
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.form {
+  margin-bottom: 1.5rem;
+}
+
+.form fieldset {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+.form label:not(:first-child) {
+  margin-top: 0.5rem;
+}
+
+.form input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--background);
+  color: var(--text);
+}
+
+.form button[type="submit"] {
+  margin-top: 0.75rem;
+  width: 100%;
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: var(--primary);
+}
+
+.error {
+  color: var(--error);
+  overflow-wrap: anywhere;
+}
+.form button[type="submit"]:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+@media (max-width: 650px) {
+  .section {
+    padding: 1.5rem;
+    margin: 1rem auto;
+  }
+}

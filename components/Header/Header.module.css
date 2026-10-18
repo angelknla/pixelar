@@ -1,0 +1,36 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.25rem var(--page-gutter);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--text);
+  font-size: 1.8rem;
+  font-weight: 850;
+  letter-spacing: -0.055em;
+  text-decoration: none;
+}
+.brand span {
+  margin-left: -0.55rem;
+  color: var(--accent);
+}
+
+.header nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.header nav a {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
