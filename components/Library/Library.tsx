@@ -105,7 +105,7 @@ function Card({
       </Link>
       <div className="cardBody">
         <div className="cardTop">
-          <Link href={`/items/${item.id}`}>
+          <Link href={`/items/${item.id}`} title={item.fields.title}>
             <h3>{item.fields.title}</h3>
           </Link>
           <button
@@ -123,8 +123,10 @@ function Card({
             ? item.platforms.join(' · ') || 'Platform not chosen'
             : `${item.kind === 'show' ? 'TV series' : 'Movie'} · ${[...new Set(item.services.map(serviceLabel))].join(' · ') || 'None'}`}
         </p>
-        {item.fields.release_date && <p className="cardDate">{releaseLabel(item.fields)}</p>}
-        <Countdown fields={item.fields} timezone={profile.timezone} />
+        <div className="cardRelease">
+          {item.fields.release_date && <p className="cardDate">{releaseLabel(item.fields)}</p>}
+          <Countdown fields={item.fields} timezone={profile.timezone} />
+        </div>
         <div className="cardFoot">
           <select
             aria-label={`Status of ${item.fields.title}`}

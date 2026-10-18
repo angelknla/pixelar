@@ -590,7 +590,7 @@ legend {
 }
 .shelf {
   --shelf-color: var(--accent);
-  margin: 2.5rem 0;
+  margin: 1.5rem 0;
   border-radius: var(--radius);
   min-height: 100px;
   transition: background 0.15s;
@@ -632,7 +632,7 @@ legend {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 .shelfHeading h2 {
   display: flex;
@@ -664,7 +664,7 @@ legend {
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 1.25rem;
+  gap: 0.75rem 1.25rem;
 }
 .itemCard {
   background: var(--surface);
@@ -722,6 +722,21 @@ legend {
   font-size: 1rem;
   background: radial-gradient(ellipse at top, var(--hero-start), transparent 80%);
 }
+.cardArtLink .artPlaceholder {
+  position: absolute;
+  inset: 0;
+}
+.cardArtLink .artPlaceholder svg {
+  flex-shrink: 0;
+}
+.cardArtLink .artPlaceholder span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
 .metascore {
   position: absolute;
   bottom: 0.6rem;
@@ -735,6 +750,8 @@ legend {
   font-size: 0.8rem;
 }
 .cardBody {
+  display: grid;
+  gap: 0.5rem;
   padding: 1rem;
 }
 .cardTop {
@@ -753,6 +770,11 @@ legend {
   margin: 0;
   line-height: 1.3;
   letter-spacing: -0.01em;
+  height: 2lh;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 .dragHandle {
   border: 0;
@@ -764,25 +786,45 @@ legend {
   flex-shrink: 0;
 }
 .cardMeta {
-  margin: 0.4rem 0;
+  margin: 0;
   line-height: 1.4;
+  height: 2lh;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
-.cardDate {
-  margin: 0.35rem 0;
+.cardRelease {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  height: 3rem;
+  min-width: 0;
+}
+.cardRelease .cardDate,
+.cardRelease .countdown {
+  display: block;
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .cardFoot {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 44px 1.25rem;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.3rem;
-  margin-top: 0.85rem;
+  gap: 0.35rem;
   padding-top: 0.7rem;
   border-top: 1px solid var(--border);
-  flex-wrap: wrap;
 }
 .cardFoot select {
   font-size: 0.75rem;
-  min-height: 30px;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
   padding: 0.3rem 0.45rem;
   border: 1px solid var(--border);
   background-color: var(--surface);
@@ -790,6 +832,10 @@ legend {
   background-position: right 0.4rem center;
   max-width: 100%;
   font-weight: 600;
+}
+.cardFoot .price {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .price {
   font-size: 0.7rem;
@@ -1407,6 +1453,17 @@ legend {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.75rem;
   }
+  .cardArtLink .artPlaceholder {
+    gap: 0.5rem;
+    padding: 0.65rem;
+  }
+  .cardArtLink .artPlaceholder svg {
+    width: clamp(28px, 10vw, 42px);
+    height: auto;
+  }
+  .cardArtLink .artPlaceholder span {
+    font-size: 0.85rem;
+  }
   .cardBody {
     padding: 0.65rem;
   }
@@ -1416,12 +1473,7 @@ legend {
   .cardMeta {
     font-size: 0.7rem;
   }
-  .cardFoot {
-    flex-wrap: wrap;
-    gap: 0.4rem;
-  }
   .cardFoot select {
-    max-width: 100%;
     font-size: 0.7rem;
   }
   .shelfHeading .hint {
@@ -1444,7 +1496,7 @@ legend {
     flex-wrap: wrap;
   }
   .shelf {
-    margin: 1.8rem 0;
+    margin: 1.25rem 0;
   }
   .artPlaceholder {
     font-size: 1rem;
