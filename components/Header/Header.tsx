@@ -20,7 +20,9 @@ export default function Header({ signedIn }: { signedIn: boolean }) {
           </>
         ) : (
           <>
-            <Link href="/login">Sign in</Link>
+            <Link href="/?signin=1" scroll={false}>
+              Sign in
+            </Link>
             <Link href="/register">Create account</Link>
           </>
         )}

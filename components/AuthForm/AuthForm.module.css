@@ -9,7 +9,9 @@
   box-shadow: var(--shadow);
 }
 
-.section h1 {
+.section h1,
+.section h2 {
+  margin-top: 0;
   margin-bottom: 2rem;
   font-size: 2.4rem;
   line-height: 1.05;
@@ -67,4 +69,17 @@
     padding: 1.5rem;
     margin: 1rem auto;
   }
+}
+.embedded {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.embedded h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
 }

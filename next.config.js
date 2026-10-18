@@ -11,6 +11,9 @@ if (process.env.SUPABASE_URL) {
 }
 
 module.exports = {
+  async redirects() {
+    return [{ source: '/login', destination: '/?signin=1', permanent: false }];
+  },
   reactStrictMode: true,
   experimental: {
     serverActions: { bodySizeLimit: '6mb' },

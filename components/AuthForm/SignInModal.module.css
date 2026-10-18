@@ -1,0 +1,38 @@
+.dialog {
+  position: fixed;
+  width: min(28rem, calc(100% - 2rem));
+  max-height: calc(100svh - 2rem);
+  padding: 2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  overscroll-behavior: contain;
+}
+.dialog::backdrop {
+  background: #030710c9;
+  backdrop-filter: blur(6px);
+}
+.close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+.branding {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-right: 2rem;
+}
+@media (max-width: 650px) {
+  .dialog {
+    padding: 1.5rem;
+  }
+}

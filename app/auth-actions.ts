@@ -105,5 +105,5 @@ export const lock = async (): Promise<void> => {
   const store = await cookies();
   store.delete(COOKIE_NAME);
   store.delete(VIEWER_COOKIE);
-  redirect('/login');
+  redirect('/');
 };

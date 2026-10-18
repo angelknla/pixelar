@@ -12,9 +12,13 @@ const initialState: ActionState = {};
 export default function AuthForm({
   mode,
   available,
+  embedded = false,
+  headingId,
 }: {
   mode: 'login' | 'register';
   available: boolean;
+  embedded?: boolean;
+  headingId?: string;
 }) {
   const registering = mode === 'register';
   const [state, action, pending] = useActionState(
@@ -23,8 +27,12 @@ export default function AuthForm({
   );
 
   return (
-    <section className={styles.section}>
-      <h1>{registering ? 'Create account' : 'Sign in'}</h1>
+    <section className={`${styles.section} ${embedded ? styles.embedded : ''}`}>
+      {embedded ? (
+        <h2 id={headingId}>{registering ? 'Create account' : 'Sign in'}</h2>
+      ) : (
+        <h1 id={headingId}>{registering ? 'Create account' : 'Sign in'}</h1>
+      )}
       <form action={action} className={styles.form}>
         <fieldset disabled={!available || pending}>
           {registering ? (
@@ -89,7 +97,7 @@ export default function AuthForm({
           </p>
         )}
       </form>
-      <Link href={registering ? '/login' : '/register'}>
+      <Link href={registering ? '/?signin=1' : '/register'} scroll={false}>
         {registering ? 'Sign in' : 'Create account'}
       </Link>
     </section>

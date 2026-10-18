@@ -70,6 +70,8 @@
 body {
   margin: 0;
   min-height: 100svh;
+  display: flex;
+  flex-direction: column;
   background: var(--background);
   color: var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -77,6 +79,7 @@ body {
   line-height: 1.5;
 }
 main {
+  flex: 1;
   width: min(100%, calc(var(--page-width) + 2 * var(--page-gutter)));
   margin: 0 auto;
   padding: 3rem var(--page-gutter) 5rem;
@@ -798,7 +801,6 @@ legend {
 }
 @media (min-width: 651px) {
   .signedIn main:has(> .libraryPage) {
-    min-height: 100svh;
     display: flex;
     flex-direction: column;
     padding-bottom: 1.5rem;
@@ -1029,8 +1031,19 @@ legend {
   }
 }
 .landing {
-  max-width: 950px;
-  padding: 3rem 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.9fr);
+  grid-template-areas:
+    "content artwork"
+    "stickers artwork";
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+  row-gap: 2.5rem;
+  padding: 2rem 0;
+}
+.landingContent {
+  grid-area: content;
+  min-width: 0;
 }
 .landing h1 {
   font-size: clamp(3rem, 7vw, 6rem);
@@ -1038,22 +1051,78 @@ legend {
 .landing h1 span {
   color: var(--accent);
 }
-.landing > p {
+.landingContent > p {
   font-size: 1.2rem;
   color: var(--muted);
   max-width: 33rem;
   margin: 2rem 0;
 }
-.landingStickers {
+.landingActions {
   display: flex;
-  gap: 1.5rem;
+  align-items: center;
   flex-wrap: wrap;
-  margin: 4rem 0;
+  gap: 1rem;
+}
+.landingActions .buttonLink {
+  min-height: 52px;
+  padding: 0.8rem 1.4rem;
+  border-radius: var(--radius);
+}
+.landingSignIn {
+  min-width: 9rem;
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  color: var(--accent);
+}
+.landingSignIn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.landingArtwork {
+  grid-area: artwork;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: 30rem;
+  aspect-ratio: 1;
+  justify-self: center;
+  isolation: isolate;
+}
+.landingArtwork::before,
+.landingArtwork::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.landingArtwork::before {
+  background: radial-gradient(ellipse, #9775fa30, var(--accent-soft) 35%, transparent 70%);
+}
+.landingArtwork::after {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--accent) 12%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 12%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse, #000 30%, transparent 70%);
+}
+.landingArtwork img {
+  width: 72%;
+  height: auto;
+  transform: rotate(-8deg);
+  filter: drop-shadow(0 24px 32px #0005);
+}
+.landingStickers {
+  grid-area: stickers;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 .landingStickers span {
   background: var(--surface);
   border: 1px solid var(--border);
-  padding: 1.3rem 2rem;
+  padding: 0.8rem 1.1rem;
   border-radius: var(--radius);
   font-size: 1rem;
   font-weight: 700;
@@ -1064,6 +1133,27 @@ legend {
 }
 .landingStickers span:nth-child(3) {
   color: var(--scheduled);
+}
+@media (max-width: 850px) {
+  .landing {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "content"
+      "artwork"
+      "stickers";
+    gap: 1.5rem;
+    padding: 1rem 0;
+  }
+  .landingArtwork {
+    width: 50%;
+    max-width: 11rem;
+  }
+}
+@media (max-width: 400px) {
+  .landingActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }
 @media (min-width: 1500px) {
   .cardGrid {
@@ -1666,14 +1756,62 @@ legend {
 }
 
 .appFooter {
-  width: min(100%, calc(var(--page-width) + 2 * var(--page-gutter)));
-  margin: 0 auto;
-  padding: 0 var(--page-gutter) 2rem;
+  width: 100%;
+  margin: 0;
+  padding: 0 var(--page-gutter) 0.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  flex-shrink: 0;
 }
 .signedIn .appFooter {
-  display: none;
   margin-left: 220px;
   width: calc(100% - 220px);
+}
+.footerInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  padding-top: 0.5rem;
+}
+.footerIdentity {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  min-width: 0;
+}
+.footerBrand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.055em;
+}
+.footerBrand img {
+  flex-shrink: 0;
+}
+.footerBrand > span {
+  margin-left: -0.45rem;
+  color: var(--accent);
+}
+.footerIdentity p {
+  font-size: 0.75rem;
+  margin: 0;
+}
+.footerInstall {
+  min-width: 0;
+}
+.footerInstall > button {
+  font-size: 0.8rem;
+}
+.footerInstall:empty {
+  display: none;
 }
 .monthHeading button {
   width: 44px;
@@ -1688,8 +1826,13 @@ legend {
   }
 }
 @media (max-width: 650px) {
+  .footerInner {
+    gap: 0.25rem 1rem;
+  }
+  .footerIdentity p {
+    display: none;
+  }
   .signedIn .appFooter {
-    display: block;
     margin-left: 0;
     width: 100%;
     padding-bottom: calc(6rem + env(safe-area-inset-bottom));

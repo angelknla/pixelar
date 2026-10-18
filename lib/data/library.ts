@@ -12,7 +12,7 @@ export function db() {
 }
 export async function requireAccount() {
   const account = await getCurrentAccount();
-  if (!account) redirect('/login');
+  if (!account) redirect('/?signin=1');
   return account;
 }
 export async function profileFor(memberId: string) {

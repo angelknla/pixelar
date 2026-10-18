@@ -1,5 +1,5 @@
+import Footer from '@components/Footer/Footer';
 import Header from '@components/Header/Header';
-import InstallApp from '@components/InstallApp/InstallApp';
 import Navigation from '@components/Navigation/Navigation';
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
@@ -33,9 +33,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         </a>
         {signedIn ? <Navigation /> : <Header signedIn={false} />}
         <main id="main">{children}</main>
-        <footer className="appFooter">
-          <InstallApp sidebarTargetId={signedIn ? 'sidebar-install' : undefined} />
-        </footer>
+        <Footer signedIn={signedIn} />
       </body>
     </html>
   );

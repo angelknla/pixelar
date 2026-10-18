@@ -121,7 +121,7 @@ describe('account actions', () => {
   });
 
   it('deletes both cookies when signing out', async () => {
-    await expect(lock()).rejects.toThrow('redirect:/login');
+    await expect(lock()).rejects.toThrow('redirect:/');
     expect(mocks.deleteCookie).toHaveBeenCalledWith(COOKIE_NAME);
     expect(mocks.deleteCookie).toHaveBeenCalledWith(VIEWER_COOKIE);
   });
