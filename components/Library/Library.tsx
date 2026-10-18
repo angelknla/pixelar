@@ -121,7 +121,7 @@ function Card({
         <p className="cardMeta">
           {item.kind === 'game'
             ? item.platforms.join(' · ') || 'Platform not chosen'
-            : `${item.kind === 'show' ? 'TV show' : 'Movie'} · ${[...new Set(item.services.map(serviceLabel))].join(' · ') || 'None'}`}
+            : `${item.kind === 'show' ? 'TV series' : 'Movie'} · ${[...new Set(item.services.map(serviceLabel))].join(' · ') || 'None'}`}
         </p>
         {item.fields.release_date && <p className="cardDate">{releaseLabel(item.fields)}</p>}
         <Countdown fields={item.fields} timezone={profile.timezone} />
@@ -198,6 +198,7 @@ export default function Library({
   const [status, setStatus] = useState('');
   const [platform, setPlatform] = useState('');
   const [service, setService] = useState('');
+  const [screenType, setScreenType] = useState<'' | 'movie' | 'show'>('');
   const [sort, setSort] = useState('added');
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
@@ -227,6 +228,7 @@ export default function Library({
       (i) =>
         (!query || i.fields.title.toLowerCase().includes(query.toLowerCase())) &&
         (!status || i.status === status) &&
+        (!screenType || i.kind === screenType) &&
         (!platform ||
           i.platforms.includes(platform) ||
           (!i.platforms.length && i.metadata?.fields.platforms.includes(platform))) &&
@@ -356,6 +358,26 @@ export default function Library({
           ))}
         </fieldset>
       </div>
+      {kind === 'screen' && (
+        <fieldset className="screenTypePicker" aria-label="Filter by title type">
+          {(
+            [
+              { value: '', title: 'All titles' },
+              { value: 'movie', title: 'Movies' },
+              { value: 'show', title: 'TV series' },
+            ] as const
+          ).map(({ value, title }) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={screenType === value}
+              onClick={() => setScreenType(value)}
+            >
+              {title}
+            </button>
+          ))}
+        </fieldset>
+      )}
       <div className="filters">
         <SlidersHorizontal className="filterBarIcon" size={16} aria-hidden="true" />
         <FilterSelect
@@ -526,7 +548,7 @@ export default function Library({
         </span>
         {adding && (
           <ItemEditor
-            kind={kind === 'game' ? 'game' : 'movie'}
+            kind={kind === 'game' ? 'game' : screenType || 'movie'}
             profile={profile}
             onDone={() => setAdding(false)}
           />

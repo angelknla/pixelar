@@ -178,3 +178,32 @@ it('keeps Other separate from unassigned services and ignores unconfirmed provid
   fireEvent.change(filter, { target: { value: 'Netflix' } });
   expect(screen.getByRole('heading', { name: 'No titles match.' })).toBeInTheDocument();
 });
+
+it('filters movies and TV series across views and combines type with service and status', () => {
+  const items = [
+    { ...tvItem('movie', 'Netflix movie', ['Netflix']), kind: 'movie' as const },
+    tvItem('series', 'Netflix series', ['Netflix']),
+    { ...tvItem('watching', 'Watching series', ['Netflix']), status: 'watching' as const },
+    tvItem('other', 'Prime series', ['Prime Video']),
+  ];
+  render(<Library items={items} profile={defaultProfile('owner')} kind="screen" />);
+  fireEvent.click(screen.getByRole('button', { name: 'Movies' }));
+  expect(screen.getByRole('heading', { name: 'Netflix movie' })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: 'Netflix series' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'TV series' }));
+  for (const view of ['Services', 'Shelves', 'Grid']) {
+    fireEvent.click(screen.getByRole('button', { name: view }));
+    expect(screen.queryByRole('heading', { name: 'Netflix movie' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Netflix series' })).toBeInTheDocument();
+  }
+  fireEvent.change(screen.getByRole('combobox', { name: 'Filter by streaming service' }), {
+    target: { value: 'Netflix' },
+  });
+  fireEvent.change(screen.getByRole('combobox', { name: 'Filter by status' }), {
+    target: { value: 'watchlist' },
+  });
+  expect(document.querySelectorAll('.itemCard')).toHaveLength(1);
+  expect(screen.getByRole('heading', { name: 'Netflix series' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'All titles' }));
+  expect(document.querySelectorAll('.itemCard')).toHaveLength(2);
+});

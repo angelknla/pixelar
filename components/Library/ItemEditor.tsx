@@ -1,4 +1,5 @@
 'use client';
+import { Film, Tv } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { deleteItem, saveItem } from '@/app/library-actions';
@@ -169,24 +170,40 @@ export default function ItemEditor({
         )}
       </div>
       {!item && initialKind !== 'game' && (
-        <label>
-          Type
-          <select
-            value={kind}
-            onChange={(e) => {
-              setKind(e.target.value as ItemKind);
-              setMetadata(null);
-              setResults([]);
-            }}
-          >
-            <option value="movie">Movie</option>
-            <option value="show">TV show</option>
-          </select>
-        </label>
+        <fieldset className="screenTypePicker editorTypePicker" aria-label="Title type">
+          <legend>What are you adding?</legend>
+          {(
+            [
+              { value: 'movie', title: 'Movie', Icon: Film },
+              { value: 'show', title: 'TV series', Icon: Tv },
+            ] as const
+          ).map(({ value, title, Icon }) => (
+            <button
+              type="button"
+              key={value}
+              aria-pressed={kind === value}
+              disabled={pending}
+              onClick={() => {
+                if (kind === value) return;
+                setKind(value);
+                setMetadata(null);
+                setResults([]);
+                setError('');
+                setMessage('');
+              }}
+            >
+              <Icon size={18} aria-hidden="true" />
+              {title}
+            </button>
+          ))}
+        </fieldset>
+      )}
+      {item && kind !== 'game' && (
+        <p className="hint">{kind === 'show' ? 'TV series · Track the whole series.' : 'Movie'}</p>
       )}
       <div className="searchBox">
         <label>
-          Find a {kind === 'game' ? 'game' : kind === 'show' ? 'TV show' : 'movie'}
+          Find a {kind === 'game' ? 'game' : kind === 'show' ? 'TV series' : 'movie'}
           <div className="inline">
             <input
               value={query}

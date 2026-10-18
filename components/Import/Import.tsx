@@ -189,7 +189,7 @@ export default function Import({ items, profile }: { items: LibraryItem[]; profi
                     <option value="">Choose a type…</option>
                     <option value="game">Game</option>
                     <option value="movie">Movie</option>
-                    <option value="show">TV show</option>
+                    <option value="show">TV series</option>
                   </select>
                 </label>
                 <label>

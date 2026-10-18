@@ -518,6 +518,35 @@ legend {
   margin: 1rem 0 2rem;
   color: var(--muted);
 }
+.screenTypePicker {
+  display: flex;
+  gap: 0.35rem;
+  border: 0;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+.screenTypePicker button {
+  flex: 1;
+  min-width: 0;
+  max-width: 10rem;
+  padding: 0.65rem 0.5rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.screenTypePicker button[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.editorTypePicker {
+  margin: 0 0 1rem;
+}
+.editorTypePicker legend {
+  padding: 0 0 0.65rem;
+}
+.editorTypePicker button {
+  max-width: none;
+}
 .filterSelect {
   position: relative;
   display: flex;
