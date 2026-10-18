@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { lock } from '@/app/auth-actions';
 import { updateProfile } from '@/app/profile-actions';
-import { PLATFORMS, SERVICES } from '@/lib/library';
+import { PLATFORMS, serviceLabel, SERVICES } from '@/lib/library';
 import type { MemberAccount } from '@/types/auth';
 import type { ProfileRow } from '@/types/library';
 import AvatarUpload from './AvatarUpload';
@@ -187,7 +187,7 @@ export default function Profile({
                     checked={settings.services.includes(s)}
                     onChange={() => toggle('services', s)}
                   />
-                  <span>{s}</span>
+                  <span>{serviceLabel(s)}</span>
                 </label>
               ))}
             </div>

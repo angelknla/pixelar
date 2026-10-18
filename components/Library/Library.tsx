@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState, useTransition } from 'react';
 import { moveItem } from '@/app/library-actions';
 import { shelfKeyboardCoordinates } from '@/lib/drag';
-import { label, PLATFORMS, releaseLabel, statusesFor } from '@/lib/library';
+import { label, PLATFORMS, releaseLabel, serviceLabel, SERVICES, statusesFor } from '@/lib/library';
 import type { LibraryItem, ProfileRow, Status } from '@/types/library';
 import Artwork from './Artwork';
 import Countdown from './Countdown';
@@ -72,7 +72,7 @@ function Card({
         <p className="cardMeta">
           {item.kind === 'game'
             ? item.platforms.join(' · ') || 'Platform not chosen'
-            : `${item.kind === 'show' ? 'TV show' : 'Movie'} · ${item.services.join(' · ') || 'None'}`}
+            : `${item.kind === 'show' ? 'TV show' : 'Movie'} · ${[...new Set(item.services.map(serviceLabel))].join(' · ') || 'None'}`}
         </p>
         {item.fields.release_date && <p className="cardDate">{releaseLabel(item.fields)}</p>}
         <Countdown fields={item.fields} timezone={profile.timezone} />
@@ -148,6 +148,7 @@ export default function Library({
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
   const [platform, setPlatform] = useState('');
+  const [service, setService] = useState('');
   const [sort, setSort] = useState('added');
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
@@ -163,6 +164,11 @@ export default function Library({
     useSensor(KeyboardSensor, { coordinateGetter: shelfKeyboardCoordinates })
   );
   const relevant = items.filter((i) => (kind === 'game' ? i.kind === 'game' : i.kind !== 'game'));
+  const serviceOptions = [
+    ...new Set(
+      [...SERVICES, ...profile.services, ...relevant.flatMap((i) => i.services)].map(serviceLabel)
+    ),
+  ];
   const featured =
     relevant.find((item) => item.status === (kind === 'game' ? 'playing' : 'watching')) ??
     relevant.find((item) => item.fields.artwork) ??
@@ -174,7 +180,11 @@ export default function Library({
         (!status || i.status === status) &&
         (!platform ||
           i.platforms.includes(platform) ||
-          (!i.platforms.length && i.metadata?.fields.platforms.includes(platform)))
+          (!i.platforms.length && i.metadata?.fields.platforms.includes(platform))) &&
+        (!service ||
+          (service === '__none__'
+            ? i.services.length === 0
+            : i.services.some((s) => serviceLabel(s) === service)))
     )
     .sort((a, b) =>
       sort === 'score'
@@ -205,15 +215,22 @@ export default function Library({
           items: filtered.filter((i) => i.status === s),
         }))
       : view === 'service'
-        ? [...new Set([...profile.services, ...relevant.flatMap((i) => i.services), 'None'])].map(
-            (name) => ({
+        ? [
+            ...new Set(
+              [...profile.services, ...relevant.flatMap((i) => i.services)].map(serviceLabel)
+            ),
+            'None',
+          ]
+            .filter((name) => !service || name === (service === '__none__' ? 'None' : service))
+            .map((name) => ({
               name,
               status: undefined,
               items: filtered.filter((i) =>
-                name === 'None' ? i.services.length === 0 : i.services.includes(name)
+                name === 'None'
+                  ? i.services.length === 0
+                  : i.services.some((s) => serviceLabel(s) === name)
               ),
-            })
-          )
+            }))
         : [];
   const cards = (list: LibraryItem[], group?: string) =>
     list.map((item) => (
@@ -304,7 +321,7 @@ export default function Library({
             </option>
           ))}
         </select>
-        {kind === 'game' && (
+        {kind === 'game' ? (
           <select
             aria-label="Filter by platform"
             value={platform}
@@ -323,6 +340,18 @@ export default function Library({
             ].map((p) => (
               <option key={p}>{p}</option>
             ))}
+          </select>
+        ) : (
+          <select
+            aria-label="Filter by streaming service"
+            value={service}
+            onChange={(e) => setService(e.target.value)}
+          >
+            <option value="">All services</option>
+            {serviceOptions.map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+            <option value="__none__">No service selected</option>
           </select>
         )}
         <select aria-label="Sort titles" value={sort} onChange={(e) => setSort(e.target.value)}>

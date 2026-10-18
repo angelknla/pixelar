@@ -8,6 +8,7 @@ import {
   label,
   PLATFORMS,
   releaseLabel,
+  serviceLabel,
   SERVICES,
   statusesFor,
 } from '@/lib/library';
@@ -392,7 +393,7 @@ export default function ItemEditor({
                       : choose(services, setServices, v)
                   }
                 />
-                <span>{v}</span>
+                <span>{kind === 'game' ? v : serviceLabel(v)}</span>
               </label>
             ))}
           </div>

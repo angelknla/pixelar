@@ -37,6 +37,13 @@ export const SERVICES = [
   'BBC iPlayer',
   'Other',
 ];
+export function serviceLabel(value: string): string {
+  if (/^(hbo(?: max)?|max)$/i.test(value)) return 'HBO Max';
+  if (/^apple tv(?:\+| plus)?$/i.test(value)) return 'Apple TV';
+  if (/^disney(?:\+| plus)$/i.test(value)) return 'Disney+';
+  if (/^(?:amazon )?prime\s*(?:video)?$/i.test(value)) return 'Prime Video';
+  return value;
+}
 export const statusesFor = (kind: ItemKind) => (kind === 'game' ? GAME_STATUSES : SCREEN_STATUSES);
 export const label = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
 export const EMPTY_FIELDS: MetadataFields = {
