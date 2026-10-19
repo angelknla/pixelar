@@ -568,6 +568,17 @@ legend {
   background: var(--accent-soft);
   color: var(--accent);
 }
+.libraryViewControls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0.5rem;
+}
+.viewSwitcher.displaySwitcher {
+  border-left: 1px solid var(--border);
+  border-radius: 0;
+  padding-left: 0.5rem;
+}
 .libraryFilterRow {
   display: flex;
   align-items: center;
@@ -1083,6 +1094,187 @@ legend {
   max-width: 100%;
   text-overflow: ellipsis;
   font-weight: 600;
+}
+.libraryPage .cardGrid.listGrid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+.listTile {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  min-height: 92px;
+}
+.listTile.gameTile {
+  grid-template-columns: 160px minmax(0, 1fr);
+}
+.listTile .cardArtLink {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+.listTile .artwork {
+  height: 100%;
+  aspect-ratio: auto;
+}
+.listTile.gameTile .cardArtLink {
+  display: flex;
+  align-items: center;
+  background: var(--surface-soft);
+}
+.listTile.gameTile .gameArt {
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+.listTile .artPlaceholder {
+  padding: 0.5rem;
+}
+.listTile .artPlaceholder span {
+  display: none;
+}
+.listTile .artPlaceholder svg {
+  width: 28px;
+  height: 28px;
+}
+.listTile .metascore {
+  inset: auto auto 0.5rem 0.5rem;
+  padding: 0.15rem 0.3rem;
+  font-size: 0.7rem;
+}
+.listTile .cardBody {
+  grid-template-columns: minmax(0, 1fr) minmax(100px, 128px);
+  align-content: center;
+  align-items: center;
+  column-gap: 0.5rem;
+  row-gap: 0.2rem;
+  padding: 0.375rem 0.625rem;
+  min-width: 0;
+}
+.listTile .cardTop {
+  grid-column: 1 / -1;
+  align-items: center;
+  padding-right: 32px;
+}
+.listTile .cardTop h3 {
+  height: auto;
+}
+.listTile .dragHandle {
+  min-height: 24px;
+  width: 24px;
+}
+.listTile .cardMeta {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.listTile .cardRelease {
+  height: auto;
+  align-self: end;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  padding-bottom: 0.125rem;
+}
+.listTile .cardFoot {
+  grid-template-rows: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.listTile .cardFoot select {
+  min-height: 32px;
+  height: 32px;
+  padding: 0.125rem 1.5rem 0.125rem 0.4rem;
+  background-position: right 0.3rem center;
+  background-size: 12px 12px;
+}
+.listTile .removeTile {
+  color: var(--muted);
+  width: 36px;
+  min-height: 32px;
+}
+.listTile .removeTile::before {
+  display: none;
+}
+.listTile .removeTile > svg {
+  transform: none;
+}
+.listTile .removeTile:hover {
+  color: var(--error);
+}
+@media (min-width: 1100px) {
+  .libraryPage .cardGrid.listGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 650px) {
+  .libraryControls .toolbar {
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+  }
+  .libraryControls .searchInput {
+    flex: 1 1 0;
+  }
+  .libraryViewControls {
+    gap: 0.25rem;
+  }
+  .libraryControls .viewSwitcher button {
+    width: clamp(28px, 9vw, 36px);
+  }
+  .libraryControls .displaySwitcher {
+    padding-left: 0.25rem;
+  }
+  .libraryControls .searchInput input {
+    text-overflow: ellipsis;
+  }
+  .listTile {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+  .listTile.gameTile {
+    grid-template-columns: clamp(96px, 32vw, 128px) minmax(0, 1fr);
+    min-height: 80px;
+    height: 80px;
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .listTile.gameTile .cardArtLink {
+    display: block;
+  }
+  .listTile.gameTile .gameArt {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+  .listTile .cardBody {
+    grid-template-columns: minmax(0, 1fr) 104px;
+    padding: 0.375rem 0.5rem;
+  }
+  .listTile.gameTile .cardBody {
+    grid-template-rows: 20px 16px 28px;
+    padding-block: 0.25rem;
+    row-gap: 0.125rem;
+    min-height: 0;
+  }
+  .listTile.gameTile .cardTop h3 {
+    display: block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .listTile.gameTile .cardRelease {
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+  .listTile.gameTile .dragHandle {
+    min-height: 20px;
+  }
+  .listTile.gameTile .cardFoot {
+    grid-template-rows: 28px;
+  }
+  .listTile.gameTile .cardFoot select {
+    min-height: 28px;
+    height: 28px;
+  }
+  .listTile .cardDateFull {
+    display: none;
+  }
+  .listTile .cardDateCompact {
+    display: inline;
+  }
 }
 .countdown {
   display: inline-flex;
@@ -2106,6 +2298,9 @@ legend {
 @media (min-width: 1500px) {
   .cardGrid {
     grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  }
+  .screenLibrary .cardGrid:not(.listGrid) {
+    grid-template-columns: repeat(auto-fill, minmax(max(210px, calc((100% - 7.5rem) / 7)), 1fr));
   }
 }
 @media (max-width: 1000px) {

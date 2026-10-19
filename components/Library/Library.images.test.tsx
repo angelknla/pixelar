@@ -156,7 +156,7 @@ it('promotes artwork when scrolling into view and disconnects observers on unmou
 
 it('rescans after filtering, switching views and resizing without making distant images eager', async () => {
   library();
-  fireEvent.click(screen.getByRole('button', { name: 'Grid' }));
+  fireEvent.click(screen.getByRole('button', { name: 'All titles together' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Search your library' }), {
     target: { value: 'Title 1' },
   });
@@ -165,6 +165,23 @@ it('rescans after filtering, switching views and resizing without making distant
   visible.add('Title 17');
   fireEvent(window, new Event('resize'));
   expectLoading('Title 17', 'eager');
+});
+
+it.each([false, true])('uses smaller artwork sizes in list display (screen: %s)', (isScreen) => {
+  library(isScreen);
+  fireEvent.click(screen.getByRole('button', { name: 'List' }));
+  const sizes = isScreen
+    ? '(max-width: 650px) 64px, 80px'
+    : '(max-width: 300px) 96px, (max-width: 400px) 32vw, (max-width: 650px) 128px, 160px';
+  document.querySelectorAll('.listTile .artwork img').forEach((image) => {
+    expect(image).toHaveAttribute('sizes', sizes);
+  });
+  expectLoading('Title 17', 'lazy');
+  fireEvent.click(screen.getByRole('button', { name: 'Grid' }));
+  expect(document.querySelector('.itemCard img')).toHaveAttribute(
+    'sizes',
+    isScreen ? '(max-width: 650px) 45vw, 240px' : '(max-width: 650px) 45vw, 360px'
+  );
 });
 
 it('keeps a shared hero URL eager when it also appears below the first search results', async () => {

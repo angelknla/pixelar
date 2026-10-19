@@ -16,6 +16,7 @@ export interface ItemTileProps {
   onRemove: (item: LibraryItem) => void;
   group?: string;
   eager?: boolean;
+  display?: 'grid' | 'list';
 }
 
 export default function ItemTile({
@@ -26,6 +27,7 @@ export default function ItemTile({
   onRemove,
   group = 'grid',
   eager = false,
+  display = 'grid',
   className,
   metadata,
 }: ItemTileProps & {
@@ -48,7 +50,7 @@ export default function ItemTile({
   return (
     <article
       ref={drag.setNodeRef}
-      className={`itemCard ${className} status-${item.status} ${drag.isDragging ? 'dragging' : ''}`}
+      className={`itemCard ${className} ${display === 'list' ? 'listTile' : ''} status-${item.status} ${drag.isDragging ? 'dragging' : ''}`}
       style={
         drag.transform
           ? { transform: `translate3d(${drag.transform.x}px,${drag.transform.y}px,0)`, zIndex: 20 }
@@ -61,7 +63,15 @@ export default function ItemTile({
           title={item.fields.title}
           kind={item.kind}
           eager={eager}
-          sizes={item.kind === 'game' ? '(max-width: 650px) 45vw, 360px' : undefined}
+          sizes={
+            display === 'list'
+              ? item.kind === 'game'
+                ? '(max-width: 300px) 96px, (max-width: 400px) 32vw, (max-width: 650px) 128px, 160px'
+                : '(max-width: 650px) 64px, 80px'
+              : item.kind === 'game'
+                ? '(max-width: 650px) 45vw, 360px'
+                : undefined
+          }
         />
         {item.fields.metascore !== null && (
           <span className="metascore" role="img" aria-label={`Metacritic ${item.fields.metascore}`}>

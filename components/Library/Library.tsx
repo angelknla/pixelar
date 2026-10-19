@@ -17,7 +17,9 @@ import {
   ArrowUp,
   ChevronDown,
   GripVertical,
+  Layers3,
   LayoutGrid,
+  List,
   MonitorPlay,
   Plus,
   RefreshCw,
@@ -96,6 +98,7 @@ function Shelf({
   onReorder,
   first,
   last,
+  display,
 }: {
   name: string;
   status?: Status;
@@ -106,6 +109,7 @@ function Shelf({
   onReorder: (direction: number) => void;
   first: boolean;
   last: boolean;
+  display: 'grid' | 'list';
 }) {
   const contentId = useId();
   const drop = useDroppable({ id: status ?? name, disabled: !status, data: { type: 'item' } });
@@ -164,7 +168,9 @@ function Shelf({
         </div>
       </div>
       <div id={contentId} hidden={collapsed}>
-        <div className="cardGrid">{collapsed ? null : children}</div>
+        <div className={`cardGrid ${display === 'list' ? 'listGrid' : ''}`}>
+          {collapsed ? null : children}
+        </div>
         {count === 0 && <p className="emptyShelf">Room for your next favourite.</p>}
       </div>
     </section>
@@ -182,6 +188,7 @@ export default function Library({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [view, setView] = useState(kind === 'game' ? 'status' : 'service');
+  const [display, setDisplay] = useState<'grid' | 'list'>('grid');
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
   const [platform, setPlatform] = useState('');
@@ -480,7 +487,7 @@ export default function Library({
     (group) => group.items.length && !currentLayout.collapsed.includes(group.name)
   )?.name;
   const firstTitles =
-    view === 'grid' ? filtered : (groups.find((group) => group.name === firstGroup)?.items ?? []);
+    view === 'all' ? filtered : (groups.find((group) => group.name === firstGroup)?.items ?? []);
   // Next tracks LCP by URL, so every copy of the hero/visible artwork must agree.
   const eagerArtwork = new Set([
     ...visibleArtwork,
@@ -500,6 +507,7 @@ export default function Library({
           setRemoving(item);
         }}
         group={group}
+        display={display}
         eager={Boolean(item.fields.artwork && eagerArtwork.has(item.fields.artwork))}
       />
     ));
@@ -592,24 +600,45 @@ export default function Library({
               placeholder="Search titles…"
             />
           </label>
-          <fieldset className="viewSwitcher" aria-label="Library view">
-            {(kind === 'game' ? ['status', 'grid'] : ['service', 'status', 'grid']).map((v) => {
-              const title = v === 'status' ? 'Shelves' : v === 'service' ? 'Services' : 'Grid';
-              const Icon = v === 'status' ? Rows3 : v === 'service' ? MonitorPlay : LayoutGrid;
-              return (
-                <button
-                  type="button"
-                  aria-label={title}
-                  title={title}
-                  aria-pressed={view === v}
-                  key={v}
-                  onClick={() => setView(v)}
-                >
-                  <Icon size={18} aria-hidden="true" />
-                </button>
-              );
-            })}
-          </fieldset>
+          <div className="libraryViewControls">
+            <fieldset className="viewSwitcher" aria-label="Library grouping">
+              {(kind === 'game' ? ['status', 'all'] : ['service', 'status', 'all']).map((v) => {
+                const title =
+                  v === 'status' ? 'Shelves' : v === 'service' ? 'Services' : 'All titles together';
+                const Icon = v === 'status' ? Rows3 : v === 'service' ? MonitorPlay : Layers3;
+                return (
+                  <button
+                    type="button"
+                    aria-label={title}
+                    title={title}
+                    aria-pressed={view === v}
+                    key={v}
+                    onClick={() => setView(v)}
+                  >
+                    <Icon size={18} aria-hidden="true" />
+                  </button>
+                );
+              })}
+            </fieldset>
+            <fieldset className="viewSwitcher displaySwitcher" aria-label="Title display">
+              {(['grid', 'list'] as const).map((style) => {
+                const title = style === 'grid' ? 'Grid' : 'List';
+                const Icon = style === 'grid' ? LayoutGrid : List;
+                return (
+                  <button
+                    type="button"
+                    aria-label={title}
+                    title={title}
+                    aria-pressed={display === style}
+                    key={style}
+                    onClick={() => setDisplay(style)}
+                  >
+                    <Icon size={18} aria-hidden="true" />
+                  </button>
+                );
+              })}
+            </fieldset>
+          </div>
         </div>
         <div className="libraryFilterRow">
           {kind === 'screen' && (
@@ -803,8 +832,10 @@ export default function Library({
               move(String(active.data.current?.itemId), String(over.id) as Status);
           }}
         >
-          {view === 'grid' ? (
-            <div className="cardGrid flatGrid">{cards(filtered)}</div>
+          {view === 'all' ? (
+            <div className={`cardGrid flatGrid ${display === 'list' ? 'listGrid' : ''}`}>
+              {cards(filtered)}
+            </div>
           ) : (
             groups.map((group, index) => (
               <Shelf
@@ -827,6 +858,7 @@ export default function Library({
                 }}
                 first={index === 0}
                 last={index === groups.length - 1}
+                display={display}
               >
                 {cards(group.items, group.name)}
               </Shelf>

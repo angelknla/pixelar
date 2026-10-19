@@ -190,7 +190,7 @@ it('restores saved shelf order and collapsed state, and keeps grid titles visibl
   );
   await act(async () => {
     fireEvent.click(screen.getByRole('button', { name: /Prime Video 1/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'Grid' }));
+    fireEvent.click(screen.getByRole('button', { name: 'All titles together' }));
   });
   expect(screen.getByRole('heading', { name: 'Prime title' })).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Netflix title' })).toBeInTheDocument();
@@ -357,6 +357,95 @@ function tvItem(id: string, title: string, services: string[]): LibraryItem {
   };
 }
 
+it.each([
+  'game',
+  'screen',
+] as const)('switches %s between grid and list without changing grouping or filters', async (kind) => {
+  const items: LibraryItem[] = [
+    {
+      ...tvItem('one', 'First title', ['Netflix', 'Prime Video']),
+      kind: kind === 'game' ? 'game' : 'show',
+      status: kind === 'game' ? 'backlog' : 'watchlist',
+      platforms: ['PC'],
+    },
+    {
+      ...tvItem('two', 'Second title', ['Netflix']),
+      kind: kind === 'game' ? 'game' : 'movie',
+      status: kind === 'game' ? 'playing' : 'watching',
+    },
+  ];
+  render(<Library items={items} profile={defaultProfile('owner')} kind={kind} />);
+  const grouping = screen.getByRole('group', { name: 'Library grouping' });
+  const display = screen.getByRole('group', { name: 'Title display' });
+  expect(within(display).getByRole('button', { name: 'Grid' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  fireEvent.click(within(display).getByRole('button', { name: 'List' }));
+  const views =
+    kind === 'game'
+      ? ['Shelves', 'All titles together']
+      : ['Services', 'Shelves', 'All titles together'];
+  for (const view of views) {
+    fireEvent.click(within(grouping).getByRole('button', { name: view }));
+    expect(within(display).getByRole('button', { name: 'List' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    const rows = document.querySelectorAll('.itemCard');
+    expect(rows).toHaveLength(view === 'Services' ? 3 : 2);
+    rows.forEach((row) => {
+      expect(row).toHaveClass('listTile');
+    });
+    expect(screen.getByRole('heading', { name: 'Second title' })).toBeInTheDocument();
+  }
+  fireEvent.change(screen.getByRole('textbox', { name: 'Search your library' }), {
+    target: { value: 'First' },
+  });
+  fireEvent.click(within(grouping).getByRole('button', { name: 'Shelves' }));
+  fireEvent.click(within(display).getByRole('button', { name: 'Grid' }));
+  expect(within(grouping).getByRole('button', { name: 'Shelves' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
+  expect(document.querySelector('.itemCard')).not.toHaveClass('listTile');
+  expect(screen.queryByRole('heading', { name: 'Second title' })).not.toBeInTheDocument();
+  fireEvent.click(within(display).getByRole('button', { name: 'List' }));
+  const shelfName = kind === 'game' ? 'Backlog' : 'Watchlist';
+  fireEvent.click(screen.getByRole('button', { name: new RegExp(`${shelfName} 1`) }));
+  expect(screen.queryByRole('heading', { name: 'First title' })).not.toBeInTheDocument();
+  fireEvent.click(within(display).getByRole('button', { name: 'Grid' }));
+  expect(screen.queryByRole('heading', { name: 'First title' })).not.toBeInTheDocument();
+  fireEvent.click(within(grouping).getByRole('button', { name: 'All titles together' }));
+  expect(screen.getByRole('heading', { name: 'First title' })).toBeInTheDocument();
+  await waitFor(() => expect(saveShelfLayout).toHaveBeenCalledTimes(1));
+});
+
+it('keeps status changes and removal available in list rows', async () => {
+  render(
+    <Library
+      items={[tvItem('one', 'List title', ['Netflix'])]}
+      profile={defaultProfile('owner')}
+      kind="screen"
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'List' }));
+  fireEvent.change(screen.getByRole('combobox', { name: 'Status of List title' }), {
+    target: { value: 'watching' },
+  });
+  await waitFor(() => expect(moveItem).toHaveBeenCalledWith('one', 'watching'));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Remove List title' })).toBeEnabled()
+  );
+  expect(screen.getByRole('button', { name: 'Drag List title to a status shelf' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Remove List title' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Remove title' }));
+  await waitFor(() => expect(deleteItem).toHaveBeenCalledWith('one'));
+  await waitFor(() =>
+    expect(screen.queryByRole('heading', { name: 'List title' })).not.toBeInTheDocument()
+  );
+});
+
 it('offers streaming service choices before adding TV titles, including custom subscriptions', () => {
   const profile = { ...defaultProfile('owner'), services: ['MUBI'] };
   render(<Library items={[]} profile={profile} kind="screen" />);
@@ -388,7 +477,7 @@ it('filters legacy HBO and multi-service titles across TV views and combines wit
   expect(screen.getAllByRole('heading', { name: 'Shared show' })).toHaveLength(1);
   expect(screen.queryByRole('heading', { name: 'Netflix show' })).not.toBeInTheDocument();
   expect(document.querySelectorAll('.shelf')).toHaveLength(1);
-  for (const view of ['Shelves', 'Grid']) {
+  for (const view of ['Shelves', 'All titles together']) {
     fireEvent.click(screen.getByRole('button', { name: view }));
     expect(screen.getByRole('heading', { name: 'Legacy HBO show' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Shared show' })).toBeInTheDocument();
@@ -449,7 +538,7 @@ it('filters movies and TV series across views and combines type with service and
   expect(screen.getByRole('heading', { name: 'Netflix movie' })).toBeInTheDocument();
   expect(screen.queryByRole('heading', { name: 'Netflix series' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'TV series' }));
-  for (const view of ['Services', 'Shelves', 'Grid']) {
+  for (const view of ['Services', 'Shelves', 'All titles together']) {
     fireEvent.click(screen.getByRole('button', { name: view }));
     expect(screen.queryByRole('heading', { name: 'Netflix movie' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Netflix series' })).toBeInTheDocument();
@@ -513,7 +602,7 @@ it('orders scheduled games by earliest release by default, with unannounced date
   fireEvent.change(screen.getByRole('combobox', { name: 'Filter by status' }), {
     target: { value: 'scheduled' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Grid' }));
+  fireEvent.click(screen.getByRole('button', { name: 'All titles together' }));
   expect(titles(document.querySelector('.libraryPage')!)).toEqual(expected);
 
   fireEvent.click(screen.getByRole('button', { name: 'Shelves' }));
@@ -534,7 +623,7 @@ it('keeps prices off game tiles while preserving detail links and status changes
     price: 59.99,
   };
   render(<Library items={[game]} profile={defaultProfile('owner')} kind="game" />);
-  for (const view of ['Shelves', 'Grid']) {
+  for (const view of ['Shelves', 'All titles together']) {
     fireEvent.click(screen.getByRole('button', { name: view }));
     expect(screen.queryByText('£59.99')).not.toBeInTheDocument();
     expect(screen.queryByText('Price —')).not.toBeInTheDocument();
