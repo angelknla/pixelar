@@ -15,7 +15,15 @@ export default function Navigation() {
   return (
     <nav className="appNav" aria-label="Library navigation">
       <Link className="navBrand" href="/games">
-        <Image src="/icon.svg?v=2" width={38} height={38} alt="" className="brandMark" unoptimized />
+        <Image
+          src="/icon.svg?v=2"
+          width={38}
+          height={38}
+          alt=""
+          className="brandMark"
+          unoptimized
+          loading="eager"
+        />
         pixelar<span className="brandDot">.</span>
       </Link>
       <div className="navTabs">

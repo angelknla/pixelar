@@ -7,7 +7,7 @@ export default function Header({ signedIn }: { signedIn: boolean }) {
   return (
     <header className={styles.header}>
       <Link className={styles.brand} href="/">
-        <Image src="/icon.svg?v=2" width={38} height={38} alt="" unoptimized />
+        <Image src="/icon.svg?v=2" width={38} height={38} alt="" unoptimized loading="eager" />
         pixelar<span>.</span>
       </Link>
       <nav aria-label="Main navigation">

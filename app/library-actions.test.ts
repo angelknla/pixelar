@@ -1,4 +1,4 @@
-import { deleteItem, moveItem, saveItem } from './library-actions';
+import { deleteItem, markAllNotificationsRead, moveItem, saveItem } from './library-actions';
 
 const mocks = vi.hoisted(() => ({
   requireAccount: vi.fn(),
@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(),
   delete: vi.fn(),
   eq: vi.fn(),
+  is: vi.fn(),
   select: vi.fn(),
   maybeSingle: vi.fn(),
   revalidate: vi.fn(),
@@ -40,6 +41,7 @@ beforeEach(() => {
     update: mocks.update,
     delete: mocks.delete,
     eq: mocks.eq,
+    is: mocks.is,
     select: mocks.select,
     maybeSingle: mocks.maybeSingle,
   };
@@ -48,6 +50,7 @@ beforeEach(() => {
   mocks.delete.mockReturnValue(q);
   mocks.select.mockReturnValue(q);
   mocks.eq.mockReturnValue(q);
+  mocks.is.mockResolvedValue({ error: null });
   mocks.rpc.mockResolvedValue({ data: id, error: null });
 });
 describe('owner-checked library actions', () => {
@@ -72,6 +75,25 @@ describe('owner-checked library actions', () => {
   });
   it('rejects kind-incompatible changes before mutation', async () => {
     expect(await moveItem(id, 'watching')).toHaveProperty('error');
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+  it('marks only the verified owner’s unread notifications without overwriting read timestamps', async () => {
+    expect(await markAllNotificationsRead()).toEqual({});
+    expect(mocks.from).toHaveBeenCalledWith('pixelar_notifications');
+    expect(mocks.update).toHaveBeenCalledWith({ read_at: expect.any(String) });
+    expect(mocks.eq).toHaveBeenCalledOnce();
+    expect(mocks.eq).toHaveBeenCalledWith('member_id', 'verified-owner');
+    expect(mocks.is).toHaveBeenCalledWith('read_at', null);
+    expect(mocks.revalidate).toHaveBeenCalledWith('/', 'layout');
+  });
+  it('reports a failed bulk read without revalidating', async () => {
+    mocks.is.mockResolvedValueOnce({ error: { message: 'Database unavailable' } });
+    expect(await markAllNotificationsRead()).toHaveProperty('error');
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+  it('requires a signed-in account before marking notifications read', async () => {
+    mocks.requireAccount.mockRejectedValueOnce(new Error('Sign in required'));
+    await expect(markAllNotificationsRead()).rejects.toThrow('Sign in required');
     expect(mocks.update).not.toHaveBeenCalled();
   });
 });

@@ -2,8 +2,8 @@
 import { Bell, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
-import { markNotificationRead } from '@/app/library-actions';
+import { useEffect, useRef, useState, useTransition } from 'react';
+import { markAllNotificationsRead, markNotificationRead } from '@/app/library-actions';
 import { isUpcoming, label, localDay, releaseLabel } from '@/lib/library';
 import type { LibraryItem, NotificationRow, ProfileRow } from '@/types/library';
 import Countdown from '../Library/Countdown';
@@ -21,7 +21,23 @@ export default function Calendar({
   const [selected, setSelected] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [error, setError] = useState('');
+  const [readIds, setReadIds] = useState<string[]>([]);
+  const unread = notifications.filter((n) => !n.read_at && !readIds.includes(n.id));
   const router = useRouter();
+  const calendar = useRef<HTMLElement>(null);
+  const layout = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const panel = calendar.current;
+    const container = layout.current;
+    if (!panel || !container || typeof ResizeObserver === 'undefined') return;
+    const measure = () => {
+      container.style.setProperty('--calendar-height', `${panel.getBoundingClientRect().height}px`);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(panel);
+    return () => observer.disconnect();
+  }, []);
   const upcoming = items
     .filter((i) => isUpcoming(i, profile.timezone))
     .sort((a, b) => (a.fields.release_date ?? '').localeCompare(b.fields.release_date ?? ''));
@@ -40,6 +56,21 @@ export default function Calendar({
     setMonth(next.toISOString().slice(0, 7));
     setSelected(null);
   }
+  function markRead(id?: string) {
+    setError('');
+    start(async () => {
+      try {
+        const result = id ? await markNotificationRead(id) : await markAllNotificationsRead();
+        if (result.error) setError(result.error);
+        else {
+          setReadIds((previous) => [...previous, ...(id ? [id] : unread.map((n) => n.id))]);
+          router.refresh();
+        }
+      } catch {
+        setError('Could not mark notifications read. Please try again.');
+      }
+    });
+  }
   return (
     <>
       <header className="pageHeading">
@@ -50,8 +81,8 @@ export default function Calendar({
         </div>
         <span className="timezoneBadge">{profile.timezone}</span>
       </header>
-      <div className="calendarLayout">
-        <section className="calendarPanel">
+      <div className="calendarLayout" ref={layout}>
+        <section className="calendarPanel" ref={calendar}>
           <div className="monthHeading">
             <button type="button" aria-label="Previous month" onClick={() => shift(-1)}>
               <ChevronLeft size={18} />
@@ -130,39 +161,52 @@ export default function Calendar({
               </button>
             )}
           </div>
-          {visible.length ? (
-            visible.map((item) => (
-              <Link key={item.id} href={`/items/${item.id}`} className="upcomingRow">
-                <span className={`typeBadge ${item.kind}`}>
-                  {item.kind === 'game' ? 'PLAY' : 'WATCH'}
-                </span>
-                <div>
-                  <strong>{item.fields.title}</strong>
-                  <small>
-                    {releaseLabel(item.fields)} · {label(item.status)}
-                    {item.fields.release_precision !== 'day' ? ' · Release window' : ''}
-                  </small>
-                </div>
-                <Countdown fields={item.fields} timezone={profile.timezone} />
-              </Link>
-            ))
-          ) : (
-            <div className="emptyState">
-              <h3>Nothing on the calendar yet.</h3>
-              <p>Add a release date to a title and it will appear here.</p>
-            </div>
-          )}
+          {/* biome-ignore lint/a11y/noNoninteractiveTabindex: Keyboard users need to scroll the release list. */}
+          <section className="upcomingList" aria-label="Upcoming releases" tabIndex={0}>
+            {visible.length ? (
+              visible.map((item) => (
+                <Link key={item.id} href={`/items/${item.id}`} className="upcomingRow">
+                  <span className={`typeBadge ${item.kind}`}>
+                    {item.kind === 'game' ? 'PLAY' : 'WATCH'}
+                  </span>
+                  <div>
+                    <strong>{item.fields.title}</strong>
+                    <small>
+                      {releaseLabel(item.fields)} · {label(item.status)}
+                      {item.fields.release_precision !== 'day' ? ' · Release window' : ''}
+                    </small>
+                  </div>
+                  <Countdown fields={item.fields} timezone={profile.timezone} />
+                </Link>
+              ))
+            ) : (
+              <div className="emptyState">
+                <h3>Nothing on the calendar yet.</h3>
+                <p>Add a release date to a title and it will appear here.</p>
+              </div>
+            )}
+          </section>
         </section>
       </div>
       <section className="notificationPanel">
         <div className="sectionHeading">
           <h2>
             <Bell size={20} /> Your notifications{' '}
-            <span className="countBadge">
-              {notifications.filter((n) => !n.read_at).length} unread
-            </span>
+            <span className="countBadge">{unread.length} unread</span>
           </h2>
-          <span className="hint">In-app · 9am local time</span>
+          <div className="notificationActions">
+            <span className="hint">In-app · 9am local time</span>
+            {unread.length > 0 && (
+              <button
+                type="button"
+                className="textButton"
+                disabled={pending}
+                onClick={() => markRead()}
+              >
+                Mark all as read
+              </button>
+            )}
+          </div>
         </div>
         {error && (
           <p role="alert" className="errorMessage">
@@ -171,7 +215,10 @@ export default function Calendar({
         )}
         {notifications.length ? (
           notifications.map((n) => (
-            <article className={`notificationRow ${n.read_at ? 'read' : ''}`} key={n.id}>
+            <article
+              className={`notificationRow ${n.read_at || readIds.includes(n.id) ? 'read' : ''}`}
+              key={n.id}
+            >
               <div>
                 <Link href={`/items/${n.item_id}`}>{n.title}</Link>
                 <small>
@@ -182,18 +229,8 @@ export default function Calendar({
                   }).format(new Date(n.created_at))}
                 </small>
               </div>
-              {!n.read_at && (
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() =>
-                    start(async () => {
-                      const result = await markNotificationRead(n.id);
-                      if (result.error) setError(result.error);
-                      else router.refresh();
-                    })
-                  }
-                >
+              {!n.read_at && !readIds.includes(n.id) && (
+                <button type="button" disabled={pending} onClick={() => markRead(n.id)}>
                   Mark read
                 </button>
               )}

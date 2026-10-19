@@ -8,12 +8,14 @@ export default function Artwork({
   title,
   kind,
   eager = false,
+  highPriority = false,
   sizes = '(max-width: 650px) 45vw, 240px',
 }: {
   url: string | null;
   title: string;
   kind: ItemKind;
   eager?: boolean;
+  highPriority?: boolean;
   sizes?: string;
 }) {
   const [failed, setFailed] = useState<string | null>(null);
@@ -25,7 +27,8 @@ export default function Artwork({
           alt={title}
           fill
           unoptimized
-          loading={eager ? 'eager' : 'lazy'}
+          loading={eager || highPriority ? 'eager' : 'lazy'}
+          fetchPriority={highPriority ? 'high' : undefined}
           sizes={sizes}
           onError={() => setFailed(url)}
         />

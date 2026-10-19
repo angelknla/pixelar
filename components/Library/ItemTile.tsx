@@ -15,6 +15,7 @@ export interface ItemTileProps {
   pending: boolean;
   onRemove: (item: LibraryItem) => void;
   group?: string;
+  eager?: boolean;
 }
 
 export default function ItemTile({
@@ -24,6 +25,7 @@ export default function ItemTile({
   pending,
   onRemove,
   group = 'grid',
+  eager = false,
   className,
   metadata,
 }: ItemTileProps & {
@@ -58,6 +60,7 @@ export default function ItemTile({
           url={item.fields.artwork}
           title={item.fields.title}
           kind={item.kind}
+          eager={eager}
           sizes={item.kind === 'game' ? '(max-width: 650px) 45vw, 360px' : undefined}
         />
         {item.fields.metascore !== null && (

@@ -9,8 +9,8 @@ import {
   label,
   PLATFORMS,
   releaseLabel,
-  serviceLabel,
   SERVICES,
+  serviceLabel,
   statusesFor,
 } from '@/lib/library';
 import type {
@@ -34,6 +34,7 @@ type Props = {
   initialTitle?: string;
   initialStatus?: Status;
   initialServices?: string[];
+  eagerArtwork?: ReadonlySet<string>;
 };
 export default function ItemEditor({
   kind: initialKind,
@@ -44,6 +45,7 @@ export default function ItemEditor({
   initialTitle = '',
   initialStatus,
   initialServices,
+  eagerArtwork,
 }: Props) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -240,7 +242,7 @@ export default function ItemEditor({
       </div>
       {results.length > 0 && (
         <div className="searchResults">
-          {results.map((result) => (
+          {results.map((result, index) => (
             <button
               type="button"
               className="searchResult"
@@ -248,7 +250,13 @@ export default function ItemEditor({
               onClick={() => load(result)}
               disabled={pending}
             >
-              <Artwork url={result.artwork} title={result.title} kind={kind} />
+              <Artwork
+                url={result.artwork}
+                title={result.title}
+                kind={kind}
+                eager={index < 4 || Boolean(result.artwork && eagerArtwork?.has(result.artwork))}
+                sizes="50px"
+              />
               <span>
                 <strong>{result.title}</strong>
                 <small>{result.year ?? 'Date unknown'}</small>

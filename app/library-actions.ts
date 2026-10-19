@@ -85,3 +85,18 @@ export async function markNotificationRead(id: string) {
   changed();
   return {};
 }
+export async function markAllNotificationsRead(): Promise<{ error?: string }> {
+  const account = await requireAccount();
+  try {
+    const { error } = await db()
+      .from('pixelar_notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('member_id', account.memberId)
+      .is('read_at', null);
+    if (error) return { error: 'Could not mark all notifications read.' };
+    changed();
+    return {};
+  } catch {
+    return { error: 'Could not mark all notifications read.' };
+  }
+}

@@ -63,6 +63,7 @@ export default function AvatarUpload({
               width={384}
               height={384}
               unoptimized
+              loading="eager"
               onError={() => setFailedVersion(version)}
             />
           ) : (

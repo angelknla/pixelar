@@ -8,7 +8,7 @@ export default function Footer({ signedIn }: { signedIn: boolean }) {
       <div className="footerInner">
         <div className="footerIdentity">
           <Link className="footerBrand" href={signedIn ? '/games' : '/'}>
-            <Image src="/icon.svg?v=2" alt="" width={24} height={24} unoptimized />
+            <Image src="/icon.svg?v=2" alt="" width={24} height={24} unoptimized loading="eager" />
             pixelar<span>.</span>
           </Link>
           <p>Games. Movies. TV. One library.</p>

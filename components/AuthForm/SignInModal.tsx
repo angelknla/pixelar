@@ -70,7 +70,7 @@ export default function SignInModal({ available }: { available: boolean }) {
             <X size={20} aria-hidden="true" />
           </button>
           <div className={styles.branding}>
-            <Image src="/icon.svg?v=2" alt="" width={44} height={44} unoptimized />
+            <Image src="/icon.svg?v=2" alt="" width={44} height={44} unoptimized loading="eager" />
             <span className="eyebrow">Welcome back to Pixelar</span>
           </div>
           <AuthForm mode="login" available={available} embedded headingId={headingId} />

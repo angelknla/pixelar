@@ -12,7 +12,7 @@ import { LayoutGrid, MonitorPlay, Plus, Rows3, Search } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useId, useRef, useState, useTransition } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, useTransition } from 'react';
 import { deleteItem, moveItem } from '@/app/library-actions';
 import { shelfKeyboardCoordinates } from '@/lib/drag';
 import { label, PLATFORMS, SERVICES, serviceLabel, statusesFor } from '@/lib/library';
@@ -111,6 +111,69 @@ export default function Library({
   const [removeError, setRemoveError] = useState('');
   const [removePending, startRemove] = useTransition();
   const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const [visibleArtwork, setVisibleArtwork] = useState<Set<string>>(() => new Set());
+  const library = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const root = library.current;
+    if (!root) return;
+    const promoted = new Set<string>();
+    const promote = (visible: HTMLImageElement[]) => {
+      const urls = visible
+        .flatMap((image) => image.getAttribute('src') ?? [])
+        .filter((url) => !promoted.has(url));
+      if (!urls.length) return;
+      urls.forEach((url) => {
+        promoted.add(url);
+      });
+      setVisibleArtwork(new Set(promoted));
+    };
+    const checkViewport = () =>
+      promote(
+        Array.from(root.querySelectorAll<HTMLImageElement>('.artwork img')).filter((image) => {
+          const rect = image.getBoundingClientRect();
+          return (
+            rect.width > 0 &&
+            rect.height > 0 &&
+            rect.top < window.innerHeight &&
+            rect.bottom > 0 &&
+            rect.left < window.innerWidth &&
+            rect.right > 0
+          );
+        })
+      );
+    const observer =
+      typeof IntersectionObserver === 'undefined'
+        ? null
+        : new IntersectionObserver((entries) => {
+            promote(
+              entries
+                .filter((entry) => entry.isIntersecting)
+                .map((entry) => entry.target as HTMLImageElement)
+            );
+          });
+    const observeImages = () => {
+      observer?.disconnect();
+      root.querySelectorAll('.artwork img').forEach((image) => {
+        observer?.observe(image);
+      });
+      checkViewport();
+    };
+    observeImages();
+    // Filters, shelves and search results can replace images without remounting the library.
+    const mutations = new MutationObserver(observeImages);
+    mutations.observe(root, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['src'],
+    });
+    window.addEventListener('resize', checkViewport);
+    return () => {
+      mutations.disconnect();
+      observer?.disconnect();
+      window.removeEventListener('resize', checkViewport);
+    };
+  }, []);
   const removeDialog = useRef<HTMLDialogElement>(null);
   const removeCancel = useRef<HTMLButtonElement>(null);
   const removeHeading = useId();
@@ -211,6 +274,15 @@ export default function Library({
             }))
         : [];
   const Tile = kind === 'game' ? GameTile : ScreenTile;
+  const firstGroup = groups.find((group) => group.items.length)?.name;
+  const firstTitles =
+    view === 'grid' ? filtered : (groups.find((group) => group.name === firstGroup)?.items ?? []);
+  // Next tracks LCP by URL, so every copy of the hero/visible artwork must agree.
+  const eagerArtwork = new Set([
+    ...visibleArtwork,
+    ...(featured?.fields.artwork ? [featured.fields.artwork] : []),
+    ...firstTitles.slice(0, 6).flatMap((item) => item.fields.artwork ?? []),
+  ]);
   const cards = (list: LibraryItem[], group?: string) =>
     list.map((item) => (
       <Tile
@@ -224,10 +296,14 @@ export default function Library({
           setRemoving(item);
         }}
         group={group}
+        eager={Boolean(item.fields.artwork && eagerArtwork.has(item.fields.artwork))}
       />
     ));
   return (
-    <div className={`libraryPage ${kind === 'game' ? 'gameLibrary' : 'screenLibrary'}`}>
+    <div
+      ref={library}
+      className={`libraryPage ${kind === 'game' ? 'gameLibrary' : 'screenLibrary'}`}
+    >
       <section className={`libraryHero ${featured ? '' : 'libraryHeroEmpty'}`}>
         <header className="pageHeading">
           <div>
@@ -251,6 +327,8 @@ export default function Library({
               title={featured.fields.title}
               kind={featured.kind}
               eager
+              highPriority
+              sizes="(max-width: 650px) calc(100vw - 32px), 40vw"
             />
             <div className="heroFeatureCaption">
               <span className="heroStatus">{label(featured.status)}</span>
@@ -425,7 +503,7 @@ export default function Library({
       )}
       {relevant.length === 0 ? (
         <div className="emptyState">
-          <Image src="/icon.svg?v=2" alt="" width={48} height={48} unoptimized />
+          <Image src="/icon.svg?v=2" alt="" width={48} height={48} unoptimized loading="eager" />
           <h2>Your collection starts here.</h2>
           <p>Add something you’re excited about, or bring over your notes.</p>
           <button type="button" className="primary" onClick={() => setAdding(true)}>
@@ -470,17 +548,21 @@ export default function Library({
           )}
         </DndContext>
       )}
-      <p className="attribution">
-        <Image src="/tmdb.svg" alt="TMDB" width={70} height={28} /> Game metadata:{' '}
-        <a href="https://rawg.io" target="_blank" rel="noreferrer">
-          RAWG
-        </a>
-        . Screen metadata and images:{' '}
-        <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">
-          TMDB
-        </a>
-        . Metascores: OMDb. This product uses the TMDB API but is not endorsed or certified by TMDB.
-      </p>
+      <div className="attribution">
+        <Image src="/tmdb.svg" alt="TMDB" width={70} height={9} />
+        <p>
+          Game metadata:{' '}
+          <a href="https://rawg.io" target="_blank" rel="noreferrer">
+            RAWG
+          </a>
+          . Screen metadata and images:{' '}
+          <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">
+            TMDB
+          </a>
+          . Metascores: OMDb. This product uses the TMDB API but is not endorsed or certified by
+          TMDB.
+        </p>
+      </div>
       <dialog
         ref={dialog}
         className="editorDialog"
@@ -495,6 +577,7 @@ export default function Library({
           <ItemEditor
             kind={kind === 'game' ? 'game' : screenType || 'movie'}
             profile={profile}
+            eagerArtwork={eagerArtwork}
             onDone={() => setAdding(false)}
           />
         )}

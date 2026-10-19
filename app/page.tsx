@@ -34,15 +34,7 @@ export default async function HomePage() {
         </div>
       </div>
       <div className="landingArtwork" aria-hidden="true">
-        <Image
-          src="/icon.svg?v=2"
-          alt=""
-          width={320}
-          height={320}
-          preload
-          unoptimized
-          loading="eager"
-        />
+        <Image src="/icon.svg?v=2" alt="" width={320} height={320} unoptimized loading="eager" />
       </div>
       <div className="landingStickers" aria-hidden="true">
         <span>PLAY ✦</span>
