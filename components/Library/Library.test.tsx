@@ -360,6 +360,36 @@ function tvItem(id: string, title: string, services: string[]): LibraryItem {
 it.each([
   'game',
   'screen',
+] as const)('defaults %s to list on mobile and grid on desktop, and keeps manual choices', (kind) => {
+  const item: LibraryItem = {
+    ...tvItem('one', 'Responsive title', ['Netflix']),
+    kind: kind === 'game' ? 'game' : 'show',
+    status: kind === 'game' ? 'backlog' : 'watchlist',
+  };
+  for (const width of [390, 650, 651, 1440]) {
+    vi.stubGlobal('innerWidth', width);
+    const props = { items: [item], profile: defaultProfile('owner'), kind };
+    const { rerender, unmount } = render(<Library {...props} />);
+    const initial = width <= 650 ? 'List' : 'Grid';
+    const chosen = width <= 650 ? 'Grid' : 'List';
+    expect(screen.getByRole('button', { name: initial })).toHaveAttribute('aria-pressed', 'true');
+    expect(document.querySelector('.itemCard')?.classList.contains('listTile')).toBe(width <= 650);
+    fireEvent.click(screen.getByRole('button', { name: chosen }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search your library' }), {
+      target: { value: 'Responsive' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'All titles together' }));
+    vi.stubGlobal('innerWidth', width <= 650 ? 1440 : 390);
+    fireEvent(window, new Event('resize'));
+    rerender(<Library {...props} />);
+    expect(screen.getByRole('button', { name: chosen })).toHaveAttribute('aria-pressed', 'true');
+    unmount();
+  }
+});
+
+it.each([
+  'game',
+  'screen',
 ] as const)('switches %s between grid and list without changing grouping or filters', async (kind) => {
   const items: LibraryItem[] = [
     {

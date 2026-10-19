@@ -189,6 +189,9 @@ export default function Library({
   const [pending, start] = useTransition();
   const [view, setView] = useState(kind === 'game' ? 'status' : 'service');
   const [display, setDisplay] = useState<'grid' | 'list'>('grid');
+  useLayoutEffect(() => {
+    if (window.innerWidth <= 650) setDisplay('list');
+  }, []);
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
   const [platform, setPlatform] = useState('');
