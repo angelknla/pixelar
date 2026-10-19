@@ -20,6 +20,7 @@ import {
   LayoutGrid,
   MonitorPlay,
   Plus,
+  RefreshCw,
   Rows3,
   Search,
 } from 'lucide-react';
@@ -184,6 +185,10 @@ export default function Library({
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
   const [moved, setMoved] = useState('');
+  const [metadataSync, setMetadataSync] = useState(false);
+  const [syncMessage, setSyncMessage] = useState('');
+  const [syncFailed, setSyncFailed] = useState<string[]>([]);
+  const metadataSyncLock = useRef(false);
   const [removing, setRemoving] = useState<LibraryItem | null>(null);
   const [removeError, setRemoveError] = useState('');
   const [removePending, startRemove] = useTransition();
@@ -329,6 +334,60 @@ export default function Library({
   const relevant = items.filter(
     (i) => !removedIds.includes(i.id) && (kind === 'game' ? i.kind === 'game' : i.kind !== 'game')
   );
+  async function syncMetadata(retry = false) {
+    if (metadataSyncLock.current) return;
+    metadataSyncLock.current = true;
+    setMetadataSync(true);
+    setError('');
+    setSyncFailed([]);
+    // A single provider link can appear on multiple shelves or saved titles.
+    const targets = [
+      ...new Map(
+        relevant
+          .filter((item) => item.metadata_id && (!retry || syncFailed.includes(item.id)))
+          .map((item) => [item.metadata_id, item.id])
+      ).values(),
+    ];
+    const failed: string[] = [];
+    let updated = 0;
+    try {
+      for (let offset = 0; offset < targets.length; offset += 4) {
+        setSyncMessage(`Syncing ${offset} of ${targets.length} titles…`);
+        const batch = targets.slice(offset, offset + 4);
+        try {
+          const response = await fetch('/api/metadata/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_ids: batch }),
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error('Could not sync titles.');
+          for (const id of batch) {
+            const outcome = data.outcomes?.find(
+              (entry: { id: string; state: string }) => entry.id === id
+            );
+            if (outcome?.state === 'updated') updated++;
+            else if (outcome?.state !== 'skipped') failed.push(id);
+          }
+        } catch {
+          failed.push(...batch);
+        }
+      }
+      const unmatched = relevant.filter((item) => !item.metadata_id).length;
+      setSyncMessage(
+        `${updated} ${updated === 1 ? 'title' : 'titles'} updated.${unmatched ? ` ${unmatched} unmatched ${unmatched === 1 ? 'title skipped' : 'titles skipped'}.` : ''}`
+      );
+      setSyncFailed(failed);
+      if (failed.length)
+        setError(
+          `${failed.length} ${failed.length === 1 ? 'title could' : 'titles could'} not sync. Cached data is still available.`
+        );
+      router.refresh();
+    } finally {
+      metadataSyncLock.current = false;
+      setMetadataSync(false);
+    }
+  }
   const serviceOptions = [
     ...new Set(
       [...SERVICES, ...profile.services, ...relevant.flatMap((i) => i.services)].map(serviceLabel)
@@ -451,10 +510,37 @@ export default function Library({
                 : 'Your next movie night. Your next must-watch series.'}
             </p>
           </div>
-          <button type="button" className="primary" onClick={() => setAdding(true)}>
-            <Plus size={18} aria-hidden="true" />
-            Add {kind === 'game' ? 'game' : 'title'}
-          </button>
+          <div className="libraryHeroActions">
+            <button type="button" className="primary" onClick={() => setAdding(true)}>
+              <Plus size={18} aria-hidden="true" />
+              Add {kind === 'game' ? 'game' : 'title'}
+            </button>
+            <button
+              type="button"
+              className={`librarySync ${metadataSync ? 'librarySyncActive' : ''}`}
+              aria-label={kind === 'game' ? 'Sync all games' : 'Sync all movies and series'}
+              title={kind === 'game' ? 'Sync all games' : 'Sync all movies and series'}
+              disabled={metadataSync || !relevant.some((item) => item.metadata_id)}
+              onClick={() => void syncMetadata()}
+            >
+              <RefreshCw size={18} aria-hidden="true" />
+            </button>
+          </div>
+          {syncMessage && (
+            <p className="librarySyncMessage" role="status">
+              {syncMessage}
+            </p>
+          )}
+          {syncFailed.length > 0 && (
+            <button
+              type="button"
+              className="textButton"
+              disabled={metadataSync}
+              onClick={() => void syncMetadata(true)}
+            >
+              Retry failed syncs
+            </button>
+          )}
         </header>
         {featured && (
           <Link href={`/items/${featured.id}`} className="heroFeature">

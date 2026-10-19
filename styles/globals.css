@@ -383,6 +383,46 @@ legend {
   font-size: clamp(2.2rem, 3.6vw, 4rem);
   margin-bottom: 0.8rem;
 }
+.libraryHeroActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.librarySync {
+  width: 32px;
+  height: 32px;
+  min-height: 0;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface-soft);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+}
+.librarySync svg {
+  width: 15px;
+  height: 15px;
+}
+.librarySyncActive svg {
+  animation: librarySyncSpin 1s linear infinite;
+}
+.libraryHero .librarySyncMessage {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+@keyframes librarySyncSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .librarySyncActive svg {
+    animation: none;
+  }
+}
 .libraryHero p {
   max-width: 28rem;
   font-size: 0.95rem;
@@ -866,7 +906,6 @@ legend {
   left: 0.5rem;
   right: auto;
   bottom: auto;
-  min-width: 28px;
   padding: 0.2rem 0.3rem;
   font-size: 0.7rem;
 }
@@ -906,7 +945,6 @@ legend {
   position: absolute;
   bottom: 0.6rem;
   right: 0.6rem;
-  min-width: 32px;
   padding: 0.25rem 0.4rem;
   border-radius: 6px;
   background: #b7e6a3;
@@ -970,6 +1008,10 @@ legend {
   border-radius: 50%;
   background: #080d17b3;
   z-index: -1;
+  transform: translate(3px, -3px);
+}
+.removeTile > svg {
+  transform: translate(3px, -3px);
 }
 .removeTile:hover {
   color: #ffb3bc;
@@ -2102,6 +2144,28 @@ legend {
   }
   .libraryHero h1 {
     font-size: 2rem;
+  }
+  .libraryHeroActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .libraryHeroActions .primary {
+    min-height: 36px;
+    padding: 0.4rem 0.7rem;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+  }
+  .libraryHeroActions .primary svg {
+    width: 15px;
+    height: 15px;
+  }
+  .librarySync {
+    width: 28px;
+    height: 28px;
+  }
+  .librarySync svg {
+    width: 13px;
+    height: 13px;
   }
   .heroFeature {
     min-height: 215px;

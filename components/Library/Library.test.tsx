@@ -1,10 +1,11 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { deleteItem, moveItem, saveShelfLayout } from '@/app/library-actions';
 import { defaultProfile, EMPTY_FIELDS } from '@/lib/library';
 import type { LibraryItem } from '@/types/library';
 import Library from './Library';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+const routerRefresh = vi.hoisted(() => vi.fn());
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: routerRefresh }) }));
 vi.mock('@/app/library-actions', () => ({
   moveItem: vi.fn().mockResolvedValue({}),
   deleteItem: vi.fn().mockResolvedValue({}),
@@ -15,6 +16,7 @@ vi.mock('./Artwork', () => ({ default: () => null }));
 vi.mock('./Countdown', () => ({ default: () => null }));
 
 beforeEach(() => {
+  routerRefresh.mockClear();
   vi.mocked(deleteItem).mockReset().mockResolvedValue({});
   vi.mocked(saveShelfLayout).mockReset().mockResolvedValue({});
   Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
@@ -29,6 +31,116 @@ beforeEach(() => {
     },
     configurable: true,
   });
+});
+
+afterEach(() => vi.unstubAllGlobals());
+
+it('syncs all movies and series despite filters, deduplicates sources, and skips manual titles', async () => {
+  const linked = (id: string, kind: 'movie' | 'show', metadataId: string): LibraryItem => ({
+    ...tvItem(id, id, ['Netflix']),
+    kind,
+    metadata_id: metadataId,
+  });
+  const items = [
+    linked('movie', 'movie', 'film'),
+    linked('series', 'show', 'show'),
+    linked('duplicate', 'movie', 'film'),
+    tvItem('manual', 'Manual title', []),
+  ];
+  let complete!: (response: Response) => void;
+  const fetch = vi.fn().mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        complete = resolve;
+      })
+  );
+  vi.stubGlobal('fetch', fetch);
+  render(<Library items={items} profile={defaultProfile('owner')} kind="screen" />);
+  expect(fetch).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: /^Movies$/ }));
+  expect(fetch).not.toHaveBeenCalled();
+  const button = screen.getByRole('button', { name: 'Sync all movies and series' });
+  expect(button.closest('.libraryHero')).not.toBeNull();
+  fireEvent.click(button);
+  expect(button).toBeDisabled();
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(JSON.parse(fetch.mock.calls[0][1].body).item_ids).toEqual(['duplicate', 'series']);
+  await act(async () =>
+    complete(
+      Response.json({
+        outcomes: [
+          { id: 'duplicate', state: 'updated' },
+          { id: 'series', state: 'updated' },
+        ],
+      })
+    )
+  );
+  expect(screen.getByText('2 titles updated. 1 unmatched title skipped.')).toHaveAttribute(
+    'role',
+    'status'
+  );
+  expect(routerRefresh).toHaveBeenCalledTimes(1);
+  expect(button).toBeEnabled();
+});
+
+it('batches game syncs and retries only failed titles while keeping the library available', async () => {
+  const items = Array.from(
+    { length: 5 },
+    (_, index): LibraryItem => ({
+      ...tvItem(`game-${index}`, `Game ${index}`, []),
+      kind: 'game',
+      status: 'backlog',
+      metadata_id: `metadata-${index}`,
+    })
+  );
+  const fetch = vi
+    .fn()
+    .mockResolvedValueOnce(
+      Response.json({
+        outcomes: items
+          .slice(0, 4)
+          .map((item) => ({ id: item.id, state: item.id === 'game-1' ? 'failed' : 'updated' })),
+      })
+    )
+    .mockRejectedValueOnce(new Error('Network down'))
+    .mockResolvedValueOnce(
+      Response.json({
+        outcomes: [
+          { id: 'game-1', state: 'updated' },
+          { id: 'game-4', state: 'updated' },
+        ],
+      })
+    );
+  vi.stubGlobal('fetch', fetch);
+  render(<Library items={items} profile={defaultProfile('owner')} kind="game" />);
+  fireEvent.click(screen.getByRole('button', { name: 'Sync all games' }));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Retry failed syncs' })).toBeEnabled()
+  );
+  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(JSON.parse(fetch.mock.calls[0][1].body).item_ids).toHaveLength(4);
+  expect(JSON.parse(fetch.mock.calls[1][1].body).item_ids).toEqual(['game-4']);
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    '2 titles could not sync. Cached data is still available.'
+  );
+  expect(screen.getByRole('heading', { name: 'Game 1' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Retry failed syncs' }));
+  await waitFor(() =>
+    expect(screen.queryByRole('button', { name: 'Retry failed syncs' })).not.toBeInTheDocument()
+  );
+  expect(JSON.parse(fetch.mock.calls[2][1].body).item_ids).toEqual(['game-1', 'game-4']);
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+
+it('disables metadata sync for an empty or entirely unmatched library', () => {
+  render(
+    <Library
+      items={[tvItem('manual', 'Manual', [])]}
+      profile={defaultProfile('owner')}
+      kind="screen"
+    />
+  );
+  expect(screen.getByRole('button', { name: 'Sync all movies and series' })).toBeDisabled();
 });
 
 it('restores saved shelf order and collapsed state, and keeps grid titles visible', async () => {
@@ -101,6 +213,7 @@ it('retains local shelf changes when syncing fails and retries the latest layout
   await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
 });
 afterEach(() => {
+  cleanup();
   Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
   Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
 });

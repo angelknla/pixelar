@@ -20,7 +20,7 @@ export const tmdb: MetadataProvider = {
     const u = url(`search/${kind === 'show' ? 'tv' : 'movie'}`);
     u.searchParams.set('query', query);
     u.searchParams.set('region', region);
-    return array(record(await fetchJson(u)).results)
+    return array(record(await fetchJson(u, undefined, 3600)).results)
       .slice(0, 12)
       .flatMap((r) =>
         typeof r.id === 'number' && string(r.title ?? r.name)

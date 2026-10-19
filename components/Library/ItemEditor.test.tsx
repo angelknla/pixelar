@@ -25,12 +25,14 @@ afterEach(() => vi.unstubAllGlobals());
 
 it('uses the chosen TV series type for provider search and saving a manual title', async () => {
   render(<ItemEditor kind="movie" profile={defaultProfile('owner')} />);
+  expect(mocks.fetch).not.toHaveBeenCalled();
   fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'My series' } });
   fireEvent.click(screen.getByRole('button', { name: 'TV series' }));
   expect(screen.getByRole('button', { name: 'TV series' })).toHaveAttribute('aria-pressed', 'true');
   fireEvent.change(screen.getByPlaceholderText('Search a title…'), {
     target: { value: 'Dark matter' },
   });
+  expect(mocks.fetch).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Search' }));
   await waitFor(() =>
     expect(mocks.fetch).toHaveBeenCalledWith('/api/search?q=Dark%20matter&kind=show')
@@ -99,6 +101,9 @@ it('preserves existing details and manual overrides while editing a cover, statu
     <ItemEditor kind="game" item={item} profile={defaultProfile('owner')} reminderDays={[0, 7]} />
   );
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('My title');
+  fireEvent.click(screen.getByText('Search & refresh metadata'));
+  expect(mocks.fetch).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByText('Search & refresh metadata'));
   expect(screen.getByText('Search & refresh metadata').closest('details')).not.toHaveAttribute(
     'open'
   );
@@ -128,4 +133,5 @@ it('preserves existing details and manual overrides while editing a cover, statu
       })
     )
   );
+  expect(mocks.fetch).not.toHaveBeenCalled();
 });

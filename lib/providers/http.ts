@@ -4,12 +4,18 @@ export function apiKey(name: string): string {
   if (!value) throw new Error(`${name} is not configured. You can still add titles manually.`);
   return value;
 }
-export async function fetchJson(url: URL, headers?: HeadersInit): Promise<unknown> {
+export async function fetchJson(
+  url: URL,
+  headers?: HeadersInit,
+  cacheSeconds = 0
+): Promise<unknown> {
   try {
     const response = await fetch(url, {
       headers,
       signal: AbortSignal.timeout(10000),
-      cache: 'no-store',
+      ...(cacheSeconds
+        ? { cache: 'force-cache' as const, next: { revalidate: cacheSeconds } }
+        : { cache: 'no-store' as const }),
     });
     if (!response.ok) throw new Error('Provider unavailable.');
     return await response.json();

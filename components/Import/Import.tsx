@@ -111,11 +111,6 @@ export default function Import({ items, profile }: { items: LibraryItem[]; profi
               setRows(review);
               setReviewing(true);
               setError('');
-              start(async () => {
-                for (const row of review) {
-                  if (!row.ambiguous && !row.duplicate) await suggest(row);
-                }
-              });
             }}
           >
             Review titles
@@ -137,8 +132,9 @@ export default function Import({ items, profile }: { items: LibraryItem[]; profi
             </button>
           </div>
           <p className="hint">
-            Confirm matches yourself. Unclear lines stay unmatched. Change any type, status, service
-            or title below; use the item editor after import for other details.
+            Find matches for the titles you want to link, then confirm each match. Unclear lines
+            stay unmatched. Change any type, status, service or title below; use the item editor
+            after import for other details.
           </p>
           {rows.map((row) => (
             <section className={`importRow ${row.skip ? 'skipped' : ''}`} key={row.id}>

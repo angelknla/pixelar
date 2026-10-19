@@ -12,7 +12,7 @@ export const rawg: MetadataProvider = {
     const u = url('games');
     u.searchParams.set('search', query);
     u.searchParams.set('page_size', '12');
-    const data = record(await fetchJson(u));
+    const data = record(await fetchJson(u, undefined, 3600));
     return array(data.results).flatMap((r) =>
       typeof r.id === 'number' && string(r.name)
         ? [

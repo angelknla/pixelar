@@ -12,6 +12,28 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe('server metadata providers', () => {
+  it('caches search responses by their provider URL but explicitly bypasses detail caching', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ results: [] }))
+      .mockResolvedValueOnce(Response.json({ results: [] }))
+      .mockResolvedValueOnce(Response.json({ name: 'Game' }));
+    vi.stubGlobal('fetch', fetch);
+    await rawg.search('Game', 'game', 'GB');
+    await tmdb.search('Film', 'movie', 'GB');
+    await rawg.details('1', 'game', 'GB');
+    expect(fetch.mock.calls[0][1]).toMatchObject({
+      cache: 'force-cache',
+      next: { revalidate: 3600 },
+    });
+    expect(fetch.mock.calls[1][1]).toMatchObject({
+      cache: 'force-cache',
+      next: { revalidate: 3600 },
+    });
+    expect(fetch.mock.calls[1][0].searchParams.get('region')).toBe('GB');
+    expect(fetch.mock.calls[2][1]).toMatchObject({ cache: 'no-store' });
+    expect(fetch.mock.calls[2][1]).not.toHaveProperty('next');
+  });
   it('offers manual adding when keys are missing', async () => {
     vi.stubEnv('RAWG_API_KEY', '');
     await expect(rawg.search('Hades', 'game', 'GB')).rejects.toThrow(/manually/);
