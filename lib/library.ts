@@ -100,7 +100,7 @@ export function countdown(
   const days = Math.round(
     (Date.parse(fields.release_date) - Date.parse(localDay(timezone, now))) / 86400000
   );
-  return days > 0 ? `${days} day${days === 1 ? '' : 's'} to go` : days === 0 ? 'Out today!' : null;
+  return days > 0 ? `${days} day${days === 1 ? '' : 's'}` : days === 0 ? 'Out today!' : null;
 }
 export function isUpcoming(item: LibraryItem, timezone: string): boolean {
   const { release_date: date, release_precision: precision } = item.fields;

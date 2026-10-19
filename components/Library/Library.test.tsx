@@ -1,10 +1,11 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { moveItem } from '@/app/library-actions';
 import { defaultProfile, EMPTY_FIELDS } from '@/lib/library';
 import type { LibraryItem } from '@/types/library';
 import Library from './Library';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-vi.mock('@/app/library-actions', () => ({ moveItem: vi.fn() }));
+vi.mock('@/app/library-actions', () => ({ moveItem: vi.fn().mockResolvedValue({}) }));
 vi.mock('./ItemEditor', () => ({ default: () => null }));
 vi.mock('./Artwork', () => ({ default: () => null }));
 vi.mock('./Countdown', () => ({ default: () => null }));
@@ -206,4 +207,29 @@ it('filters movies and TV series across views and combines type with service and
   expect(screen.getByRole('heading', { name: 'Netflix series' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'All titles' }));
   expect(document.querySelectorAll('.itemCard')).toHaveLength(2);
+});
+
+it('keeps prices off game tiles while preserving detail links and status changes in both views', async () => {
+  const game: LibraryItem = {
+    ...tvItem('game', 'Fable', []),
+    kind: 'game',
+    status: 'scheduled',
+    platforms: ['PlayStation 5'],
+    price: 59.99,
+  };
+  render(<Library items={[game]} profile={defaultProfile('owner')} kind="game" />);
+  for (const view of ['Shelves', 'Grid']) {
+    fireEvent.click(screen.getByRole('button', { name: view }));
+    expect(screen.queryByText('£59.99')).not.toBeInTheDocument();
+    expect(screen.queryByText('Price —')).not.toBeInTheDocument();
+    const title = screen.getByRole('heading', { name: 'Fable' });
+    expect(title.closest('a')).toHaveAttribute('href', '/items/game');
+    const status = screen.getByRole('combobox', { name: 'Status of Fable' });
+    expect(within(status).getByRole('option', { name: 'Playing' })).toBeInTheDocument();
+    expect(within(status).queryByRole('option', { name: 'Watching' })).not.toBeInTheDocument();
+    fireEvent.change(status, { target: { value: 'backlog' } });
+    await waitFor(() => expect(moveItem).toHaveBeenCalledWith('game', 'backlog'));
+    await waitFor(() => expect(status).toBeEnabled());
+    vi.mocked(moveItem).mockClear();
+  }
 });

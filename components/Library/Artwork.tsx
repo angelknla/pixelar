@@ -8,11 +8,13 @@ export default function Artwork({
   title,
   kind,
   eager = false,
+  sizes = '(max-width: 650px) 45vw, 240px',
 }: {
   url: string | null;
   title: string;
   kind: ItemKind;
   eager?: boolean;
+  sizes?: string;
 }) {
   const [failed, setFailed] = useState<string | null>(null);
   return (
@@ -24,7 +26,7 @@ export default function Artwork({
           fill
           unoptimized
           loading={eager ? 'eager' : 'lazy'}
-          sizes="(max-width: 650px) 45vw, 240px"
+          sizes={sizes}
           onError={() => setFailed(url)}
         />
       ) : (

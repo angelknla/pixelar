@@ -16,5 +16,5 @@ export default function Countdown({
     return () => clearInterval(id);
   }, []);
   const value = now ? countdown(fields, timezone, now) : null;
-  return value ? <span className="countdown">◷ {value}</span> : null;
+  return value ? <span className="countdown">{value}</span> : null;
 }

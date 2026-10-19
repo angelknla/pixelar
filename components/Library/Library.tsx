@@ -4,7 +4,6 @@ import {
   DndContext,
   KeyboardSensor,
   PointerSensor,
-  useDraggable,
   useDroppable,
   useSensor,
   useSensors,
@@ -12,7 +11,6 @@ import {
 import {
   ArrowDownUp,
   Gamepad2,
-  GripVertical,
   ListFilter,
   MonitorPlay,
   Plus,
@@ -25,11 +23,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState, useTransition } from 'react';
 import { moveItem } from '@/app/library-actions';
 import { shelfKeyboardCoordinates } from '@/lib/drag';
-import { label, PLATFORMS, releaseLabel, serviceLabel, SERVICES, statusesFor } from '@/lib/library';
+import { label, PLATFORMS, SERVICES, serviceLabel, statusesFor } from '@/lib/library';
 import type { LibraryItem, ProfileRow, Status } from '@/types/library';
 import Artwork from './Artwork';
-import Countdown from './Countdown';
+import GameTile from './GameTile';
 import ItemEditor from './ItemEditor';
+import ScreenTile from './ScreenTile';
 
 function FilterSelect({
   name,
@@ -71,90 +70,6 @@ function FilterSelect({
   );
 }
 
-function Card({
-  item,
-  profile,
-  move,
-  pending,
-  group = 'grid',
-}: {
-  item: LibraryItem;
-  profile: ProfileRow;
-  move: (id: string, status: Status) => void;
-  pending: boolean;
-  group?: string;
-}) {
-  const drag = useDraggable({ id: `${group}:${item.id}`, data: { itemId: item.id } });
-  return (
-    <article
-      ref={drag.setNodeRef}
-      className={`itemCard status-${item.status} ${drag.isDragging ? 'dragging' : ''}`}
-      style={
-        drag.transform
-          ? { transform: `translate3d(${drag.transform.x}px,${drag.transform.y}px,0)`, zIndex: 20 }
-          : undefined
-      }
-    >
-      <Link href={`/items/${item.id}`} className="cardArtLink">
-        <Artwork url={item.fields.artwork} title={item.fields.title} kind={item.kind} />
-        {item.fields.metascore !== null && (
-          <span className="metascore" role="img" aria-label={`Metacritic ${item.fields.metascore}`}>
-            {item.fields.metascore}
-          </span>
-        )}
-      </Link>
-      <div className="cardBody">
-        <div className="cardTop">
-          <Link href={`/items/${item.id}`} title={item.fields.title}>
-            <h3>{item.fields.title}</h3>
-          </Link>
-          <button
-            type="button"
-            className="dragHandle"
-            {...drag.attributes}
-            {...drag.listeners}
-            aria-label={`Drag ${item.fields.title} to a status shelf`}
-          >
-            <GripVertical size={18} />
-          </button>
-        </div>
-        <p className="cardMeta">
-          {item.kind === 'game'
-            ? item.platforms.join(' · ') || 'Platform not chosen'
-            : `${item.kind === 'show' ? 'TV series' : 'Movie'} · ${[...new Set(item.services.map(serviceLabel))].join(' · ') || 'None'}`}
-        </p>
-        <div className="cardRelease">
-          {item.fields.release_date && <p className="cardDate">{releaseLabel(item.fields)}</p>}
-          <Countdown fields={item.fields} timezone={profile.timezone} />
-        </div>
-        <div className="cardFoot">
-          <select
-            aria-label={`Status of ${item.fields.title}`}
-            value={item.status}
-            disabled={pending}
-            onChange={(e) => move(item.id, e.target.value as Status)}
-          >
-            {statusesFor(item.kind).map((s) => (
-              <option value={s} key={s}>
-                {label(s)}
-              </option>
-            ))}
-          </select>
-          {item.kind === 'game' && (
-            <span className="price">
-              {item.price === null
-                ? 'Price —'
-                : new Intl.NumberFormat('en-GB', {
-                    style: 'currency',
-                    currency: item.currency,
-                  }).format(item.price)}
-            </span>
-          )}
-        </div>
-      </div>
-    </article>
-  );
-}
 function Shelf({
   name,
   status,
@@ -285,9 +200,10 @@ export default function Library({
               ),
             }))
         : [];
+  const Tile = kind === 'game' ? GameTile : ScreenTile;
   const cards = (list: LibraryItem[], group?: string) =>
     list.map((item) => (
-      <Card
+      <Tile
         key={item.id}
         item={item}
         profile={profile}
@@ -297,7 +213,7 @@ export default function Library({
       />
     ));
   return (
-    <div className="libraryPage">
+    <div className={`libraryPage ${kind === 'game' ? 'gameLibrary' : 'screenLibrary'}`}>
       <section className={`libraryHero ${featured ? '' : 'libraryHeroEmpty'}`}>
         <header className="pageHeading">
           <div>

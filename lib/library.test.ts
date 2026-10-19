@@ -17,10 +17,10 @@ describe('library metadata and dates', () => {
       release_precision: 'day' as const,
     };
     expect(localDay('Europe/London', new Date('2026-03-29T23:30:00Z'))).toBe('2026-03-30');
-    expect(countdown(fields, 'Europe/London', new Date('2026-03-28T23:30:00Z'))).toBe(
-      '2 days to go'
-    );
+    expect(countdown(fields, 'Europe/London', new Date('2026-03-28T23:30:00Z'))).toBe('2 days');
+    expect(countdown(fields, 'Europe/London', new Date('2026-03-29T12:00:00Z'))).toBe('1 day');
     expect(countdown(fields, 'Europe/London', new Date('2026-03-29T23:30:00Z'))).toBe('Out today!');
+    expect(countdown(fields, 'Europe/London', new Date('2026-03-31T12:00:00Z'))).toBeNull();
   });
   it('displays partial windows without countdowns', () => {
     const fields = {
