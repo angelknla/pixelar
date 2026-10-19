@@ -66,32 +66,30 @@ export default function ItemTile({
           </span>
         )}
       </Link>
+      <button
+        type="button"
+        className="removeTile"
+        aria-label={`Remove ${item.fields.title}`}
+        title="Remove title"
+        disabled={pending}
+        onClick={() => onRemove(item)}
+      >
+        <Trash2 size={14} aria-hidden="true" />
+      </button>
       <div className="cardBody">
         <div className="cardTop">
           <Link href={`/items/${item.id}`} title={item.fields.title}>
             <h3>{item.fields.title}</h3>
           </Link>
-          <div className="cardActions">
-            <button
-              type="button"
-              className="dragHandle"
-              {...drag.attributes}
-              {...drag.listeners}
-              aria-label={`Drag ${item.fields.title} to a status shelf`}
-            >
-              <GripVertical size={16} aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="removeTile"
-              aria-label={`Remove ${item.fields.title}`}
-              title="Remove title"
-              disabled={pending}
-              onClick={() => onRemove(item)}
-            >
-              <Trash2 size={16} aria-hidden="true" />
-            </button>
-          </div>
+          <button
+            type="button"
+            className="dragHandle"
+            {...drag.attributes}
+            {...drag.listeners}
+            aria-label={`Drag ${item.fields.title} to a status shelf`}
+          >
+            <GripVertical size={16} aria-hidden="true" />
+          </button>
         </div>
         <p className="cardMeta" title={metadata}>
           {metadata}

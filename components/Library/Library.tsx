@@ -8,15 +8,7 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import {
-  ArrowDownUp,
-  Gamepad2,
-  ListFilter,
-  MonitorPlay,
-  Plus,
-  Search,
-  SlidersHorizontal,
-} from 'lucide-react';
+import { LayoutGrid, MonitorPlay, Plus, Rows3, Search } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -35,7 +27,6 @@ function FilterSelect({
   value,
   display,
   compactDisplay = display,
-  icon,
   onChange,
   children,
 }: {
@@ -43,15 +34,11 @@ function FilterSelect({
   value: string;
   display: string;
   compactDisplay?: string;
-  icon: React.ReactNode;
   onChange: (value: string) => void;
   children: React.ReactNode;
 }) {
   return (
     <div className="filterSelect">
-      <span className="filterIcon" aria-hidden="true">
-        {icon}
-      </span>
       <span className="filterValue" aria-hidden="true">
         {display}
       </span>
@@ -285,133 +272,146 @@ export default function Library({
         </span>
         <Link href="/import">Import your notes ↗</Link>
       </div>
-      <div className="toolbar">
-        <label className="searchInput">
-          <Search size={18} />
-          <input
-            aria-label="Search your library"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Find in your library…"
-          />
-        </label>
-        <fieldset className="viewSwitcher" aria-label="Library view">
-          {(kind === 'game' ? ['status', 'grid'] : ['service', 'status', 'grid']).map((v) => (
-            <button type="button" aria-pressed={view === v} key={v} onClick={() => setView(v)}>
-              {v === 'status' ? 'Shelves' : v === 'service' ? 'Services' : 'Grid'}
-            </button>
-          ))}
-        </fieldset>
-      </div>
-      {kind === 'screen' && (
-        <fieldset className="screenTypePicker" aria-label="Filter by title type">
-          {(
-            [
-              { value: '', title: 'All titles' },
-              { value: 'movie', title: 'Movies' },
-              { value: 'show', title: 'TV series' },
-            ] as const
-          ).map(({ value, title }) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={screenType === value}
-              onClick={() => setScreenType(value)}
+      <div className="libraryControls">
+        <div className="toolbar">
+          <label className="searchInput">
+            <Search size={18} aria-hidden="true" />
+            <input
+              aria-label="Search your library"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search titles…"
+            />
+          </label>
+          <fieldset className="viewSwitcher" aria-label="Library view">
+            {(kind === 'game' ? ['status', 'grid'] : ['service', 'status', 'grid']).map((v) => {
+              const title = v === 'status' ? 'Shelves' : v === 'service' ? 'Services' : 'Grid';
+              const Icon = v === 'status' ? Rows3 : v === 'service' ? MonitorPlay : LayoutGrid;
+              return (
+                <button
+                  type="button"
+                  aria-label={title}
+                  title={title}
+                  aria-pressed={view === v}
+                  key={v}
+                  onClick={() => setView(v)}
+                >
+                  <Icon size={18} aria-hidden="true" />
+                </button>
+              );
+            })}
+          </fieldset>
+        </div>
+        <div className="libraryFilterRow">
+          {kind === 'screen' && (
+            <fieldset
+              className="screenTypePicker libraryTypePicker"
+              aria-label="Filter by title type"
             >
-              {title}
-            </button>
-          ))}
-        </fieldset>
-      )}
-      <div className="filters">
-        <SlidersHorizontal className="filterBarIcon" size={16} aria-hidden="true" />
-        <FilterSelect
-          name="Filter by status"
-          value={status}
-          display={status ? label(status) : 'All statuses'}
-          compactDisplay={status ? label(status) : 'Status'}
-          icon={<ListFilter size={16} />}
-          onChange={setStatus}
-        >
-          <option value="">All statuses</option>
-          {statuses.map((s) => (
-            <option key={s} value={s}>
-              {label(s)}
-            </option>
-          ))}
-        </FilterSelect>
-        {kind === 'game' ? (
-          <FilterSelect
-            name="Filter by platform"
-            value={platform}
-            display={platform || 'All platforms'}
-            compactDisplay={platform || 'Platform'}
-            icon={<Gamepad2 size={16} />}
-            onChange={setPlatform}
-          >
-            <option value="">All platforms</option>
-            {[
-              ...new Set([
-                ...PLATFORMS,
-                ...profile.platforms,
-                ...relevant.flatMap((i) => [
-                  ...i.platforms,
-                  ...(i.metadata?.fields.platforms ?? []),
-                ]),
-              ]),
-            ].map((p) => (
-              <option key={p}>{p}</option>
-            ))}
-          </FilterSelect>
-        ) : (
-          <FilterSelect
-            name="Filter by streaming service"
-            value={service}
-            display={service === '__none__' ? 'No service selected' : service || 'All services'}
-            compactDisplay={service === '__none__' ? 'None' : service || 'Service'}
-            icon={<MonitorPlay size={16} />}
-            onChange={setService}
-          >
-            <option value="">All services</option>
-            {serviceOptions.map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-            <option value="__none__">No service selected</option>
-          </FilterSelect>
-        )}
-        <FilterSelect
-          name="Sort titles"
-          value={sort}
-          display={
-            sort === 'added'
-              ? 'Recently added'
-              : sort === 'release'
-                ? 'Release date'
-                : sort === 'score'
-                  ? 'Metacritic score'
-                  : 'Price: low to high'
-          }
-          compactDisplay={
-            sort === 'added'
-              ? 'Added'
-              : sort === 'release'
-                ? 'Release'
-                : sort === 'score'
-                  ? 'Score'
-                  : 'Price'
-          }
-          icon={<ArrowDownUp size={16} />}
-          onChange={setSort}
-        >
-          <option value="added">Recently added</option>
-          <option value="release">Release date</option>
-          <option value="score">Metacritic score</option>
-          {kind === 'game' && <option value="price">Price: low to high</option>}
-        </FilterSelect>
-        <span className="filterCount">
-          {filtered.length}
-          <span> titles</span>
-        </span>
+              {(
+                [
+                  { value: '', title: 'All titles' },
+                  { value: 'movie', title: 'Movies' },
+                  { value: 'show', title: 'TV series' },
+                ] as const
+              ).map(({ value, title }) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={screenType === value}
+                  onClick={() => setScreenType(value)}
+                >
+                  {title}
+                </button>
+              ))}
+            </fieldset>
+          )}
+          <div className="filters">
+            <FilterSelect
+              name="Filter by status"
+              value={status}
+              display={status ? label(status) : 'All statuses'}
+              compactDisplay={status ? label(status) : 'Status'}
+              onChange={setStatus}
+            >
+              <option value="">All statuses</option>
+              {statuses.map((s) => (
+                <option key={s} value={s}>
+                  {label(s)}
+                </option>
+              ))}
+            </FilterSelect>
+            {kind === 'game' ? (
+              <FilterSelect
+                name="Filter by platform"
+                value={platform}
+                display={platform || 'All platforms'}
+                compactDisplay={platform || 'Platform'}
+                onChange={setPlatform}
+              >
+                <option value="">All platforms</option>
+                {[
+                  ...new Set([
+                    ...PLATFORMS,
+                    ...profile.platforms,
+                    ...relevant.flatMap((i) => [
+                      ...i.platforms,
+                      ...(i.metadata?.fields.platforms ?? []),
+                    ]),
+                  ]),
+                ].map((p) => (
+                  <option key={p}>{p}</option>
+                ))}
+              </FilterSelect>
+            ) : (
+              <FilterSelect
+                name="Filter by streaming service"
+                value={service}
+                display={service === '__none__' ? 'No service selected' : service || 'All services'}
+                compactDisplay={service === '__none__' ? 'None' : service || 'Service'}
+                onChange={setService}
+              >
+                <option value="">All services</option>
+                {serviceOptions.map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
+                <option value="__none__">No service selected</option>
+              </FilterSelect>
+            )}
+            <FilterSelect
+              name="Sort titles"
+              value={sort}
+              display={
+                sort === 'added'
+                  ? 'Recently added'
+                  : sort === 'release'
+                    ? 'Release date'
+                    : sort === 'score'
+                      ? 'Metacritic score'
+                      : 'Price: low to high'
+              }
+              compactDisplay={
+                sort === 'added'
+                  ? 'Added'
+                  : sort === 'release'
+                    ? 'Release'
+                    : sort === 'score'
+                      ? 'Score'
+                      : 'Price'
+              }
+              onChange={setSort}
+            >
+              <option value="added">Recently added</option>
+              <option value="release">Release date</option>
+              <option value="score">Metacritic score</option>
+              {kind === 'game' && <option value="price">Price: low to high</option>}
+            </FilterSelect>
+            <span className="filterCount">
+              {filtered.length}
+              <span> titles</span>
+            </span>
+          </div>
+        </div>
       </div>
       {error && (
         <p className="errorMessage" role="alert">

@@ -83,7 +83,9 @@ it('keeps failed deletions in the library and allows retrying from the confirmat
     expect(screen.getByRole('alert')).toHaveTextContent('Could not delete item.')
   );
   expect(screen.getAllByRole('heading', { name: 'Shared title' })).toHaveLength(2);
-  fireEvent.click(screen.getByRole('button', { name: 'Remove title' }));
+  const retry = await screen.findByRole('button', { name: 'Remove title' });
+  await waitFor(() => expect(retry).toBeEnabled());
+  fireEvent.click(retry);
   await waitFor(() =>
     expect(screen.queryAllByRole('heading', { name: 'Shared title' })).toHaveLength(0)
   );
