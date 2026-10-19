@@ -1,9 +1,10 @@
 'use client';
+
 import { Upload } from 'lucide-react';
 import { useId, useRef, useState } from 'react';
 import { shrinkImage } from '@/lib/image';
 
-export default function CoverUpload({
+const CoverUpload = ({
   itemId,
   disabled,
   onUploaded,
@@ -13,12 +14,13 @@ export default function CoverUpload({
   disabled: boolean;
   onUploaded: (url: string) => void;
   onBusy: (busy: boolean) => void;
-}) {
+}) => {
   const input = useRef<HTMLInputElement>(null);
   const hint = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+
   return (
     <div className="coverUpload" aria-busy={busy}>
       <div className="coverUploadRow">
@@ -33,20 +35,28 @@ export default function CoverUpload({
           onChange={async (event) => {
             const element = event.currentTarget;
             const file = element.files?.[0];
+
             if (!file) return;
+
             setError('');
             setMessage('');
             setBusy(true);
             onBusy(true);
+
             try {
               if (file.size > 5 * 1024 * 1024) throw new Error('Choose an image under 5 MB.');
+
               const prepared = await shrinkImage(file, 1920);
               const data = new FormData();
+
               data.set('cover', prepared);
+
               const response = await fetch(`/api/covers/${itemId}`, { method: 'POST', body: data });
               const result = await response.json();
+
               if (!response.ok)
                 throw new Error(result.error || 'Could not upload the cover image.');
+
               onUploaded(result.url);
               setMessage('Cover uploaded. Save changes to use it.');
             } catch (error) {
@@ -80,4 +90,6 @@ export default function CoverUpload({
       )}
     </div>
   );
-}
+};
+
+export default CoverUpload;

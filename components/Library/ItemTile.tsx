@@ -19,7 +19,7 @@ export interface ItemTileProps {
   display?: 'grid' | 'list';
 }
 
-export default function ItemTile({
+const ItemTile = ({
   item,
   profile,
   move,
@@ -33,8 +33,9 @@ export default function ItemTile({
 }: ItemTileProps & {
   className: string;
   metadata: string;
-}) {
+}) => {
   const drag = useDraggable({ id: `${group}:${item.id}`, data: { itemId: item.id } });
+
   const release = releaseLabel(item.fields);
   const compactRelease =
     item.fields.release_date && item.fields.release_precision === 'day'
@@ -47,6 +48,7 @@ export default function ItemTile({
           .format(new Date(`${item.fields.release_date}T12:00:00Z`))
           .replace(/(^|\/)0(?=\d)/g, '$1')
       : release;
+
   return (
     <article
       ref={drag.setNodeRef}
@@ -138,4 +140,6 @@ export default function ItemTile({
       </div>
     </article>
   );
-}
+};
+
+export default ItemTile;

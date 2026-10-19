@@ -1,4 +1,5 @@
 'use client';
+
 import { Bell, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -7,7 +8,8 @@ import { markAllNotificationsRead, markNotificationRead } from '@/app/library-ac
 import { isUpcoming, label, localDay, releaseLabel } from '@/lib/library';
 import type { LibraryItem, NotificationRow, ProfileRow } from '@/types/library';
 import Countdown from '../Library/Countdown';
-export default function Calendar({
+
+const Calendar = ({
   items,
   notifications,
   profile,
@@ -15,52 +17,71 @@ export default function Calendar({
   items: LibraryItem[];
   notifications: NotificationRow[];
   profile: ProfileRow;
-}) {
+}) => {
   const today = localDay(profile.timezone);
+
   const [month, setMonth] = useState(today.slice(0, 7));
   const [selected, setSelected] = useState<string | null>(null);
+
   const [pending, start] = useTransition();
   const [error, setError] = useState('');
   const [readIds, setReadIds] = useState<string[]>([]);
+
   const unread = notifications.filter((n) => !n.read_at && !readIds.includes(n.id));
+
   const router = useRouter();
   const calendar = useRef<HTMLElement>(null);
   const layout = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const panel = calendar.current;
     const container = layout.current;
+
     if (!panel || !container || typeof ResizeObserver === 'undefined') return;
+
     const measure = () => {
       container.style.setProperty('--calendar-height', `${panel.getBoundingClientRect().height}px`);
     };
+
     measure();
+
     const observer = new ResizeObserver(measure);
+
     observer.observe(panel);
+
     return () => observer.disconnect();
   }, []);
+
   const upcoming = items
     .filter((i) => isUpcoming(i, profile.timezone))
     .sort((a, b) => (a.fields.release_date ?? '').localeCompare(b.fields.release_date ?? ''));
+
   const first = new Date(`${month}-01T12:00:00Z`);
   const days = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
   const padding = (first.getUTCDay() + 6) % 7;
+
   const dayItems = (day: string) =>
     items.filter((i) => i.fields.release_precision === 'day' && i.fields.release_date === day);
+
   const visible = selected
     ? items.filter(
         (i) => i.fields.release_precision === 'day' && i.fields.release_date === selected
       )
     : upcoming;
-  function shift(delta: number) {
+
+  const shift = (delta: number) => {
     const next = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + delta, 1));
+
     setMonth(next.toISOString().slice(0, 7));
     setSelected(null);
-  }
-  function markRead(id?: string) {
+  };
+
+  const markRead = (id?: string) => {
     setError('');
     start(async () => {
       try {
         const result = id ? await markNotificationRead(id) : await markAllNotificationsRead();
+
         if (result.error) setError(result.error);
         else {
           setReadIds((previous) => [...previous, ...(id ? [id] : unread.map((n) => n.id))]);
@@ -70,7 +91,8 @@ export default function Calendar({
         setError('Could not mark notifications read. Please try again.');
       }
     });
-  }
+  };
+
   return (
     <>
       <header className="pageHeading">
@@ -110,6 +132,7 @@ export default function Calendar({
             {Array.from({ length: days }, (_, i) => {
               const day = `${month}-${String(i + 1).padStart(2, '0')}`;
               const titles = dayItems(day);
+
               return (
                 <button
                   type="button"
@@ -242,4 +265,6 @@ export default function Calendar({
       </section>
     </>
   );
-}
+};
+
+export default Calendar;

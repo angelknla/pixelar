@@ -1,9 +1,11 @@
 import { apiAccount, apiError } from '@/lib/api';
 import { downloadAvatar } from '@/lib/avatar';
-export async function GET(request: Request) {
+
+export const GET = async (request: Request) => {
   try {
     const account = await apiAccount(request);
     const blob = await downloadAvatar(account.memberId);
+
     return blob
       ? new Response(blob, {
           headers: {
@@ -16,4 +18,4 @@ export async function GET(request: Request) {
   } catch (error) {
     return apiError(error);
   }
-}
+};

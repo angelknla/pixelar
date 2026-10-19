@@ -10,23 +10,29 @@ type InstallPrompt = Event & {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 };
 
-export default function InstallApp({ sidebarTargetId }: { sidebarTargetId?: string }) {
+const InstallApp = ({ sidebarTargetId }: { sidebarTargetId?: string }) => {
   const [prompt, setPrompt] = useState<InstallPrompt | null>(null);
   const [ios, setIos] = useState(false);
+
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const [sidebarTarget, setSidebarTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!sidebarTargetId) return;
+
     const desktop = window.matchMedia('(min-width: 651px)');
+
     const place = () => {
       setSidebarTarget(desktop.matches ? document.getElementById(sidebarTargetId) : null);
     };
+
     place();
     desktop.addEventListener('change', place);
+
     return () => desktop.removeEventListener('change', place);
   }, [sidebarTargetId]);
 
@@ -36,30 +42,37 @@ export default function InstallApp({ sidebarTargetId }: { sidebarTargetId?: stri
         console.warn('Pixelar app worker registration failed.');
       });
     }
+
     const standalone = window.matchMedia('(display-mode: standalone)');
     const appleStandalone = (navigator as Navigator & { standalone?: boolean }).standalone;
+
     if (standalone.matches || appleStandalone) return;
 
     const appleDevice =
       /iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
     setIos(appleDevice);
 
     const beforeInstall = (event: Event) => {
       event.preventDefault();
       setPrompt(event as InstallPrompt);
     };
+
     const installed = () => {
       setPrompt(null);
       setIos(false);
       dialog.current?.close();
     };
+
     const displayChanged = () => {
       if (standalone.matches) installed();
     };
+
     window.addEventListener('beforeinstallprompt', beforeInstall);
     window.addEventListener('appinstalled', installed);
     standalone.addEventListener('change', displayChanged);
+
     return () => {
       window.removeEventListener('beforeinstallprompt', beforeInstall);
       window.removeEventListener('appinstalled', installed);
@@ -67,13 +80,17 @@ export default function InstallApp({ sidebarTargetId }: { sidebarTargetId?: stri
     };
   }, []);
 
-  async function install() {
+  const install = async () => {
     setError('');
+
     if (!prompt) {
       dialog.current?.showModal();
+
       return;
     }
+
     setBusy(true);
+
     try {
       await prompt.prompt();
       await prompt.userChoice;
@@ -83,9 +100,10 @@ export default function InstallApp({ sidebarTargetId }: { sidebarTargetId?: stri
       setPrompt(null);
       setBusy(false);
     }
-  }
+  };
 
   if (!prompt && !ios && !error) return null;
+
   const controls = (
     <>
       {(prompt || ios) && (
@@ -124,5 +142,8 @@ export default function InstallApp({ sidebarTargetId }: { sidebarTargetId?: stri
       </dialog>
     </>
   );
+
   return sidebarTarget ? createPortal(controls, sidebarTarget) : controls;
-}
+};
+
+export default InstallApp;

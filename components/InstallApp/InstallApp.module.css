@@ -7,6 +7,7 @@
   color: var(--text);
   font-size: 1rem;
 }
+
 .dialog {
   width: min(28rem, calc(100% - 2.5rem));
   padding: 2rem;
@@ -15,24 +16,30 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
+
 .dialog::backdrop {
   background: #000a;
 }
+
 .dialog h2 {
   font-size: clamp(1.35rem, 5vw, 1.75rem);
   margin: 0 2.5rem 1.5rem 0;
 }
+
 .dialog p {
   color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.7;
 }
+
 .dialog p:last-child {
   margin-bottom: 0;
 }
+
 .dialog p svg {
   vertical-align: middle;
 }
+
 .close {
   position: absolute;
   top: 0.5rem;
@@ -43,6 +50,7 @@
   height: 2.75rem;
   padding: 0;
 }
+
 .error {
   max-width: 15rem;
   font-size: 0.75rem;

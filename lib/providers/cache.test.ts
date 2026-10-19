@@ -3,10 +3,12 @@ import { EMPTY_FIELDS } from '@/lib/library';
 import { getMetadata } from './index';
 
 const mocks = vi.hoisted(() => ({ db: vi.fn(), details: vi.fn() }));
+
 vi.mock('server-only', () => ({}));
 vi.mock('@/lib/data/library', () => ({ db: mocks.db }));
 vi.mock('./rawg', () => ({ rawg: { details: mocks.details } }));
 vi.mock('./tmdb', () => ({ tmdb: { details: mocks.details } }));
+
 const cached = {
   id: 'cached',
   provider: 'rawg',
@@ -23,8 +25,10 @@ const cached = {
   },
   fetched_at: '2020-01-01T00:00:00Z',
 };
+
 let existing: { data: typeof cached | null; error: object | null };
 let query: Record<string, ReturnType<typeof vi.fn>>;
+
 beforeEach(() => {
   vi.clearAllMocks();
   existing = { data: cached, error: null };
@@ -41,6 +45,7 @@ beforeEach(() => {
   mocks.db.mockReturnValue({ from: vi.fn().mockReturnValue(query) });
   mocks.details.mockResolvedValue({ ...cached.fields, title: 'Fresh title' });
 });
+
 it('reuses old persisted metadata without provider requests, including linking', async () => {
   expect(await getMetadata('rawg', '1', 'game', 'GB')).toEqual(cached);
   expect(await getMetadata('rawg', '1', 'game', 'GB')).toEqual(cached);
@@ -48,6 +53,7 @@ it('reuses old persisted metadata without provider requests, including linking',
   expect(query.upsert).not.toHaveBeenCalled();
   expect(query.eq).toHaveBeenCalledWith('region', 'GB');
 });
+
 it('explicitly refreshes and caches fetched values without touching personal items', async () => {
   expect(await getMetadata('rawg', '1', 'game', 'GB', true)).toMatchObject({
     fields: { title: 'Fresh title' },
@@ -62,38 +68,53 @@ it('explicitly refreshes and caches fetched values without touching personal ite
     mocks.db().from.mock.calls.every(([table]: [string]) => table === 'pixelar_metadata_cache')
   ).toBe(true);
 });
+
 it('coalesces overlapping refreshes, then permits a later explicit refresh', async () => {
   let finish!: (value: typeof cached.fields) => void;
+
   mocks.details.mockImplementationOnce(
     () =>
       new Promise((resolve) => {
         finish = resolve;
       })
   );
+
   const first = getMetadata('rawg', '1', 'game', 'GB', true);
   const second = getMetadata('rawg', '1', 'game', 'GB', true);
+
   await vi.waitFor(() => expect(mocks.details).toHaveBeenCalledTimes(1));
   finish(cached.fields);
   await Promise.all([first, second]);
+
   expect(query.upsert).toHaveBeenCalledTimes(1);
+
   await getMetadata('rawg', '1', 'game', 'GB', true);
+
   expect(mocks.details).toHaveBeenCalledTimes(2);
 });
+
 it('keeps failed refreshes out of the cache and permits retry', async () => {
   mocks.details.mockRejectedValueOnce(new Error('Provider unavailable.'));
+
   await expect(getMetadata('rawg', '1', 'game', 'GB', true)).rejects.toThrow(
     'Provider unavailable.'
   );
   expect(query.upsert).not.toHaveBeenCalled();
   expect(await getMetadata('rawg', '1', 'game', 'GB')).toEqual(cached);
+
   await getMetadata('rawg', '1', 'game', 'GB', true);
+
   expect(mocks.details).toHaveBeenCalledTimes(2);
 });
+
 it('fetches uncached metadata and rejects cache failures or incompatible providers', async () => {
   existing.data = null;
   await getMetadata('rawg', '1', 'game', 'GB');
+
   expect(mocks.details).toHaveBeenCalledTimes(1);
+
   existing.error = {};
+
   await expect(getMetadata('rawg', '1', 'game', 'GB')).rejects.toThrow(
     'Metadata cache unavailable.'
   );

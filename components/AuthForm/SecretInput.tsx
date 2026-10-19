@@ -8,8 +8,9 @@ type SecretInputProps = Omit<ComponentProps<'input'>, 'type' | 'className'> & {
   secretLabel: string;
 };
 
-export default function SecretInput({ secretLabel, disabled, ...props }: SecretInputProps) {
+const SecretInput = ({ secretLabel, disabled, ...props }: SecretInputProps) => {
   const [visible, setVisible] = useState(false);
+
   const toggleLabel = `${visible ? 'Hide' : 'Show'} ${secretLabel}`;
 
   return (
@@ -34,4 +35,6 @@ export default function SecretInput({ secretLabel, disabled, ...props }: SecretI
       </button>
     </div>
   );
-}
+};
+
+export default SecretInput;

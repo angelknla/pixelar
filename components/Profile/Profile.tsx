@@ -1,34 +1,35 @@
 'use client';
+
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { lock } from '@/app/auth-actions';
 import { updateProfile } from '@/app/profile-actions';
-import { PLATFORMS, serviceLabel, SERVICES } from '@/lib/library';
+import { PLATFORMS, SERVICES, serviceLabel } from '@/lib/library';
 import type { MemberAccount } from '@/types/auth';
 import type { ProfileRow } from '@/types/library';
 import AvatarUpload from './AvatarUpload';
 import Theme from './Theme';
-export default function Profile({
-  account,
-  profile,
-}: {
-  account: MemberAccount;
-  profile: ProfileRow;
-}) {
+
+const Profile = ({ account, profile }: { account: MemberAccount; profile: ProfileRow }) => {
   const router = useRouter();
   const [pending, start] = useTransition();
+
   const [name, setName] = useState(account.name);
   const [email, setEmail] = useState(account.email);
   const [password, setPassword] = useState('');
+
   const [settings, setSettings] = useState<ProfileRow>({
     ...profile,
     theme: profile.theme === 'light' ? 'light' : 'dark',
   });
+
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+
   const patch = <K extends keyof ProfileRow>(key: K, value: ProfileRow[K]) =>
     setSettings((prev) => ({ ...prev, [key]: value }));
-  function run(work: () => Promise<void>) {
+
+  const run = (work: () => Promise<void>) => {
     setError('');
     setMessage('');
     start(async () => {
@@ -38,7 +39,8 @@ export default function Profile({
         setError(e instanceof Error ? e.message : 'Could not update profile.');
       }
     });
-  }
+  };
+
   const toggle = (key: 'platforms' | 'services', value: string) =>
     patch(
       key,
@@ -46,6 +48,7 @@ export default function Profile({
         ? settings[key].filter((v) => v !== value)
         : [...settings[key], value]
     );
+
   return (
     <>
       <Theme theme={settings.theme} />
@@ -71,7 +74,9 @@ export default function Profile({
             e.preventDefault();
             run(async () => {
               const result = await updateProfile({ ...settings, name, email, password });
+
               if (result.error) throw new Error(result.error);
+
               setPassword('');
               router.refresh();
               setMessage('Profile saved.');
@@ -238,4 +243,6 @@ export default function Profile({
       </div>
     </>
   );
-}
+};
+
+export default Profile;

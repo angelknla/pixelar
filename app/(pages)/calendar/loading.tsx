@@ -1,1 +1,1 @@
-export { CalendarLoading as default } from '@components/Loading/Loading';
+export { default } from '@components/Loading/CalendarLoading';

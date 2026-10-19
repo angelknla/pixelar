@@ -1,6 +1,6 @@
 'use client';
 
-export default function ErrorPage({ reset }: { reset: () => void }) {
+const ErrorPage = ({ reset }: { reset: () => void }) => {
   return (
     <section>
       <h1>Something went wrong</h1>
@@ -13,4 +13,6 @@ export default function ErrorPage({ reset }: { reset: () => void }) {
       </button>
     </section>
   );
-}
+};
+
+export default ErrorPage;

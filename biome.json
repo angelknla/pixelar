@@ -13,7 +13,8 @@
       "preset": "recommended",
       "complexity": {
         "noForEach": "off",
-        "noImportantStyles": "off"
+        "noImportantStyles": "off",
+        "useArrowFunction": "error"
       },
       "style": {
         "noNonNullAssertion": "off",

@@ -3,11 +3,13 @@
   justify-items: center;
   min-width: 0;
 }
+
 .frame {
   position: relative;
   width: 128px;
   height: 128px;
 }
+
 .picture {
   width: 100%;
   height: 100%;
@@ -23,11 +25,13 @@
   border: 2px solid var(--border);
   box-shadow: 0 0 0 6px var(--surface);
 }
+
 .picture img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .input {
   position: absolute;
   width: 1px;
@@ -39,10 +43,12 @@
   overflow: hidden;
   clip-path: inset(50%);
 }
+
 .frame:focus-within .picture {
   outline: 3px solid var(--accent);
   outline-offset: 4px;
 }
+
 .edit {
   display: grid;
   place-items: center;
@@ -57,10 +63,12 @@
   color: var(--on-primary);
   pointer-events: none;
 }
+
 .frame[aria-busy="true"] .picture {
   cursor: wait;
   opacity: 0.65;
 }
+
 .hint {
   font-size: 0.75rem;
   color: var(--muted);

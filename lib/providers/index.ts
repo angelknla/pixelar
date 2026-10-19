@@ -3,21 +3,25 @@ import { db } from '@/lib/data/library';
 import type { ItemKind, MetadataRow, Provider } from '@/types/library';
 import { rawg } from './rawg';
 import { tmdb } from './tmdb';
-export function providerFor(provider: Provider, kind: ItemKind) {
+
+export const providerFor = (provider: Provider, kind: ItemKind) => {
   if (provider === 'rawg' && kind === 'game') return rawg;
   if (provider === 'tmdb' && (kind === 'movie' || kind === 'show')) return tmdb;
+
   throw new Error('Invalid provider for this title.');
-}
+};
+
 const pendingMetadata = new Map<string, Promise<MetadataRow>>();
 
-export async function getMetadata(
+export const getMetadata = async (
   provider: Provider,
   id: string,
   kind: ItemKind,
   region: string,
   refresh = false
-): Promise<MetadataRow> {
+): Promise<MetadataRow> => {
   providerFor(provider, kind);
+
   const client = db();
   const existing = await client
     .from('pixelar_metadata_cache')
@@ -27,11 +31,15 @@ export async function getMetadata(
     .eq('kind', kind)
     .eq('region', region)
     .maybeSingle();
+
   if (existing.error) throw new Error('Metadata cache unavailable.');
+
   const key = JSON.stringify([provider, id, kind, region]);
   const pending = pendingMetadata.get(key);
+
   if (pending) return pending;
   if (existing.data && !refresh) return existing.data;
+
   const request = (async () => {
     const fields = await providerFor(provider, kind).details(id, kind, region);
     const { data, error } = await client
@@ -42,9 +50,13 @@ export async function getMetadata(
       )
       .select('*')
       .single();
+
     if (error) throw new Error('Could not cache metadata.');
+
     return data;
   })().finally(() => pendingMetadata.delete(key));
+
   pendingMetadata.set(key, request);
+
   return request;
-}
+};

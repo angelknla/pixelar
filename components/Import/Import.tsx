@@ -1,4 +1,5 @@
 'use client';
+
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { saveReviewedImport } from '@/app/import-actions';
@@ -20,24 +21,32 @@ interface ReviewRow extends ImportRow {
   metadata: MetadataRow | null;
   error: string;
 }
-export default function Import({ items, profile }: { items: LibraryItem[]; profile: ProfileRow }) {
+
+const Import = ({ items, profile }: { items: LibraryItem[]; profile: ProfileRow }) => {
   const router = useRouter();
+
   const [notes, setNotes] = useState('');
   const [rows, setRows] = useState<ReviewRow[]>([]);
+
   const [pending, start] = useTransition();
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [reviewing, setReviewing] = useState(false);
+
   const patch = (id: string, value: Partial<ReviewRow>) =>
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...value } : r)));
-  async function suggest(row: ReviewRow) {
+
+  const suggest = async (row: ReviewRow) => {
     if (!row.kind) return;
+
     try {
       const response = await fetch(
         `/api/search?q=${encodeURIComponent(row.title)}&kind=${row.kind}`
       );
       const data = await response.json();
+
       if (!response.ok) throw new Error(data.error);
+
       patch(row.id, {
         results: data.results,
         error: data.results.length ? '' : 'No match found. This title can be saved unmatched.',
@@ -45,8 +54,9 @@ export default function Import({ items, profile }: { items: LibraryItem[]; profi
     } catch (e) {
       patch(row.id, { error: e instanceof Error ? e.message : 'Search unavailable.' });
     }
-  }
-  async function link(row: ReviewRow, result: SearchResult) {
+  };
+
+  const link = async (row: ReviewRow, result: SearchResult) => {
     try {
       const response = await fetch('/api/metadata', {
         method: 'POST',
@@ -54,12 +64,15 @@ export default function Import({ items, profile }: { items: LibraryItem[]; profi
         body: JSON.stringify(result),
       });
       const data = await response.json();
+
       if (!response.ok) throw new Error(data.error);
+
       patch(row.id, { metadata: data.metadata, error: '' });
     } catch (e) {
       patch(row.id, { error: e instanceof Error ? e.message : 'Could not load details.' });
     }
-  }
+  };
+
   return (
     <>
       <header className="pageHeading">
@@ -93,14 +106,19 @@ export default function Import({ items, profile }: { items: LibraryItem[]; profi
             disabled={!notes.trim() || pending}
             onClick={() => {
               const parsed = parseNotes(notes, items);
+
               if (parsed.length > 200) {
                 setError('Please import at most 200 titles at a time.');
+
                 return;
               }
+
               if (!parsed.length) {
                 setError('No titles found. Add a title below a heading.');
+
                 return;
               }
+
               const review = parsed.map((r) => ({
                 ...r,
                 skip: r.duplicate,
@@ -108,6 +126,7 @@ export default function Import({ items, profile }: { items: LibraryItem[]; profi
                 metadata: null,
                 error: '',
               }));
+
               setRows(review);
               setReviewing(true);
               setError('');
@@ -173,6 +192,7 @@ export default function Import({ items, profile }: { items: LibraryItem[]; profi
                     value={row.kind ?? ''}
                     onChange={(e) => {
                       const kind = e.target.value as ItemKind;
+
                       patch(row.id, {
                         kind,
                         status: kind === 'game' ? 'backlog' : 'watchlist',
@@ -268,6 +288,7 @@ export default function Import({ items, profile }: { items: LibraryItem[]; profi
                     disabled={pending}
                     onChange={(e) => {
                       const result = row.results.find((r) => r.provider_id === e.target.value);
+
                       if (result) start(() => link(row, result));
                       else patch(row.id, { metadata: null });
                     }}
@@ -299,10 +320,13 @@ export default function Import({ items, profile }: { items: LibraryItem[]; profi
                 setMessage('');
                 start(async () => {
                   const selected = rows.filter((r) => !r.skip);
+
                   if (selected.some((r) => !r.kind)) {
                     setError('Choose a type for every title you want to import.');
+
                     return;
                   }
+
                   const values = selected.map((row) => {
                     const item: ItemInput = {
                       kind: row.kind!,
@@ -324,10 +348,13 @@ export default function Import({ items, profile }: { items: LibraryItem[]; profi
                       auto_move: true,
                       reminder_days: profile.default_release_reminder ? [0] : [],
                     };
+
                     return { key: row.id, item };
                   });
+
                   try {
                     const result = await saveReviewedImport(values);
+
                     setRows((prev) =>
                       prev
                         .filter((r) => !result.saved.includes(r.id))
@@ -337,10 +364,12 @@ export default function Import({ items, profile }: { items: LibraryItem[]; profi
                         }))
                     );
                     setMessage(`${result.saved.length} titles imported.`);
+
                     if (result.errors.length)
                       setError(
                         'Some titles could not be saved. They remain below for correction; saved titles will not be retried.'
                       );
+
                     router.refresh();
                   } catch {
                     setError(
@@ -369,4 +398,6 @@ export default function Import({ items, profile }: { items: LibraryItem[]; profi
       )}
     </>
   );
-}
+};
+
+export default Import;

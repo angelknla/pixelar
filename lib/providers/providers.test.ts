@@ -2,15 +2,18 @@ import { rawg } from './rawg';
 import { tmdb } from './tmdb';
 
 vi.mock('server-only', () => ({}));
+
 beforeEach(() => {
   vi.stubEnv('RAWG_API_KEY', 'test-key');
   vi.stubEnv('TMDB_API_KEY', 'test-key');
   vi.stubEnv('OMDB_API_KEY', '');
 });
+
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
+
 describe('server metadata providers', () => {
   it('caches search responses by their provider URL but explicitly bypasses detail caching', async () => {
     const fetch = vi
@@ -18,10 +21,12 @@ describe('server metadata providers', () => {
       .mockResolvedValueOnce(Response.json({ results: [] }))
       .mockResolvedValueOnce(Response.json({ results: [] }))
       .mockResolvedValueOnce(Response.json({ name: 'Game' }));
+
     vi.stubGlobal('fetch', fetch);
     await rawg.search('Game', 'game', 'GB');
     await tmdb.search('Film', 'movie', 'GB');
     await rawg.details('1', 'game', 'GB');
+
     expect(fetch.mock.calls[0][1]).toMatchObject({
       cache: 'force-cache',
       next: { revalidate: 3600 },
@@ -34,19 +39,24 @@ describe('server metadata providers', () => {
     expect(fetch.mock.calls[2][1]).toMatchObject({ cache: 'no-store' });
     expect(fetch.mock.calls[2][1]).not.toHaveProperty('next');
   });
+
   it('offers manual adding when keys are missing', async () => {
     vi.stubEnv('RAWG_API_KEY', '');
+
     await expect(rawg.search('Hades', 'game', 'GB')).rejects.toThrow(/manually/);
   });
+
   it('does not include provider request URLs or credentials in errors', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockRejectedValue(new Error('https://api.rawg.io?key=test-key'))
     );
+
     await expect(rawg.search('Hades', 'game', 'GB')).rejects.toThrow(
       'The metadata provider is unavailable. Try again later or add manually.'
     );
   });
+
   it('normalizes RAWG detail fields and nullable scores', async () => {
     vi.stubGlobal(
       'fetch',
@@ -61,6 +71,7 @@ describe('server metadata providers', () => {
         })
       )
     );
+
     expect(await rawg.details('1', 'game', 'GB')).toMatchObject({
       title: 'Hades',
       metascore: 93,
@@ -69,8 +80,10 @@ describe('server metadata providers', () => {
       release_precision: 'day',
     });
   });
+
   it('normalizes UK streaming suggestions and tolerates optional OMDb failure', async () => {
     vi.stubEnv('OMDB_API_KEY', 'test-key');
+
     const fetch = vi
       .fn()
       .mockResolvedValueOnce(
@@ -92,7 +105,9 @@ describe('server metadata providers', () => {
         })
       )
       .mockRejectedValueOnce(new Error('OMDb timeout'));
+
     vi.stubGlobal('fetch', fetch);
+
     expect(await tmdb.details('1', 'movie', 'GB')).toMatchObject({
       title: 'Film',
       services: ['Prime Video', 'Apple TV'],

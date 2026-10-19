@@ -24,8 +24,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: '#080d17' };
 
-export default async function RootLayout({ children }: { children: ReactNode }) {
+const RootLayout = async ({ children }: { children: ReactNode }) => {
   const signedIn = Boolean(await getCurrentAccount());
+
   return (
     <html lang="en">
       <body className={signedIn ? 'signedIn' : undefined}>
@@ -38,4 +39,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;

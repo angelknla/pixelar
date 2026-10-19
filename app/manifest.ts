@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-export default function manifest(): MetadataRoute.Manifest {
+const manifest = (): MetadataRoute.Manifest => {
   return {
     id: '/',
     name: 'Pixelar',
@@ -22,4 +22,6 @@ export default function manifest(): MetadataRoute.Manifest {
       },
     ],
   };
-}
+};
+
+export default manifest;

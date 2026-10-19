@@ -1,5 +1,7 @@
-import { LibraryLoading } from '@components/Loading/Loading';
+import LibraryLoading from '@components/Loading/LibraryLoading';
 
-export default function Loading() {
+const Loading = () => {
   return <LibraryLoading kind="screen" />;
-}
+};
+
+export default Loading;

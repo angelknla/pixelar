@@ -1,1 +1,1 @@
-export { ProfileLoading as default } from '@components/Loading/Loading';
+export { default } from '@components/Loading/ProfileLoading';

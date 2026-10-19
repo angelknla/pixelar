@@ -7,29 +7,38 @@ import { useCallback, useEffect, useId, useRef } from 'react';
 import AuthForm from './AuthForm';
 import styles from './SignInModal.module.css';
 
-export default function SignInModal({ available }: { available: boolean }) {
+const SignInModal = ({ available }: { available: boolean }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const open = searchParams.get('signin') === '1';
+
   const dialog = useRef<HTMLDialogElement>(null);
   const headingId = useId();
   const close = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
+
     params.delete('signin');
     router.replace(params.size ? `/?${params}` : '/', { scroll: false });
   }, [router, searchParams]);
 
   useEffect(() => {
     const element = dialog.current;
+
     if (!element) return;
+
     if (!open) {
       element.close();
+
       return;
     }
+
     const previousOverflow = document.body.style.overflow;
+
     document.body.style.overflow = 'hidden';
     element.showModal();
     element.querySelector<HTMLInputElement>('input[name="login"]:enabled')?.focus();
+
     return () => {
       element.close();
       document.body.style.overflow = previousOverflow;
@@ -53,7 +62,9 @@ export default function SignInModal({ available }: { available: boolean }) {
       }}
       onClick={(event) => {
         if (event.target !== event.currentTarget) return;
+
         const bounds = event.currentTarget.getBoundingClientRect();
+
         if (
           event.clientX < bounds.left ||
           event.clientX > bounds.right ||
@@ -78,4 +89,6 @@ export default function SignInModal({ available }: { available: boolean }) {
       )}
     </dialog>
   );
-}
+};
+
+export default SignInModal;

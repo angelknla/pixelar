@@ -2,7 +2,7 @@ import InstallApp from '@components/InstallApp/InstallApp';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export default function Footer({ signedIn }: { signedIn: boolean }) {
+const Footer = ({ signedIn }: { signedIn: boolean }) => {
   return (
     <footer className="appFooter">
       <div className="footerInner">
@@ -19,4 +19,6 @@ export default function Footer({ signedIn }: { signedIn: boolean }) {
       </div>
     </footer>
   );
-}
+};
+
+export default Footer;

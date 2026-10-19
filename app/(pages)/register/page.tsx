@@ -6,12 +6,15 @@ import { isSupabaseConfigured } from '@/lib/supabase/server';
 
 export const metadata: Metadata = { title: 'Create account | Pixelar' };
 
-export default async function RegisterPage() {
+const RegisterPage = async () => {
   if (await isUnlocked()) redirect('/');
+
   return (
     <AuthForm
       mode="register"
       available={isSupabaseConfigured() && Boolean(process.env.APP_PASSCODE)}
     />
   );
-}
+};
+
+export default RegisterPage;

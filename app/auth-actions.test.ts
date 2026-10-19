@@ -32,7 +32,9 @@ vi.mock('@/lib/account', async (importOriginal) => ({
 
 const form = (values: Record<string, string>) => {
   const data = new FormData();
+
   for (const [name, value] of Object.entries(values)) data.set(name, value);
+
   return data;
 };
 
@@ -51,11 +53,14 @@ afterEach(() => vi.unstubAllEnvs());
 describe('account actions', () => {
   it('fails closed when the database or app passcode is unavailable', async () => {
     mocks.configured.mockReturnValue(false);
+
     expect(
       await loginWithCredentials({}, form({ login: 'alice', password: 'password' }))
     ).toHaveProperty('error');
+
     mocks.configured.mockReturnValue(true);
     vi.stubEnv('APP_PASSCODE', '');
+
     expect(await registerAccount({}, form({}))).toHaveProperty('error');
     expect(mocks.credential).not.toHaveBeenCalled();
     expect(mocks.createAccount).not.toHaveBeenCalled();
@@ -64,10 +69,12 @@ describe('account actions', () => {
 
   it('does not establish a session for an incorrect password', async () => {
     mocks.verifyPassword.mockResolvedValue(false);
+
     const result = await loginWithCredentials(
       {},
       form({ login: 'alice', password: 'wrong-password' })
     );
+
     expect(result.error).toBe('Username/email or password is incorrect.');
     expect(mocks.setCookie).not.toHaveBeenCalled();
     expect(mocks.redirect).not.toHaveBeenCalled();
@@ -75,12 +82,15 @@ describe('account actions', () => {
 
   it('normalizes login and creates signed, secure production cookies', async () => {
     vi.stubEnv('NODE_ENV', 'production');
+
     await expect(
       loginWithCredentials({}, form({ login: ' ALICE@EXAMPLE.COM ', password: 'password' }))
     ).rejects.toThrow('redirect:/');
     expect(mocks.credential).toHaveBeenCalledWith('alice@example.com');
+
     const unlock = mocks.setCookie.mock.calls.find(([name]) => name === COOKIE_NAME);
     const viewer = mocks.setCookie.mock.calls.find(([name]) => name === VIEWER_COOKIE);
+
     expect(unlock?.[1]).toBe(await deriveToken('test-app-passcode'));
     expect(await readViewerToken(viewer?.[1], 'test-app-passcode')).toBe('member-1');
     expect(viewer?.[2]).toEqual({

@@ -11,6 +11,7 @@ import {
 describe('authentication tokens', () => {
   it('derives stable tokens without exposing the passcode', async () => {
     const token = await deriveToken('test-passcode');
+
     expect(token).toBe(await deriveToken('test-passcode'));
     expect(token).not.toContain('test-passcode');
     expect(token).not.toBe(await deriveToken('another-passcode'));
@@ -18,6 +19,7 @@ describe('authentication tokens', () => {
 
   it('accepts a signed identity and rejects altered identities and secrets', async () => {
     const token = await createViewerToken('member-id', 'test-secret');
+
     expect(await readViewerToken(token, 'test-secret')).toBe('member-id');
     expect(await readViewerToken(token.replace('member-id', 'other-id'), 'test-secret')).toBeNull();
     expect(await readViewerToken(token, 'other-secret')).toBeNull();
@@ -37,6 +39,7 @@ describe('authentication tokens', () => {
     const caelumSignature = createHmac('sha256', secret)
       .update(`caelum:member:v1:${memberId}`)
       .digest('base64url');
+
     expect(tokensMatch(caelumUnlock, await deriveToken(secret))).toBe(false);
     expect(await readViewerToken(`${memberId}.${caelumSignature}`, secret)).toBeNull();
     expect(COOKIE_NAME).toBe('pixelar_unlock');

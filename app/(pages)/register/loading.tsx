@@ -1,1 +1,1 @@
-export { RegisterLoading as default } from '@components/Loading/Loading';
+export { default } from '@components/Loading/RegisterLoading';

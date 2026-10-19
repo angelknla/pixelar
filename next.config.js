@@ -2,6 +2,7 @@ const remotePatterns = [];
 
 if (process.env.SUPABASE_URL) {
   const supabaseUrl = new URL(process.env.SUPABASE_URL);
+
   remotePatterns.push({
     protocol: supabaseUrl.protocol.slice(0, -1),
     hostname: supabaseUrl.hostname,
@@ -11,7 +12,7 @@ if (process.env.SUPABASE_URL) {
 }
 
 module.exports = {
-  async redirects() {
+  redirects: async () => {
     return [{ source: '/login', destination: '/?signin=1', permanent: false }];
   },
   reactStrictMode: true,

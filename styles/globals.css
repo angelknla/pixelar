@@ -34,6 +34,7 @@
   --watched: #98be8d;
   color-scheme: dark;
 }
+
 :root[data-theme="light"] {
   --background: #edf2f8;
   --surface: #fff;
@@ -64,9 +65,11 @@
   --watched: #5f7837;
   color-scheme: light;
 }
+
 * {
   box-sizing: border-box;
 }
+
 body {
   margin: 0;
   min-height: 100svh;
@@ -78,17 +81,20 @@ body {
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
 }
+
 main {
   flex: 1;
   width: min(100%, calc(var(--page-width) + 2 * var(--page-gutter)));
   margin: 0 auto;
   padding: 3rem var(--page-gutter) 5rem;
 }
+
 .signedIn main {
   margin-left: 220px;
   width: calc(100% - 220px);
   max-width: none;
 }
+
 h1,
 h2,
 h3 {
@@ -96,23 +102,28 @@ h3 {
   overflow-wrap: anywhere;
   letter-spacing: -0.035em;
 }
+
 h1 {
   font-size: clamp(2rem, 3.5vw, 3.4rem);
   margin: 0.5rem 0 1rem;
 }
+
 h2 {
   font-size: 1.6rem;
 }
+
 a {
   color: var(--accent);
   text-underline-offset: 0.25em;
 }
+
 button,
 input,
 select,
 textarea {
   font: inherit;
 }
+
 button,
 .buttonLink {
   min-height: 44px;
@@ -129,24 +140,29 @@ button,
   font-weight: 600;
   text-decoration: none;
 }
+
 button:hover,
 .buttonLink:hover {
   background: var(--surface-soft);
 }
+
 button:disabled {
   opacity: 0.55;
   cursor: wait;
 }
+
 .primary {
   background: var(--primary);
   color: var(--on-primary);
   border-color: var(--primary);
   font-weight: 700;
 }
+
 .primary:hover {
   filter: brightness(1.12);
   background: var(--primary);
 }
+
 input,
 select,
 textarea {
@@ -158,6 +174,7 @@ textarea {
   min-height: 44px;
   max-width: 100%;
 }
+
 select {
   appearance: none;
   padding-right: 2.25rem;
@@ -166,9 +183,11 @@ select {
   background-size: 16px 16px;
   background-repeat: no-repeat;
 }
+
 textarea {
   resize: vertical;
 }
+
 label {
   display: grid;
   min-width: 0;
@@ -176,12 +195,14 @@ label {
   font-size: 0.9rem;
   font-weight: 600;
 }
+
 fieldset {
   min-width: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-small);
   padding: 1rem;
 }
+
 legend {
   font-size: 0.9rem;
   font-weight: 700;
@@ -189,10 +210,12 @@ legend {
   max-width: 100%;
   line-height: 1.5;
 }
+
 :focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
+
 .skipLink {
   position: fixed;
   top: -5rem;
@@ -202,9 +225,11 @@ legend {
   background: var(--text);
   color: var(--background);
 }
+
 .skipLink:focus {
   top: 1rem;
 }
+
 .srOnly {
   position: absolute;
   width: 1px;
@@ -212,6 +237,7 @@ legend {
   overflow: hidden;
   clip-path: inset(50%);
 }
+
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -219,6 +245,7 @@ legend {
   font-weight: 800;
   color: var(--accent);
 }
+
 .hint,
 .cardMeta,
 .cardDate {
@@ -226,6 +253,7 @@ legend {
   color: var(--muted);
   overflow-wrap: anywhere;
 }
+
 .errorMessage {
   color: var(--error);
   background: var(--surface);
@@ -233,31 +261,37 @@ legend {
   border-radius: var(--radius-small);
   overflow-wrap: anywhere;
 }
+
 .successMessage {
   padding: 1rem;
   background: var(--accent-soft);
   border-radius: var(--radius-small);
   overflow-wrap: anywhere;
 }
+
 .inline {
   display: flex;
   gap: 0.75rem;
   align-items: center;
 }
+
 .inline input {
   flex: 1;
   min-width: 0;
 }
+
 .checkbox {
   display: flex;
   align-items: flex-start;
   gap: 0.6rem;
 }
+
 .checkbox input {
   min-height: 0;
   flex-shrink: 0;
   margin-top: 0.3rem;
 }
+
 .textButton {
   font-size: 0.75rem;
   min-height: 30px;
@@ -267,9 +301,11 @@ legend {
   color: var(--accent);
   background: transparent;
 }
+
 .danger {
   color: var(--error);
 }
+
 .appNav {
   position: fixed;
   left: 0;
@@ -283,6 +319,7 @@ legend {
   display: flex;
   flex-direction: column;
 }
+
 .navBrand {
   font-size: 1.8rem;
   font-weight: 850;
@@ -294,20 +331,24 @@ legend {
   gap: 0.55rem;
   margin-bottom: 2.5rem;
 }
+
 .brandMark {
   display: block;
   flex-shrink: 0;
   width: 38px;
   height: 38px;
 }
+
 .brandDot {
   color: var(--accent);
   margin-left: -0.55rem;
 }
+
 .navTabs {
   display: grid;
   gap: 0.5rem;
 }
+
 .navTabs a {
   display: flex;
   align-items: center;
@@ -318,48 +359,58 @@ legend {
   border-radius: 12px;
   font-weight: 650;
 }
+
 .navTabs .active {
   color: var(--accent);
   background: var(--accent-soft);
   box-shadow: inset 3px 0 var(--accent);
 }
+
 .navFooter {
   margin-top: auto;
   display: grid;
   gap: 1rem;
 }
+
 .navInstall {
   display: grid;
   gap: 0.5rem;
 }
+
 .navInstall > button {
   width: 100%;
   font-size: 0.8rem;
   padding-inline: 0.5rem;
 }
+
 .navNote {
   margin: 0;
   color: var(--muted);
   font-size: 0.8rem;
   line-height: 1.8;
 }
+
 .pageHeading {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 2rem;
 }
+
 .pageHeading > div {
   min-width: 0;
 }
+
 .pageHeading p {
   color: var(--muted);
   max-width: 42rem;
   margin-bottom: 0;
 }
+
 .pageHeading > button {
   flex-shrink: 0;
 }
+
 .libraryHero {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
@@ -369,9 +420,11 @@ legend {
   border-radius: 18px;
   background: linear-gradient(120deg, var(--hero-start), var(--hero-end) 70%);
 }
+
 .libraryHeroEmpty {
   grid-template-columns: 1fr;
 }
+
 .libraryHero .pageHeading {
   padding: 2.5rem;
   flex-direction: column;
@@ -379,15 +432,18 @@ legend {
   justify-content: center;
   gap: 1.5rem;
 }
+
 .libraryHero h1 {
   font-size: clamp(2.2rem, 3.6vw, 4rem);
   margin-bottom: 0.8rem;
 }
+
 .libraryHeroActions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
+
 .librarySync {
   width: 32px;
   height: 32px;
@@ -401,32 +457,39 @@ legend {
   display: grid;
   place-items: center;
 }
+
 .librarySync svg {
   width: 15px;
   height: 15px;
 }
+
 .librarySyncActive svg {
   animation: librarySyncSpin 1s linear infinite;
 }
+
 .libraryHero .librarySyncMessage {
   font-size: 0.8rem;
   color: var(--muted);
   margin: 0;
 }
+
 @keyframes librarySyncSpin {
   to {
     transform: rotate(360deg);
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .librarySyncActive svg {
     animation: none;
   }
 }
+
 .libraryHero p {
   max-width: 28rem;
   font-size: 0.95rem;
 }
+
 .heroFeature {
   position: relative;
   display: block;
@@ -435,12 +498,14 @@ legend {
   color: #fff;
   text-decoration: none;
 }
+
 .heroFeature > .artwork {
   position: absolute;
   inset: 0;
   height: 100%;
   aspect-ratio: auto;
 }
+
 .heroFeature::after {
   content: "";
   position: absolute;
@@ -448,19 +513,23 @@ legend {
   background: linear-gradient(180deg, #07112000 15%, #071120f0);
   pointer-events: none;
 }
+
 .heroFeature .artPlaceholder {
   background: linear-gradient(140deg, #256fb0, #0e2348);
   color: #9dccff;
   padding-bottom: 6rem;
 }
+
 .heroFeature .artPlaceholder span {
   display: none;
 }
+
 .heroFeature .artPlaceholder svg {
   width: 80px;
   height: 80px;
   opacity: 0.7;
 }
+
 .heroFeatureCaption {
   position: absolute;
   inset: auto 1.75rem 1.75rem;
@@ -468,6 +537,7 @@ legend {
   gap: 0.65rem;
   z-index: 1;
 }
+
 .heroStatus {
   justify-self: start;
   padding: 0.3rem 0.6rem;
@@ -479,18 +549,22 @@ legend {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
+
 .heroFeatureCaption strong {
   font-size: clamp(1.4rem, 2.1vw, 2rem);
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
+
 .heroFeatureAction {
   font-size: 0.8rem;
   color: #c7d7e9;
 }
+
 .heroFeature:focus-visible {
   outline-offset: -4px;
 }
+
 .libraryStats {
   display: flex;
   align-items: center;
@@ -501,24 +575,29 @@ legend {
   font-size: 0.8rem;
   color: var(--muted);
 }
+
 .libraryStats strong {
   color: var(--text);
   font-size: 1.2rem;
   margin-right: 0.3rem;
 }
+
 .libraryStats a {
   margin-left: auto;
   font-weight: 600;
 }
+
 .libraryControls {
   margin: 0 0 1.5rem;
 }
+
 .toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
 }
+
 .searchInput {
   display: flex;
   align-items: center;
@@ -530,22 +609,27 @@ legend {
   min-width: 0;
   color: var(--muted);
 }
+
 .searchInput > svg {
   flex-shrink: 0;
 }
+
 .searchInput input {
   border: 0;
   min-width: 0;
   width: 100%;
   background: transparent;
 }
+
 .searchInput:has(input:focus-visible) {
   box-shadow: inset 0 -2px var(--accent);
   color: var(--accent);
 }
+
 .searchInput input:focus-visible {
   outline: none;
 }
+
 .viewSwitcher {
   display: flex;
   flex-shrink: 0;
@@ -556,6 +640,7 @@ legend {
   border-radius: var(--radius-small);
   gap: 0.125rem;
 }
+
 .viewSwitcher button {
   border: 0;
   background: transparent;
@@ -564,21 +649,25 @@ legend {
   padding: 0;
   color: var(--muted);
 }
+
 .viewSwitcher button[aria-pressed="true"] {
   background: var(--accent-soft);
   color: var(--accent);
 }
+
 .libraryViewControls {
   display: flex;
   align-items: center;
   flex-shrink: 0;
   gap: 0.5rem;
 }
+
 .viewSwitcher.displaySwitcher {
   border-left: 1px solid var(--border);
   border-radius: 0;
   padding-left: 0.5rem;
 }
+
 .libraryFilterRow {
   display: flex;
   align-items: center;
@@ -587,6 +676,7 @@ legend {
   margin-top: 0.5rem;
   border-bottom: 1px solid var(--border);
 }
+
 .filters {
   display: flex;
   align-items: center;
@@ -597,6 +687,7 @@ legend {
   margin: 0;
   color: var(--muted);
 }
+
 .screenTypePicker {
   display: flex;
   gap: 0.35rem;
@@ -604,6 +695,7 @@ legend {
   padding: 0;
   margin: 1rem 0 0;
 }
+
 .screenTypePicker button {
   flex: 1;
   min-width: 0;
@@ -612,15 +704,18 @@ legend {
   font-size: 0.85rem;
   white-space: nowrap;
 }
+
 .screenTypePicker button[aria-pressed="true"] {
   background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent);
 }
+
 .libraryTypePicker {
   gap: 0.75rem;
   margin: 0;
 }
+
 .libraryTypePicker button {
   flex: 0 0 auto;
   padding: 0.6rem 0;
@@ -632,23 +727,29 @@ legend {
   color: var(--muted);
   font-size: 0.8rem;
 }
+
 .libraryTypePicker button[aria-pressed="true"] {
   background: transparent;
   color: var(--accent);
   border-color: var(--accent);
 }
+
 .libraryTypePicker button:hover {
   color: var(--text);
 }
+
 .editorTypePicker {
   margin: 0 0 1rem;
 }
+
 .editorTypePicker legend {
   padding: 0 0 0.65rem;
 }
+
 .editorTypePicker button {
   max-width: none;
 }
+
 .filterSelect {
   position: relative;
   display: flex;
@@ -663,10 +764,12 @@ legend {
   color: var(--muted);
   font-size: 0.8rem;
 }
+
 .filterSelect:hover {
   background-color: var(--surface-soft);
   color: var(--text);
 }
+
 .filterSelect select {
   position: absolute;
   inset: 0;
@@ -675,10 +778,12 @@ legend {
   opacity: 0;
   cursor: pointer;
 }
+
 .filterSelect:has(select:focus-visible) {
   box-shadow: inset 0 -2px var(--accent);
   color: var(--accent);
 }
+
 .filterValue,
 .filterCompactValue {
   min-width: 0;
@@ -686,15 +791,18 @@ legend {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .filterCompactValue {
   display: none;
 }
+
 .filters > .filterCount {
   margin-left: auto;
   font-size: 0.8rem;
   padding-left: 0.5rem;
   white-space: nowrap;
 }
+
 .shelf {
   --shelf-color: var(--accent);
   margin: 1.5rem 0;
@@ -702,45 +810,58 @@ legend {
   min-height: 100px;
   transition: background 0.15s;
 }
+
 .status-anticipated {
   --shelf-color: var(--anticipated);
 }
+
 .status-scheduled {
   --shelf-color: var(--scheduled);
 }
+
 .status-backlog {
   --shelf-color: var(--backlog);
 }
+
 .status-playing {
   --shelf-color: var(--playing);
 }
+
 .status-replay {
   --shelf-color: var(--replay);
 }
+
 .status-completed {
   --shelf-color: var(--completed);
 }
+
 .status-dropped {
   --shelf-color: var(--dropped);
 }
+
 .status-upcoming {
   --shelf-color: var(--upcoming);
 }
+
 .status-watchlist {
   --shelf-color: var(--watchlist);
 }
+
 .status-watching {
   --shelf-color: var(--watching);
 }
+
 .status-watched {
   --shelf-color: var(--watched);
 }
+
 .shelfHeading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.75rem;
 }
+
 .shelfHeading h2 {
   display: flex;
   align-items: center;
@@ -751,9 +872,11 @@ legend {
   min-width: 0;
   flex-wrap: wrap;
 }
+
 .shelfHeading > h2 {
   flex: 1;
 }
+
 .shelfToggle {
   padding: 0.25rem 0;
   min-height: 36px;
@@ -768,26 +891,32 @@ legend {
   min-width: 0;
   gap: 0.6rem;
 }
+
 .shelfName {
   overflow-wrap: anywhere;
 }
+
 .shelfToggle svg {
   flex-shrink: 0;
   color: var(--muted);
   transition: transform 0.15s;
 }
+
 .shelfToggle[aria-expanded="false"] svg {
   transform: rotate(-90deg);
 }
+
 .shelfHeadingActions {
   display: flex;
   align-items: center;
   flex-shrink: 0;
   gap: 0.25rem;
 }
+
 .shelfHeadingActions .hint {
   margin-right: 0.5rem;
 }
+
 .shelfMove,
 .shelfDrag {
   width: 32px;
@@ -797,22 +926,28 @@ legend {
   background: transparent;
   border: 0;
 }
+
 .shelfMove:disabled {
   opacity: 0.25;
 }
+
 .shelfDrag {
   touch-action: none;
   cursor: grab;
 }
+
 .shelfCollapsed {
   min-height: 0;
 }
+
 .shelfCollapsed .shelfHeading {
   margin-bottom: 0;
 }
+
 .shelfReorderTarget .shelfHeading {
   box-shadow: inset 0 -2px var(--accent);
 }
+
 .shelfDragOverlay {
   display: flex;
   align-items: center;
@@ -824,6 +959,7 @@ legend {
   box-shadow: var(--shadow);
   font-weight: 700;
 }
+
 .shelfSyncError {
   display: flex;
   align-items: center;
@@ -831,17 +967,21 @@ legend {
   flex-wrap: wrap;
   color: var(--error);
 }
+
 @media (max-width: 650px) {
   .shelfHeadingActions .hint {
     display: none;
   }
+
   .shelfHeading {
     gap: 0.5rem;
   }
+
   .shelfMove {
     display: none;
   }
 }
+
 .shelfDot {
   width: 3px;
   height: 20px;
@@ -849,6 +989,7 @@ legend {
   border-radius: 2px;
   flex-shrink: 0;
 }
+
 .countBadge {
   font-size: 0.75rem;
   font-weight: 600;
@@ -859,14 +1000,17 @@ legend {
   flex-shrink: 0;
   white-space: nowrap;
 }
+
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 0.75rem 1.25rem;
 }
+
 .gameLibrary .cardGrid {
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
+
 .itemCard {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -878,40 +1022,49 @@ legend {
   min-width: 0;
   align-self: start;
 }
+
 .itemCard:hover,
 .itemCard:focus-within {
   border-color: var(--accent);
   box-shadow: var(--shadow);
 }
+
 .itemCard.dragging {
   opacity: 0.7;
   box-shadow: 0 15px 35px #00000025;
   pointer-events: none;
 }
+
 .cardArtLink {
   display: block;
   position: relative;
   border-radius: var(--radius) var(--radius) 0 0;
   overflow: hidden;
 }
+
 .artwork {
   position: relative;
   width: 100%;
   overflow: hidden;
   background: linear-gradient(135deg, var(--accent-soft), var(--surface-soft));
 }
+
 .gameArt {
   aspect-ratio: 1;
 }
+
 .screenArt {
   aspect-ratio: 2 / 3;
 }
+
 .gameTile .gameArt {
   aspect-ratio: 16 / 9;
 }
+
 .gameTile .cardArtLink .artPlaceholder span {
   display: none;
 }
+
 .gameTile .metascore {
   top: 0.5rem;
   left: 0.5rem;
@@ -920,9 +1073,11 @@ legend {
   padding: 0.2rem 0.3rem;
   font-size: 0.7rem;
 }
+
 .artwork img {
   object-fit: cover;
 }
+
 .artPlaceholder {
   display: flex;
   align-items: center;
@@ -937,13 +1092,16 @@ legend {
   font-size: 1rem;
   background: radial-gradient(ellipse at top, var(--hero-start), transparent 80%);
 }
+
 .cardArtLink .artPlaceholder {
   position: absolute;
   inset: 0;
 }
+
 .cardArtLink .artPlaceholder svg {
   flex-shrink: 0;
 }
+
 .cardArtLink .artPlaceholder span {
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -952,6 +1110,7 @@ legend {
   overflow-wrap: anywhere;
   max-width: 100%;
 }
+
 .metascore {
   position: absolute;
   bottom: 0.6rem;
@@ -963,22 +1122,26 @@ legend {
   font-weight: 800;
   font-size: 0.8rem;
 }
+
 .cardBody {
   display: grid;
   gap: 0.375rem;
   padding: 0.875rem;
 }
+
 .cardTop {
   display: flex;
   align-items: flex-start;
   gap: 0.2rem;
 }
+
 .cardTop a {
   flex: 1;
   min-width: 0;
   color: var(--text);
   text-decoration: none;
 }
+
 .cardTop h3 {
   font-size: 0.95rem;
   margin: 0;
@@ -990,6 +1153,7 @@ legend {
   -webkit-line-clamp: 2;
   overflow: hidden;
 }
+
 .dragHandle {
   border: 0;
   background: transparent;
@@ -1000,6 +1164,7 @@ legend {
   touch-action: none;
   flex-shrink: 0;
 }
+
 .removeTile {
   position: absolute;
   top: 0;
@@ -1012,6 +1177,7 @@ legend {
   color: #e0e8f3;
   isolation: isolate;
 }
+
 .removeTile::before {
   content: "";
   position: absolute;
@@ -1021,17 +1187,21 @@ legend {
   z-index: -1;
   transform: translate(3px, -3px);
 }
+
 .removeTile > svg {
   transform: translate(3px, -3px);
 }
+
 .removeTile:hover {
   color: #ffb3bc;
   background: transparent;
 }
+
 .removeTile:hover::before,
 .removeTile:focus-visible::before {
   background: #080d17ed;
 }
+
 .cardMeta {
   margin: 0;
   line-height: 1.4;
@@ -1040,6 +1210,7 @@ legend {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .cardRelease {
   display: flex;
   align-items: center;
@@ -1047,6 +1218,7 @@ legend {
   height: 1.6rem;
   min-width: 0;
 }
+
 .cardRelease .cardDate,
 .cardRelease .countdown {
   display: block;
@@ -1056,18 +1228,22 @@ legend {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .cardRelease .countdown {
   flex-shrink: 0;
   padding: 0.15rem 0.35rem;
   font-size: 0.65rem;
 }
+
 .cardRelease .cardDate {
   min-width: 0;
   font-size: 0.8rem;
 }
+
 .cardDateCompact {
   display: none;
 }
+
 .cardFoot {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -1077,10 +1253,12 @@ legend {
   padding-top: 0.5rem;
   border-top: 1px solid var(--border);
 }
+
 .gameTile .cardFoot {
   margin-top: 0;
   padding-top: 0.35rem;
 }
+
 .cardFoot select {
   font-size: 0.75rem;
   width: 100%;
@@ -1095,49 +1273,61 @@ legend {
   text-overflow: ellipsis;
   font-weight: 600;
 }
+
 .libraryPage .cardGrid.listGrid {
   grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
 }
+
 .listTile {
   display: grid;
   grid-template-columns: 80px minmax(0, 1fr);
   min-height: 92px;
 }
+
 .listTile.gameTile {
   grid-template-columns: 160px minmax(0, 1fr);
 }
+
 .listTile .cardArtLink {
   border-radius: var(--radius) 0 0 var(--radius);
 }
+
 .listTile .artwork {
   height: 100%;
   aspect-ratio: auto;
 }
+
 .listTile.gameTile .cardArtLink {
   display: flex;
   align-items: center;
   background: var(--surface-soft);
 }
+
 .listTile.gameTile .gameArt {
   height: auto;
   aspect-ratio: 16 / 9;
 }
+
 .listTile .artPlaceholder {
   padding: 0.5rem;
 }
+
 .listTile .artPlaceholder span {
   display: none;
 }
+
 .listTile .artPlaceholder svg {
   width: 28px;
   height: 28px;
 }
+
 .listTile .metascore {
   inset: auto auto 0.5rem 0.5rem;
   padding: 0.15rem 0.3rem;
   font-size: 0.7rem;
 }
+
 .listTile .cardBody {
   grid-template-columns: minmax(0, 1fr) minmax(100px, 128px);
   align-content: center;
@@ -1147,22 +1337,27 @@ legend {
   padding: 0.375rem 0.625rem;
   min-width: 0;
 }
+
 .listTile .cardTop {
   grid-column: 1 / -1;
   align-items: center;
   padding-right: 32px;
 }
+
 .listTile .cardTop h3 {
   height: auto;
 }
+
 .listTile .dragHandle {
   min-height: 24px;
   width: 24px;
 }
+
 .listTile .cardMeta {
   grid-column: 1 / -1;
   min-width: 0;
 }
+
 .listTile .cardRelease {
   height: auto;
   align-self: end;
@@ -1170,12 +1365,14 @@ legend {
   gap: 0.2rem;
   padding-bottom: 0.125rem;
 }
+
 .listTile .cardFoot {
   grid-template-rows: 32px;
   margin: 0;
   padding: 0;
   border: 0;
 }
+
 .listTile .cardFoot select {
   min-height: 32px;
   height: 32px;
@@ -1183,99 +1380,124 @@ legend {
   background-position: right 0.3rem center;
   background-size: 12px 12px;
 }
+
 .listTile .removeTile {
   color: var(--muted);
   width: 36px;
   min-height: 32px;
 }
+
 .listTile .removeTile::before {
   display: none;
 }
+
 .listTile .removeTile > svg {
   transform: none;
 }
+
 .listTile .removeTile:hover {
   color: var(--error);
 }
+
 @media (min-width: 1100px) {
   .libraryPage .cardGrid.listGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
 @media (max-width: 650px) {
   .libraryControls .toolbar {
     flex-wrap: nowrap;
     gap: 0.35rem;
   }
+
   .libraryControls .searchInput {
     flex: 1 1 0;
   }
+
   .libraryViewControls {
     gap: 0.25rem;
   }
+
   .libraryControls .viewSwitcher button {
     width: clamp(28px, 9vw, 36px);
   }
+
   .libraryControls .displaySwitcher {
     padding-left: 0.25rem;
   }
+
   .libraryControls .searchInput input {
     text-overflow: ellipsis;
   }
+
   .listTile {
     grid-template-columns: 64px minmax(0, 1fr);
   }
+
   .listTile.gameTile {
     grid-template-columns: clamp(96px, 32vw, 128px) minmax(0, 1fr);
     min-height: 80px;
     height: 80px;
     grid-template-rows: minmax(0, 1fr);
   }
+
   .listTile.gameTile .cardArtLink {
     display: block;
   }
+
   .listTile.gameTile .gameArt {
     position: absolute;
     inset: 0;
     height: 100%;
     aspect-ratio: auto;
   }
+
   .listTile .cardBody {
     grid-template-columns: minmax(0, 1fr) 104px;
     padding: 0.375rem 0.5rem;
   }
+
   .listTile.gameTile .cardBody {
     grid-template-rows: 20px 16px 28px;
     padding-block: 0.25rem;
     row-gap: 0.125rem;
     min-height: 0;
   }
+
   .listTile.gameTile .cardTop h3 {
     display: block;
     white-space: nowrap;
     text-overflow: ellipsis;
   }
+
   .listTile.gameTile .cardRelease {
     flex-wrap: nowrap;
     overflow: hidden;
   }
+
   .listTile.gameTile .dragHandle {
     min-height: 20px;
   }
+
   .listTile.gameTile .cardFoot {
     grid-template-rows: 28px;
   }
+
   .listTile.gameTile .cardFoot select {
     min-height: 28px;
     height: 28px;
   }
+
   .listTile .cardDateFull {
     display: none;
   }
+
   .listTile .cardDateCompact {
     display: inline;
   }
 }
+
 .countdown {
   display: inline-flex;
   font-size: 0.7rem;
@@ -1286,6 +1508,7 @@ legend {
   font-weight: 650;
   white-space: nowrap;
 }
+
 .emptyShelf {
   font-size: 0.8rem;
   color: var(--muted);
@@ -1294,21 +1517,25 @@ legend {
   background: color-mix(in srgb, var(--surface) 55%, transparent);
   border-radius: var(--radius-small);
 }
+
 .dropOver {
   background: var(--accent-soft);
   outline: 2px dashed var(--accent);
   outline-offset: 6px;
 }
+
 .dropTargets {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
   padding: 1rem 0;
 }
+
 .dropTargets p {
   width: 100%;
   margin: 0;
 }
+
 .dropTarget {
   --shelf-color: var(--accent);
   padding: 0.65rem 0.8rem;
@@ -1316,6 +1543,7 @@ legend {
   border-radius: var(--radius-small);
   font-size: 0.8rem;
 }
+
 .emptyState {
   text-align: center;
   padding: 4rem 1rem;
@@ -1325,16 +1553,20 @@ legend {
   border-radius: var(--radius);
   color: var(--muted);
 }
+
 .emptyState h2 {
   color: var(--text);
 }
+
 .emptyState > p {
   max-width: 36rem;
 }
+
 .emptyIcon {
   font-size: 3rem;
   color: var(--accent);
 }
+
 .attribution {
   display: flex;
   align-items: flex-start;
@@ -1344,30 +1576,36 @@ legend {
   margin-top: 3rem;
   max-width: 48rem;
 }
+
 .attribution > img {
   flex-shrink: 0;
   height: auto;
   margin-top: 0.25rem;
 }
+
 .attribution > p {
   margin: 0;
   min-width: 0;
 }
+
 @media (min-width: 651px) {
   .signedIn main:has(> .libraryPage) {
     display: flex;
     flex-direction: column;
     padding-bottom: 1.5rem;
   }
+
   .libraryPage {
     flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;
   }
+
   .libraryPage > * {
     flex-shrink: 0;
   }
+
   .libraryPage > .emptyState {
     flex: 1;
     display: flex;
@@ -1377,6 +1615,7 @@ legend {
     padding: 2rem 1rem;
     margin: 0 0 1.5rem;
   }
+
   .libraryPage > .attribution {
     margin: auto 0 0;
     padding-top: 1rem;
@@ -1384,6 +1623,7 @@ legend {
     max-width: none;
   }
 }
+
 .editorDialog {
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1395,13 +1635,16 @@ legend {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+
 :root:has(.editorDialog[open]) {
   overflow: hidden;
 }
+
 .editorDialog::backdrop {
   background: #03070dcc;
   backdrop-filter: blur(8px);
 }
+
 .removeDialog {
   width: min(440px, calc(100vw - 32px));
   max-height: 90svh;
@@ -1411,16 +1654,20 @@ legend {
   background: var(--surface);
   color: var(--text);
 }
+
 .removeDialog::backdrop {
   background: #03070dcc;
   backdrop-filter: blur(8px);
 }
+
 .removeDialog h2 {
   margin: 0 0 0.75rem;
 }
+
 .removeDialog p {
   overflow-wrap: anywhere;
 }
+
 .removeDialogActions {
   display: flex;
   justify-content: flex-end;
@@ -1428,6 +1675,7 @@ legend {
   gap: 0.75rem;
   margin-top: 1.25rem;
 }
+
 .editor {
   max-width: 760px;
   padding: 1.5rem;
@@ -1435,11 +1683,13 @@ legend {
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
+
 .editorDialog .editor {
   max-width: none;
   border: 0;
   padding: 0;
 }
+
 .editorHeading {
   display: flex;
   justify-content: space-between;
@@ -1447,83 +1697,102 @@ legend {
   margin-bottom: 1.3rem;
   gap: 1rem;
 }
+
 .editorHeading > div {
   min-width: 0;
 }
+
 .editorHeading > button {
   width: 44px;
   height: 44px;
   padding: 0;
   flex-shrink: 0;
 }
+
 .editorHeading h2 {
   margin: 0.4rem 0;
 }
+
 .editor form {
   display: grid;
   gap: 1rem;
 }
+
 .editor form > *,
 .formGrid > * {
   min-width: 0;
 }
+
 .editor input,
 .editor select,
 .editor textarea {
   width: 100%;
 }
+
 .editor .checkbox input,
 .editor .choiceChips input {
   width: auto;
 }
+
 .editor > label {
   margin-bottom: 1rem;
 }
+
 .searchBox {
   padding: 1rem;
   border-radius: var(--radius-small);
   background: var(--surface-soft);
   margin-bottom: 1rem;
 }
+
 .searchBox p {
   margin-bottom: 0;
 }
+
 .searchResults {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
+
 .searchResult {
   padding: 0.4rem;
   justify-content: flex-start;
   text-align: left;
 }
+
 .searchResult .artwork {
   width: 50px;
   flex-shrink: 0;
   aspect-ratio: 2 / 3;
   border-radius: 5px;
 }
+
 .searchResult .artPlaceholder {
   font-size: 0.5rem;
   padding: 0;
 }
+
 .searchResult .artPlaceholder svg {
   width: 20px;
 }
+
 .searchResult .artPlaceholder span {
   display: none;
 }
+
 .searchResult span {
   display: grid;
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
 .searchResult small {
   color: var(--muted);
   font-weight: 400;
 }
+
 .metadataInfo {
   display: flex;
   align-items: center;
@@ -1532,29 +1801,35 @@ legend {
   font-size: 0.75rem;
   padding: 0.75rem 0;
 }
+
 .metadataInfo button {
   font-size: 0.75rem;
 }
+
 .formGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
+
 @media (max-width: 420px) {
   .formGrid {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
 .formActions {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
 }
+
 .choiceChips {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+
 .choiceChips label {
   display: flex;
   align-items: center;
@@ -1567,25 +1842,30 @@ legend {
   max-width: 100%;
   overflow-wrap: anywhere;
 }
+
 .choiceChips input {
   min-height: 0;
   accent-color: var(--accent);
   flex-shrink: 0;
 }
+
 .choiceChips label:has(:checked) {
   background: var(--accent-soft);
   border-color: var(--accent);
 }
+
 .backLink {
   display: inline-block;
   margin-bottom: 1.5rem;
 }
+
 .editor.itemDetails {
   max-width: none;
   padding: 0;
   border: 0;
   background: transparent;
 }
+
 .itemOverview {
   overflow: hidden;
   border: 1px solid var(--border);
@@ -1593,34 +1873,42 @@ legend {
   background: var(--surface);
   margin-bottom: 1.75rem;
 }
+
 .itemDetailArtwork {
   background: var(--background);
 }
+
 .itemDetailArtwork > .artwork {
   border-radius: 0;
   width: 100%;
   height: 100%;
   aspect-ratio: auto;
 }
+
 .itemDetailArtwork img {
   object-fit: contain;
 }
+
 .detailGameArt {
   height: clamp(180px, 20vw, 320px);
 }
+
 .detailScreenArt {
   height: clamp(180px, 20vw, 320px);
 }
+
 .itemOverviewBody {
   padding: clamp(1.25rem, 2.5vw, 2.5rem);
   min-width: 0;
 }
+
 .itemOverviewBody h1 {
   margin: 0.5rem 0 1rem;
   font-size: clamp(1.75rem, 3vw, 3rem);
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
+
 .itemOverviewMeta {
   display: flex;
   align-items: center;
@@ -1629,6 +1917,7 @@ legend {
   color: var(--muted);
   font-size: 0.9rem;
 }
+
 .detailStatus {
   padding: 0.35rem 0.7rem;
   border-radius: 6px;
@@ -1636,17 +1925,21 @@ legend {
   color: var(--text);
   font-weight: 650;
 }
+
 .itemOverviewBody > .hint {
   margin: 1rem 0 0;
 }
+
 .editorSection {
   display: grid;
   align-content: start;
   gap: 1.25rem;
 }
+
 .editorSection > legend {
   font-size: 1rem;
 }
+
 .editorSection > legend,
 .detailChoices > legend,
 .profileForm fieldset > legend {
@@ -1654,15 +1947,18 @@ legend {
   width: 100%;
   padding: 0;
 }
+
 .sectionIntro {
   color: var(--muted);
   font-size: 0.85rem;
   line-height: 1.6;
   margin: 0;
 }
+
 .itemDetails .itemDetailForm {
   gap: 1.75rem;
 }
+
 .itemDetailColumns,
 .itemDetailMain {
   display: grid;
@@ -1670,67 +1966,84 @@ legend {
   gap: 1.75rem;
   align-items: start;
 }
+
 .itemDetails .itemDetailColumns {
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
 }
+
 .itemDetailPersonal {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
   gap: 1.75rem;
 }
+
 .itemDetailPersonal > * {
   min-width: 0;
 }
+
 .itemDetailNotes {
   grid-template-rows: auto auto minmax(140px, 1fr);
 }
+
 .itemDetailNotes > label,
 .itemDetailNotes textarea {
   height: 100%;
 }
+
 .itemDetails .editorSection {
   background: var(--surface);
   padding: 1.5rem;
   border-radius: var(--radius);
   gap: 1.5rem;
 }
+
 .itemDetails .detailChoices {
   border: 0;
   padding: 0;
 }
+
 .detailChoices {
   display: grid;
   gap: 0.75rem;
   width: 100%;
 }
+
 .itemDetails .detailChoices legend {
   padding: 0;
   margin-bottom: 0.75rem;
 }
+
 .itemDetails .choiceChips {
   gap: 0.65rem;
 }
+
 .itemDetails .choiceChips label {
   padding: 0.65rem 0.75rem;
 }
+
 .itemDetails .formGrid {
   gap: 1.25rem;
 }
+
 .itemDetailRelease .formGrid {
   grid-template-columns: minmax(0, 1fr);
 }
+
 .itemDetails label {
   gap: 0.65rem;
   line-height: 1.5;
 }
+
 .itemDetails textarea {
   min-height: 140px;
   line-height: 1.7;
 }
+
 .itemDetails .checkbox {
   align-items: start;
 }
+
 .itemProviderTools,
 .itemMetadataFields {
   min-width: 0;
@@ -1738,6 +2051,7 @@ legend {
   border-radius: var(--radius);
   margin-bottom: 1.25rem;
 }
+
 .itemProviderTools > summary,
 .itemMetadataFields > summary {
   padding: 1rem 1.25rem;
@@ -1746,23 +2060,28 @@ legend {
   font-weight: 650;
   overflow-wrap: anywhere;
 }
+
 .providerToolsBody,
 .itemMetadataBody {
   padding: 0 1.25rem 1.25rem;
   min-width: 0;
 }
+
 .itemMetadataBody {
   display: grid;
   gap: 1.5rem;
 }
+
 .itemDetails .itemDetailActions {
   padding: 1.25rem 0;
   border-top: 1px solid var(--border);
   justify-content: space-between;
 }
+
 .itemMetadataFields {
   margin-bottom: 0;
 }
+
 .coverUploadRow,
 .coverActions {
   display: flex;
@@ -1770,10 +2089,12 @@ legend {
   flex-wrap: wrap;
   gap: 0.75rem 1.25rem;
 }
+
 .coverUpload {
   display: grid;
   gap: 0.75rem;
 }
+
 .coverUpload input[type="file"] {
   position: absolute;
   width: 1px;
@@ -1781,19 +2102,23 @@ legend {
   opacity: 0;
   pointer-events: none;
 }
+
 .coverUpload .hint,
 .coverUpload [role="status"],
 .coverUpload [role="alert"] {
   margin: 0;
 }
+
 .itemCreate .itemDetailForm,
 .itemCreate .itemDetailColumns,
 .itemCreate .itemDetailPersonal {
   gap: 2rem;
 }
+
 .itemCreate .itemDetailColumns {
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
 }
+
 .itemCreate .editorSection {
   margin: 0;
   border: 0;
@@ -1801,155 +2126,194 @@ legend {
   border-radius: 0;
   padding: 1.5rem 0 0;
 }
+
 .itemCreate .detailChoices {
   margin: 0;
   border: 0;
   padding: 0;
 }
+
 .itemCreate .choiceChips label {
   min-height: 44px;
   padding: 0.6rem 0.75rem;
 }
+
 .itemCreate .itemProviderTools,
 .itemCreate .itemMetadataFields {
   border: 0;
   border-radius: 0;
 }
+
 .itemCreate .itemProviderTools > summary {
   padding: 0 0 1rem;
 }
+
 .itemCreate .providerToolsBody,
 .itemCreate .searchBox {
   padding: 0;
 }
+
 .itemCreate .searchBox {
   background: transparent;
 }
+
 .itemCreate .itemMetadataFields {
   border-top: 1px solid var(--border);
 }
+
 .itemCreate .itemMetadataFields > summary {
   padding: 1.5rem 0;
 }
+
 .itemCreate .itemMetadataBody {
   padding: 0;
 }
+
 .itemCreate .itemDetailActions {
   border-top: 1px solid var(--border);
   padding-top: 1.5rem;
 }
+
 @media (max-width: 1100px) {
   .itemDetailPersonal {
     grid-template-columns: minmax(0, 1fr);
   }
+
   .itemDetails .itemDetailColumns {
     grid-template-columns: minmax(0, 1fr);
   }
+
   .itemDetailRelease .formGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
 @media (max-width: 650px) {
   .itemCreate .itemDetailColumns,
   .itemCreate .itemDetailPersonal,
   .itemCreate .formGrid {
     grid-template-columns: minmax(0, 1fr);
   }
+
   .itemOverview {
     border-radius: var(--radius);
     margin-bottom: 1.25rem;
   }
+
   .itemDetails .editorSection {
     padding: 1.25rem;
     gap: 1.25rem;
   }
+
   .itemDetails .itemDetailForm,
   .itemDetails .itemDetailColumns,
   .itemDetailMain {
     gap: 1.25rem;
   }
+
   .itemDetails .formGrid {
     grid-template-columns: minmax(0, 1fr);
   }
+
   .itemDetails .choiceChips label {
     padding: 0.5rem 0.65rem;
   }
+
   .itemOverviewMeta {
     gap: 0.65rem 1rem;
     font-size: 0.8rem;
   }
+
   .itemDetailActions .primary {
     flex: 1;
   }
 }
+
 .deleteConfirm {
   border: 1px solid var(--error);
   border-radius: var(--radius-small);
   padding: 1rem;
 }
+
 .deleteConfirm button {
   margin-right: 0.5rem;
   margin-bottom: 0.5rem;
 }
+
 .skeleton {
   background: var(--surface-soft);
   border-radius: var(--radius-small);
   animation: pulse 1.5s ease-in-out infinite;
 }
+
 .loadingPage {
   min-width: 0;
 }
+
 .skeletonBar {
   height: 0.75rem;
   max-width: 100%;
   flex-shrink: 0;
 }
+
 .skeletonShort {
   width: 40%;
 }
+
 .skeletonMedium {
   width: 75%;
 }
+
 .skeletonInput,
 .skeletonButton,
 .skeletonSearch {
   height: 44px;
 }
+
 .skeletonButton {
   width: 128px;
 }
+
 .skeletonSearch {
   flex: 1;
   min-width: 0;
 }
+
 .skeletonViews,
 .skeletonShelfHeading {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
+
 .skeletonViews {
   gap: 0.125rem;
 }
+
 .skeletonView {
   width: 44px;
   height: 44px;
 }
+
 .skeletonHeroTitle {
   height: 2rem;
   width: 75%;
 }
+
 .skeletonStat {
   width: 130px;
 }
+
 .skeletonStatLink {
   margin-left: auto;
 }
+
 .skeletonFilter {
   width: 110px;
   height: 24px;
   margin-block: 10px;
 }
+
 .skeletonTypes {
   align-items: center;
   min-height: 44px;
@@ -1957,16 +2321,20 @@ legend {
   font-weight: 600;
   color: var(--muted);
 }
+
 .skeletonCount {
   width: 48px;
 }
+
 .filterCount > .skeletonCount {
   margin-left: auto;
 }
+
 .skeletonShelfTitle {
   width: 110px;
   height: 1.3rem;
 }
+
 .skeletonTileTitle {
   flex: 1;
   min-width: 0;
@@ -1975,145 +2343,179 @@ legend {
   align-content: start;
   gap: 0.5rem;
 }
+
 .skeletonGrip {
   width: 16px;
   height: 24px;
 }
+
 .skeletonTile .cardArtLink > .skeleton {
   border-radius: 0;
 }
+
 .skeletonPosterRows {
   display: grid;
   gap: 0.75rem;
 }
+
 .skeletonPosterRows > .skeletonPosterRow {
   grid-template-rows: auto;
   grid-auto-rows: 0;
   row-gap: 0;
   overflow: hidden;
 }
+
 .skeletonPosterRow > .skeletonTile {
   height: 100%;
   min-height: 0;
   overflow: hidden;
 }
+
 .skeletonDate {
   width: 70px;
   flex-shrink: 1;
 }
+
 .skeletonCounter {
   width: 55px;
   height: 20px;
 }
+
 .skeletonField,
 .skeletonForm {
   display: grid;
   gap: 1rem;
   min-width: 0;
 }
+
 .skeletonField {
   gap: 0.4rem;
   font-size: 0.9rem;
   font-weight: 600;
 }
+
 .skeletonTextarea {
   height: 120px;
 }
+
 .importPaste .skeletonTextarea {
   height: 406px;
 }
+
 .skeletonHint {
   margin: 1rem 0;
   display: grid;
   gap: 0.5rem;
 }
+
 .skeletonChips {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+
 .skeletonChip {
   width: 100px;
   height: 32px;
 }
+
 .skeletonChip:nth-child(3n) {
   width: 130px;
 }
+
 .skeletonIdentity {
   display: grid;
   justify-items: center;
   gap: 1rem;
 }
+
 .skeletonAvatar {
   width: 128px;
   height: 128px;
   border-radius: 50%;
 }
+
 .skeletonBack {
   width: 130px;
   height: 24px;
   margin-bottom: 1.5rem;
 }
+
 .skeletonEditorTitle {
   width: 250px;
   height: 2rem;
   margin-top: 0.5rem;
 }
+
 .skeletonEditor .editorHeading > div {
   width: 100%;
 }
+
 .skeletonMonth {
   width: 150px;
   height: 24px;
   flex-shrink: 1;
   min-width: 0;
 }
+
 .skeletonDay {
   width: 14px;
   height: 14px;
 }
+
 .skeletonType {
   width: 44px;
   height: 28px;
 }
+
 .loadingCalendar .upcomingRow > div:not(.skeleton),
 .loadingCalendar .notificationRow > div:not(.skeleton) {
   display: grid;
   gap: 0.5rem;
   flex: 1;
 }
+
 .loadingCalendar .notificationRow {
   min-height: 80px;
 }
+
 .loadingCalendar .upcomingRow .skeletonType {
   flex: 0 0 44px;
 }
+
 .loadingCalendar .upcomingRow .skeletonCounter {
   flex: 0 0 55px;
 }
+
 .loadingCalendar .upcomingPanel {
   height: auto;
   min-height: 0;
 }
+
 .loadingCalendar .calendarLayout {
   align-items: stretch;
 }
+
 @media (max-width: 1000px) {
   .loadingCalendar .calendarLayout {
     grid-template-columns: minmax(0, 1fr);
   }
+
   .loadingCalendar .calendarPanel {
     min-width: 0;
   }
+
   .loadingCalendar .upcomingList {
     flex: initial;
     height: auto;
   }
 }
+
 @media (max-width: 650px) {
   .skeletonView {
     width: 36px;
   }
+
   .skeletonFilter {
     width: 75px;
     max-width: calc((100% - 0.7rem) / 3);
@@ -2121,27 +2523,34 @@ legend {
     margin-block: 7px;
     border-radius: 999px;
   }
+
   .skeletonTileTitle {
     height: calc(0.85rem * 1.3 * 2);
   }
+
   .skeletonStat {
     width: 100px;
   }
+
   .skeletonStatLink {
     margin-left: 0;
   }
+
   .skeletonTile .skeletonBar:not(.skeletonInput) {
     height: 10px;
   }
+
   .skeletonTile .skeletonCounter {
     width: 40px;
   }
 }
+
 @keyframes pulse {
   50% {
     opacity: 0.5;
   }
 }
+
 .landing {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.9fr);
@@ -2153,43 +2562,52 @@ legend {
   row-gap: 2.5rem;
   padding: 2rem 0;
 }
+
 .landingContent {
   grid-area: content;
   min-width: 0;
 }
+
 .landing h1 {
   font-size: clamp(3rem, 7vw, 6rem);
 }
+
 .landing h1 span {
   color: var(--accent);
 }
+
 .landingContent > p {
   font-size: 1.2rem;
   color: var(--muted);
   max-width: 33rem;
   margin: 2rem 0;
 }
+
 .landingActions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
 }
+
 .landingActions .buttonLink {
   min-height: 52px;
   padding: 0.8rem 1.4rem;
   border-radius: var(--radius);
 }
+
 .landingSignIn {
   min-width: 9rem;
   background: var(--surface);
   border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
   color: var(--accent);
 }
+
 .landingSignIn:hover {
   background: var(--accent-soft);
   border-color: var(--accent);
 }
+
 .landingArtwork {
   grid-area: artwork;
   position: relative;
@@ -2201,6 +2619,7 @@ legend {
   justify-self: center;
   isolation: isolate;
 }
+
 .landingArtwork::before,
 .landingArtwork::after {
   content: "";
@@ -2209,9 +2628,11 @@ legend {
   z-index: -1;
   pointer-events: none;
 }
+
 .landingArtwork::before {
   background: radial-gradient(ellipse, #9775fa30, var(--accent-soft) 35%, transparent 70%);
 }
+
 .landingArtwork::after {
   background-image:
     linear-gradient(color-mix(in srgb, var(--accent) 12%, transparent) 1px, transparent 1px),
@@ -2219,18 +2640,21 @@ legend {
   background-size: 32px 32px;
   mask-image: radial-gradient(ellipse, #000 30%, transparent 70%);
 }
+
 .landingArtwork img {
   width: 72%;
   height: auto;
   transform: rotate(-8deg);
   filter: drop-shadow(0 24px 32px #0005);
 }
+
 .landingStickers {
   grid-area: stickers;
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
 }
+
 .landingStickers span {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -2240,12 +2664,15 @@ legend {
   font-weight: 700;
   color: var(--accent);
 }
+
 .landingStickers span:nth-child(2) {
   color: var(--playing);
 }
+
 .landingStickers span:nth-child(3) {
   color: var(--scheduled);
 }
+
 @media (max-width: 850px) {
   .landing {
     grid-template-columns: minmax(0, 1fr);
@@ -2256,15 +2683,18 @@ legend {
     gap: 1.5rem;
     padding: 1rem 0;
   }
+
   .landingArtwork {
     width: 50%;
     max-width: 11rem;
   }
+
   .landingStickers {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: clamp(0.3rem, 1.5vw, 0.75rem);
   }
+
   .landingStickers span {
     min-width: 0;
     padding: 0.8rem clamp(0.25rem, 1.5vw, 1.1rem);
@@ -2273,94 +2703,120 @@ legend {
     white-space: nowrap;
   }
 }
+
 @media (max-width: 400px) {
   .cardRelease {
     gap: 0.15rem;
   }
+
   .cardDateFull {
     display: none;
   }
+
   .cardDateCompact {
     display: inline;
   }
+
   .cardRelease .cardDate {
     font-size: 0.7rem;
   }
+
   .cardRelease .countdown {
     font-size: 0.6rem;
     padding-inline: 0.15rem;
   }
+
   .landingActions {
     align-items: stretch;
     flex-direction: column;
   }
 }
+
 @media (min-width: 1500px) {
   .cardGrid {
     grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   }
+
   .screenLibrary .cardGrid:not(.listGrid) {
     grid-template-columns: repeat(auto-fill, minmax(max(210px, calc((100% - 7.5rem) / 7)), 1fr));
   }
 }
+
 @media (max-width: 1000px) {
   :root {
     --page-gutter: 1.5rem;
   }
+
   .appNav {
     width: 180px;
   }
+
   .navBrand {
     font-size: 1.45rem;
     gap: 0.45rem;
   }
+
   .brandMark {
     width: 32px;
     height: 32px;
   }
+
   .signedIn main {
     margin-left: 180px;
     width: calc(100% - 180px);
   }
+
   .pageHeading {
     gap: 1rem;
   }
+
   .pageHeading p {
     font-size: 0.9rem;
   }
+
   .cardGrid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
+
   .screenTile .cardDateFull {
     display: none;
   }
+
   .screenTile .cardDateCompact {
     display: inline;
   }
+
   .libraryStats {
     gap: 1rem;
   }
+
   .libraryHero {
     grid-template-columns: minmax(0, 1fr) minmax(220px, 0.8fr);
   }
+
   .libraryHeroEmpty {
     grid-template-columns: 1fr;
   }
+
   .libraryHero .pageHeading {
     padding: 1.75rem;
   }
 }
+
 @media (max-width: 650px) {
   :root {
     --page-gutter: 1rem;
   }
+
   main {
     padding: 1.75rem var(--page-gutter) 6rem;
   }
+
   .signedIn main {
     margin: 0;
     width: 100%;
   }
+
   .appNav {
     top: auto;
     bottom: 0;
@@ -2372,15 +2828,18 @@ legend {
     border-right: 0;
     border-top: 1px solid var(--border);
   }
+
   .navBrand,
   .navFooter {
     display: none;
   }
+
   .navTabs {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0.3rem;
   }
+
   .navTabs a {
     padding: 0.5rem 0.3rem;
     flex-direction: column;
@@ -2388,97 +2847,123 @@ legend {
     font-size: 0.65rem;
     border-radius: 10px;
   }
+
   .navTabs .active {
     box-shadow: none;
   }
+
   .libraryHero {
     grid-template-columns: minmax(0, 1fr);
     border-radius: var(--radius);
   }
+
   .libraryHero .pageHeading {
     padding: 1.5rem;
     gap: 1.2rem;
   }
+
   .libraryHero h1 {
     font-size: 2rem;
   }
+
   .libraryHeroActions {
     width: 100%;
     justify-content: space-between;
   }
+
   .libraryHeroActions .primary {
     min-height: 36px;
     padding: 0.4rem 0.7rem;
     gap: 0.35rem;
     font-size: 0.8rem;
   }
+
   .libraryHeroActions .primary svg {
     width: 15px;
     height: 15px;
   }
+
   .librarySync {
     width: 28px;
     height: 28px;
   }
+
   .librarySync svg {
     width: 13px;
     height: 13px;
   }
+
   .heroFeature {
     min-height: 215px;
   }
+
   .heroFeatureCaption {
     inset: auto 1.5rem 1.25rem;
   }
+
   .heroFeature .artPlaceholder {
     padding-bottom: 4rem;
   }
+
   .editor {
     padding: 1rem;
   }
+
   .pageHeading {
     align-items: flex-start;
     flex-wrap: wrap;
   }
+
   .pageHeading > button {
     min-height: 40px;
     font-size: 0.8rem;
   }
+
   .pageHeading h1 {
     font-size: 2rem;
   }
+
   .libraryStats {
     font-size: 0.75rem;
     gap: 0.8rem;
     flex-wrap: wrap;
     margin: 1.5rem 0;
   }
+
   .libraryStats strong {
     font-size: 1rem;
   }
+
   .libraryStats a {
     margin-left: 0;
   }
+
   .toolbar {
     gap: 0.35rem;
   }
+
   .searchInput {
     padding-left: 0.6rem;
   }
+
   .searchInput input {
     font-size: 0.8rem;
     padding-inline: 0.5rem;
   }
+
   .viewSwitcher button {
     width: 36px;
   }
+
   .libraryFilterRow {
     display: block;
     margin-top: 0.4rem;
   }
+
   .libraryTypePicker {
     gap: 1.25rem;
   }
+
   .filters {
     display: flex;
     column-gap: 0.35rem;
@@ -2486,9 +2971,11 @@ legend {
     padding-bottom: 0.4rem;
     margin-bottom: 0;
   }
+
   .filterValue {
     display: none;
   }
+
   .filterSelect {
     max-width: calc((100% - 0.7rem) / 3);
     padding: 0 1.35rem 0 0.65rem;
@@ -2496,6 +2983,7 @@ legend {
     color: var(--muted);
     font-size: 0.75rem;
   }
+
   .filterSelect::before {
     content: "";
     position: absolute;
@@ -2505,22 +2993,28 @@ legend {
     background: var(--select-chevron) no-repeat right 0.35rem center / 10px 10px;
     pointer-events: none;
   }
+
   .filterSelect:hover {
     background-color: transparent;
   }
+
   .filterSelect:hover::before {
     background-color: var(--surface-soft);
   }
+
   .filterSelect:has(select:focus-visible) {
     box-shadow: none;
   }
+
   .filterSelect:has(select:focus-visible)::before {
     border-color: var(--accent);
   }
+
   .filterCompactValue {
     display: block;
     position: relative;
   }
+
   .filters > .filterCount {
     flex-basis: 100%;
     text-align: right;
@@ -2528,47 +3022,60 @@ legend {
     margin-left: 0;
     white-space: nowrap;
   }
+
   .cardGrid,
   .gameLibrary .cardGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.75rem;
   }
+
   .cardArtLink .artPlaceholder {
     gap: 0.5rem;
     padding: 0.65rem;
   }
+
   .cardArtLink .artPlaceholder svg {
     width: clamp(28px, 10vw, 42px);
     height: auto;
   }
+
   .cardArtLink .artPlaceholder span {
     font-size: 0.85rem;
   }
+
   .removeTile::before {
     inset: 11px;
   }
+
   .removeTile > svg {
     width: 12px;
     height: 12px;
   }
+
   .cardBody {
     padding: 0.65rem;
   }
+
   .cardTop h3 {
     font-size: 0.85rem;
   }
+
   .cardMeta {
     font-size: 0.7rem;
   }
+
   .cardFoot select {
     font-size: 0.7rem;
   }
+
   .shelfHeading .hint {
     display: none;
   }
+
   .formGrid {
     gap: 0.7rem;
   }
+
   .editorDialog {
     width: 100%;
     max-width: none;
@@ -2580,6 +3087,7 @@ legend {
     padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
       max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
   }
+
   .editorDialog .editorHeading {
     position: sticky;
     top: calc(-1 * max(1rem, env(safe-area-inset-top)));
@@ -2588,6 +3096,7 @@ legend {
     margin-top: calc(-1 * max(1rem, env(safe-area-inset-top)));
     padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
   }
+
   .editorDialog .itemDetailActions {
     position: sticky;
     bottom: calc(-1 * max(1rem, env(safe-area-inset-bottom)));
@@ -2595,25 +3104,32 @@ legend {
     padding: 1rem 0 max(1rem, env(safe-area-inset-bottom));
     margin-bottom: calc(-1 * max(1rem, env(safe-area-inset-bottom)));
   }
+
   .searchResults {
     grid-template-columns: 1fr;
   }
+
   .editorHeading h2 {
     font-size: 1.4rem;
   }
+
   .metadataInfo {
     flex-wrap: wrap;
   }
+
   .shelf {
     margin: 1.25rem 0;
   }
+
   .artPlaceholder {
     font-size: 1rem;
   }
+
   .attribution {
     margin-bottom: 1rem;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -2622,10 +3138,12 @@ legend {
     transition: none !important;
     scroll-behavior: auto !important;
   }
+
   .itemCard:hover {
     transform: none;
   }
 }
+
 .timezoneBadge {
   font-size: 0.75rem;
   color: var(--muted);
@@ -2633,12 +3151,14 @@ legend {
   border: 1px solid var(--border);
   border-radius: 8px;
 }
+
 .calendarLayout {
   display: grid;
   grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr);
   gap: 2rem;
   margin: 2rem 0;
 }
+
 .calendarPanel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -2647,6 +3167,7 @@ legend {
   align-self: start;
   box-shadow: var(--shadow);
 }
+
 .upcomingPanel {
   display: flex;
   flex-direction: column;
@@ -2654,9 +3175,11 @@ legend {
   min-height: 0;
   height: var(--calendar-height, auto);
 }
+
 .upcomingPanel > .sectionHeading {
   flex-shrink: 0;
 }
+
 .upcomingList {
   flex: 1;
   height: 0;
@@ -2666,6 +3189,7 @@ legend {
   scrollbar-gutter: stable;
   padding: 0 0.4rem 0.4rem;
 }
+
 .monthHeading {
   display: flex;
   justify-content: space-between;
@@ -2673,26 +3197,31 @@ legend {
   margin-bottom: 1rem;
   gap: 0.5rem;
 }
+
 .monthHeading h2 {
   font-size: 1.2rem;
   text-align: center;
   min-width: 0;
 }
+
 .monthHeading button {
   padding: 0.4rem;
   min-height: 36px;
 }
+
 .calendarGrid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 0.35rem;
 }
+
 .weekDay {
   text-align: center;
   font-size: 0.7rem;
   color: var(--muted);
   padding: 0.5rem 0;
 }
+
 .calendarDay {
   display: flex;
   width: 100%;
@@ -2706,19 +3235,23 @@ legend {
   font-size: 0.85rem;
   min-width: 0;
 }
+
 .calendarDay.today {
   border-color: var(--accent);
 }
+
 .calendarDay.selected {
   background: var(--accent-soft);
   color: var(--accent);
   border-color: var(--accent);
 }
+
 .dateDots {
   display: flex;
   gap: 0.2rem;
   min-height: 5px;
 }
+
 .dateDot {
   display: inline-block;
   width: 5px;
@@ -2726,9 +3259,11 @@ legend {
   border-radius: 50%;
   background: var(--scheduled);
 }
+
 .dateDot.game {
   background: var(--anticipated);
 }
+
 .calendarLegend {
   display: flex;
   justify-content: space-between;
@@ -2739,17 +3274,20 @@ legend {
   margin-top: 1rem;
   flex-wrap: wrap;
 }
+
 .calendarLegend > span {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
 }
+
 .sectionHeading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
+
 .sectionHeading h2 {
   display: flex;
   align-items: center;
@@ -2758,9 +3296,11 @@ legend {
   min-width: 0;
   flex-wrap: wrap;
 }
+
 .sectionHeading h2 > svg {
   flex-shrink: 0;
 }
+
 .upcomingRow {
   display: flex;
   align-items: center;
@@ -2771,20 +3311,24 @@ legend {
   color: var(--text);
   border-radius: var(--radius-small);
 }
+
 .upcomingRow:hover {
   background: var(--surface);
 }
+
 .upcomingRow > div {
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
 .upcomingRow small {
   display: block;
   font-size: 0.75rem;
   color: var(--muted);
   margin-top: 0.2rem;
 }
+
 .typeBadge {
   font-size: 0.6rem;
   font-weight: 800;
@@ -2796,13 +3340,16 @@ legend {
   text-align: center;
   flex-shrink: 0;
 }
+
 .typeBadge.game {
   background: var(--accent-soft);
   color: var(--accent);
 }
+
 .notificationPanel {
   margin-top: 3rem;
 }
+
 .notificationActions {
   display: flex;
   align-items: center;
@@ -2810,10 +3357,12 @@ legend {
   gap: 0.5rem 1rem;
   flex-wrap: wrap;
 }
+
 .notificationActions button {
   font-size: 0.75rem;
   white-space: nowrap;
 }
+
 .notificationRow {
   display: flex;
   justify-content: space-between;
@@ -2825,34 +3374,41 @@ legend {
   margin-bottom: 0.6rem;
   background: var(--surface);
 }
+
 .notificationRow > div {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
 .notificationRow.read {
   opacity: 0.65;
 }
+
 .notificationRow a {
   font-weight: 650;
   text-decoration: none;
   color: var(--text);
 }
+
 .notificationRow small {
   display: block;
   color: var(--muted);
   font-size: 0.75rem;
   margin-top: 0.3rem;
 }
+
 .notificationRow button {
   font-size: 0.75rem;
   flex-shrink: 0;
 }
+
 .profileLayout {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
   gap: 2rem;
   margin-top: 2rem;
 }
+
 .profileIdentity {
   text-align: center;
   background: linear-gradient(180deg, var(--hero-end), var(--surface));
@@ -2861,89 +3417,113 @@ legend {
   border-radius: var(--radius);
   align-self: start;
 }
+
 .profileIdentity h2 {
   font-size: 1.3rem;
   margin-bottom: 0.25rem;
 }
+
 .profileIdentity > p {
   color: var(--muted);
   margin-top: 0;
   overflow-wrap: anywhere;
 }
+
 .profileForm {
   display: grid;
   gap: 1.25rem;
 }
+
 .profileForm fieldset {
   display: grid;
   gap: 1rem;
   background: var(--surface);
   padding: 1.25rem;
 }
+
 .profileForm > button {
   justify-self: start;
 }
+
 @media (max-width: 1000px) {
   .calendarLayout {
     grid-template-columns: 1fr;
   }
+
   .upcomingList {
     padding: 0;
   }
+
   .upcomingPanel {
     height: var(--calendar-height, 36rem);
   }
+
   .calendarPanel {
     max-width: 600px;
   }
+
   .profileLayout {
     grid-template-columns: 1fr;
   }
+
   .profileIdentity {
     max-width: 350px;
   }
+
   .upcomingRow .countdown {
     flex-shrink: 0;
   }
 }
+
 @media (max-width: 650px) {
   .calendarPanel {
     padding: 0.8rem;
   }
+
   .calendarLayout {
     gap: 1rem;
   }
+
   .upcomingRow {
     flex-wrap: wrap;
   }
+
   .upcomingRow .countdown {
     margin-left: auto;
   }
+
   .notificationRow {
     align-items: flex-start;
   }
+
   .notificationRow button {
     font-size: 0.7rem;
     padding: 0.4rem 0.6rem;
   }
+
   .sectionHeading {
     flex-wrap: wrap;
     gap: 0.5rem;
   }
+
   .profileLayout {
     gap: 1rem;
   }
+
   .profileIdentity {
     max-width: none;
   }
 }
+
 .importPaste {
   max-width: 800px;
   margin-top: 2rem;
 }
+
 .importPaste textarea {
   width: 100%;
 }
+
 .importRow {
   padding: 1.25rem;
   margin-bottom: 1rem;
@@ -2953,57 +3533,72 @@ legend {
   display: grid;
   gap: 0.8rem;
 }
+
 .importRow > * {
   min-width: 0;
 }
+
 .importRow input,
 .importRow select {
   width: 100%;
 }
+
 .importRow .checkbox input {
   width: auto;
 }
+
 .importRow > .inline {
   flex-wrap: wrap;
   gap: 0.65rem;
 }
+
 .importRow > .inline > button {
   flex-shrink: 0;
 }
+
 .importRow .hint {
   margin: 0;
 }
+
 .importRow.skipped {
   opacity: 0.6;
 }
+
 .importRowHeading {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
 }
+
 .importFields {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 0.8rem;
 }
+
 @media (max-width: 650px) {
   .importFields {
     grid-template-columns: 1fr 1fr;
   }
+
   .importFields > label:first-child {
     grid-column: 1 / -1;
   }
+
   .importRowHeading {
     flex-wrap: wrap;
   }
+
   .importRow {
     padding: 1rem;
   }
 }
+
 .viewSwitcher {
   margin: 0;
   border: 0;
 }
+
 .moveToast {
   display: inline-block;
   background: var(--accent-soft);
@@ -3014,11 +3609,13 @@ legend {
   font-weight: 650;
   animation: pop 0.2s ease-out;
 }
+
 @keyframes pop {
   from {
     transform: scale(0.95);
     opacity: 0.4;
   }
+
   to {
     transform: scale(1);
     opacity: 1;
@@ -3032,17 +3629,21 @@ legend {
 .profileLayout > * {
   min-width: 0;
 }
+
 .profileForm fieldset {
   min-width: 0;
 }
+
 .profileForm input,
 .profileForm select {
   width: 100%;
 }
+
 .profileForm .checkbox input,
 .profileForm .choiceChips input {
   width: auto;
 }
+
 @media (max-width: 1000px) {
   .profileLayout {
     grid-template-columns: minmax(0, 1fr);
@@ -3057,10 +3658,12 @@ legend {
   color: var(--muted);
   flex-shrink: 0;
 }
+
 .signedIn .appFooter {
   margin-left: 220px;
   width: calc(100% - 220px);
 }
+
 .footerInner {
   display: flex;
   align-items: center;
@@ -3069,6 +3672,7 @@ legend {
   gap: 0.25rem 1.5rem;
   padding-top: 0.5rem;
 }
+
 .footerIdentity {
   display: flex;
   align-items: center;
@@ -3076,6 +3680,7 @@ legend {
   gap: 0.25rem 1rem;
   min-width: 0;
 }
+
 .footerBrand {
   display: inline-flex;
   align-items: center;
@@ -3087,60 +3692,75 @@ legend {
   font-weight: 800;
   letter-spacing: -0.055em;
 }
+
 .footerBrand img {
   flex-shrink: 0;
 }
+
 .footerBrand > span {
   margin-left: -0.45rem;
   color: var(--accent);
 }
+
 .footerIdentity p {
   font-size: 0.75rem;
   margin: 0;
 }
+
 .footerInstall {
   min-width: 0;
 }
+
 .footerInstall > button {
   font-size: 0.8rem;
 }
+
 .footerInstall:empty {
   display: none;
 }
+
 .monthHeading button {
   width: 44px;
   height: 44px;
   padding: 0;
   flex-shrink: 0;
 }
+
 @media (max-width: 1000px) {
   .signedIn .appFooter {
     margin-left: 180px;
     width: calc(100% - 180px);
   }
 }
+
 @media (max-width: 650px) {
   .footerInner {
     gap: 0.25rem 1rem;
   }
+
   .footerIdentity p {
     display: none;
   }
+
   .signedIn .appFooter {
     margin-left: 0;
     width: 100%;
     padding-bottom: calc(6rem + env(safe-area-inset-bottom));
   }
+
   .signedIn main {
     padding-bottom: 2rem;
   }
 }
+
 select:focus {
   outline: none;
 }
+
 select:focus-visible {
   border-color: var(--accent);
 }
+
 @media (forced-colors: active) {
   select {
     appearance: auto;

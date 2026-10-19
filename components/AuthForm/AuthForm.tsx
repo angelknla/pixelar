@@ -9,7 +9,7 @@ import SecretInput from './SecretInput';
 
 const initialState: ActionState = {};
 
-export default function AuthForm({
+const AuthForm = ({
   mode,
   available,
   embedded = false,
@@ -19,8 +19,9 @@ export default function AuthForm({
   available: boolean;
   embedded?: boolean;
   headingId?: string;
-}) {
+}) => {
   const registering = mode === 'register';
+
   const [state, action, pending] = useActionState(
     registering ? registerAccount : loginWithCredentials,
     initialState
@@ -102,4 +103,6 @@ export default function AuthForm({
       </Link>
     </section>
   );
-}
+};
+
+export default AuthForm;

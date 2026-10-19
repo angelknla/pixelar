@@ -9,6 +9,7 @@ import {
 describe('account credentials', () => {
   it('uses salted hashes and verifies passwords', async () => {
     const hash = await hashPassword('a-test-password');
+
     expect(hash).toMatch(/^pbkdf2-sha256\$120000\$/);
     expect(await verifyPassword('a-test-password', hash)).toBe(true);
     expect(await verifyPassword('wrong-password', hash)).toBe(false);

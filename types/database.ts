@@ -1,5 +1,7 @@
 import type { ItemRow, MetadataRow, NotificationRow, ProfileRow, ReminderRow } from './library';
+
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
 type Table<
   Row,
   Required extends keyof Row = never,
@@ -18,6 +20,7 @@ type Table<
   Update: { [K in keyof Row]?: Row[K] };
   Relationships: Relations;
 };
+
 export interface Database {
   public: {
     Tables: {

@@ -6,6 +6,7 @@ describe('secret field visibility', () => {
   it('toggles visibility without changing the value or submitting the form', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+
     render(
       <form onSubmit={onSubmit}>
         <label htmlFor="password">Password</label>
@@ -17,10 +18,14 @@ describe('secret field visibility', () => {
         />
       </form>
     );
+
     const input = screen.getByLabelText('Password');
+
     expect(input).toHaveAttribute('type', 'password');
+
     await user.type(input, 'test-password');
     await user.click(screen.getByRole('button', { name: 'Show password' }));
+
     expect(input).toHaveAttribute('type', 'text');
     expect(input).toHaveValue('test-password');
     expect(screen.getByRole('button', { name: 'Hide password' })).toHaveAttribute(
@@ -28,7 +33,9 @@ describe('secret field visibility', () => {
       'true'
     );
     expect(input).toHaveAttribute('autoComplete', 'current-password');
+
     await user.click(screen.getByRole('button', { name: 'Hide password' }));
+
     expect(input).toHaveAttribute('type', 'password');
     expect(input).toHaveValue('test-password');
     expect(onSubmit).not.toHaveBeenCalled();
@@ -44,6 +51,7 @@ describe('secret field visibility', () => {
       </>
     );
     fireEvent.click(screen.getByRole('button', { name: 'Show app passcode' }));
+
     expect(screen.getByLabelText('App passcode')).toHaveAttribute('type', 'text');
     expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
   });
@@ -55,8 +63,11 @@ describe('secret field visibility', () => {
         <SecretInput id="password" name="password" secretLabel="password" />
       </fieldset>
     );
+
     expect(screen.getByRole('button', { name: 'Show password' })).toBeDisabled();
+
     await userEvent.click(screen.getByRole('button', { name: 'Show password' }));
+
     expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
   });
 });

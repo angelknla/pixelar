@@ -1,4 +1,5 @@
 'use client';
+
 import { CalendarDays, Gamepad2, MonitorPlay, UserRound } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -10,8 +11,10 @@ const tabs = [
   { href: '/calendar', title: 'Calendar', Icon: CalendarDays },
   { href: '/profile', title: 'Profile', Icon: UserRound },
 ];
-export default function Navigation() {
+
+const Navigation = () => {
   const path = usePathname();
+
   return (
     <nav className="appNav" aria-label="Library navigation">
       <Link className="navBrand" href="/games">
@@ -48,4 +51,6 @@ export default function Navigation() {
       </div>
     </nav>
   );
-}
+};
+
+export default Navigation;

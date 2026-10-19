@@ -3,9 +3,10 @@
 import { serviceLabel } from '@/lib/library';
 import ItemTile, { type ItemTileProps } from './ItemTile';
 
-export default function ScreenTile(props: ItemTileProps) {
+const ScreenTile = (props: ItemTileProps) => {
   const { item } = props;
   const services = [...new Set(item.services.map(serviceLabel))].join(' · ') || 'None';
+
   return (
     <ItemTile
       {...props}
@@ -13,4 +14,6 @@ export default function ScreenTile(props: ItemTileProps) {
       metadata={`${item.kind === 'show' ? 'TV series' : 'Movie'} · ${services}`}
     />
   );
-}
+};
+
+export default ScreenTile;

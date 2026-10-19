@@ -15,7 +15,9 @@ vi.mock('@/lib/supabase/server', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+
   const query = { select: mocks.select, eq: mocks.eq, maybeSingle: mocks.maybeSingle };
+
   mocks.from.mockReturnValue(query);
   mocks.select.mockReturnValue(query);
   mocks.eq.mockReturnValue(query);
@@ -32,7 +34,9 @@ describe('accounts in the shared Supabase project', () => {
       email: 'alice@example.com',
       password_hash: 'hash',
     };
+
     mocks.maybeSingle.mockResolvedValue({ data: credential, error: null });
+
     expect(await getCredentialByLogin(login)).toEqual(credential);
     expect(mocks.from).toHaveBeenCalledWith('pixelar_member_credentials');
     expect(mocks.eq).toHaveBeenCalledWith(login.includes('@') ? 'email' : 'username', login);
@@ -48,6 +52,7 @@ describe('accounts in the shared Supabase project', () => {
       },
       error: null,
     });
+
     expect(await getAccount('pixelar-member')).toEqual({
       memberId: 'pixelar-member',
       username: 'alice',
@@ -63,6 +68,7 @@ describe('accounts in the shared Supabase project', () => {
 
   it('creates accounts using only the Pixelar transaction function', async () => {
     mocks.rpc.mockResolvedValue({ data: 'pixelar-member', error: null });
+
     expect(await createAccount('Alice', 'alice', 'alice@example.com', 'hash')).toEqual({
       memberId: 'pixelar-member',
     });

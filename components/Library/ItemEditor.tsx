@@ -1,4 +1,5 @@
 'use client';
+
 import { Film, Tv } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
@@ -26,6 +27,7 @@ import type {
 import Artwork from './Artwork';
 import Countdown from './Countdown';
 import CoverUpload from './CoverUpload';
+import RestoreFetchedButton from './RestoreFetchedButton';
 
 type Props = {
   kind: ItemKind;
@@ -38,7 +40,8 @@ type Props = {
   initialServices?: string[];
   eagerArtwork?: ReadonlySet<string>;
 };
-export default function ItemEditor({
+
+const ItemEditor = ({
   kind: initialKind,
   profile,
   item,
@@ -48,48 +51,63 @@ export default function ItemEditor({
   initialStatus,
   initialServices,
   eagerArtwork,
-}: Props) {
+}: Props) => {
   const router = useRouter();
   const [pending, start] = useTransition();
+
   const [kind, setKind] = useState(initialKind);
   const [metadata, setMetadata] = useState<MetadataRow | null>(item?.metadata ?? null);
   const [overrides, setOverrides] = useState<Partial<MetadataFields>>(
     item?.overrides ?? { title: initialTitle }
   );
+
   const [status, setStatus] = useState<Status>(
     item?.status ?? initialStatus ?? (initialKind === 'game' ? 'backlog' : 'watchlist')
   );
   const [platforms, setPlatforms] = useState(item?.platforms ?? profile.platforms);
   const [services, setServices] = useState(item?.services ?? initialServices ?? profile.services);
+
   const [price, setPrice] = useState(item?.price?.toString() ?? '');
   const [currency, setCurrency] = useState(item?.currency ?? profile.currency);
+
   const [notes, setNotes] = useState(item?.notes ?? '');
   const [autoMove, setAutoMove] = useState(item?.auto_move ?? true);
   const [reminders, setReminders] = useState(
     (reminderDays ?? (profile.default_release_reminder ? [0] : [])).join(', ')
   );
+
   const [query, setQuery] = useState(item?.fields.title ?? initialTitle);
   const [results, setResults] = useState<SearchResult[]>([]);
+
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [coverPending, setCoverPending] = useState(false);
+
   const fields = effectiveFields(metadata?.fields ?? EMPTY_FIELDS, overrides);
+
   const patch = <K extends keyof MetadataFields>(key: K, value: MetadataFields[K]) =>
     setOverrides((prev) => ({ ...prev, [key]: value }));
-  function restoreFetched(key: keyof MetadataFields) {
+
+  const restoreFetched = (key: keyof MetadataFields) => {
     setOverrides((prev) => {
       const next = { ...prev };
+
       delete next[key];
+
       return next;
     });
-  }
-  function finish() {
+  };
+
+  const finish = () => {
     router.refresh();
+
     if (onDone) onDone();
     else router.push(kind === 'game' ? '/games' : '/screen');
-  }
-  function run(work: () => Promise<void>) {
+  };
+
+  const run = (work: () => Promise<void>) => {
     setError('');
     setMessage('');
     start(async () => {
@@ -99,8 +117,9 @@ export default function ItemEditor({
         setError(e instanceof Error ? e.message : 'Something went wrong.');
       }
     });
-  }
-  function load(result: SearchResult, refresh = false) {
+  };
+
+  const load = (result: SearchResult, refresh = false) => {
     run(async () => {
       const response = await fetch('/api/metadata', {
         method: 'POST',
@@ -108,30 +127,40 @@ export default function ItemEditor({
         body: JSON.stringify({ ...result, refresh, item_id: item?.id }),
       });
       const data = await response.json();
+
       if (!response.ok) throw new Error(data.error);
+
       const cached = data.metadata as MetadataRow;
+
       setMetadata(cached);
       setResults([]);
+
       // A search typed into the add form is not a deliberate title override.
       if (!item && !metadata && overrides.title === initialTitle)
         setOverrides((prev) => {
           const next = { ...prev };
+
           delete next.title;
+
           return next;
         });
+
       if (!item && !metadata) {
         setPlatforms(profile.platforms.filter((p) => cached.fields.platforms.includes(p)));
         setServices(profile.services.filter((s) => cached.fields.services.includes(s)));
       }
+
       setMessage(
         refresh
           ? 'Fetched values refreshed. Your edits are preserved. Save to confirm changes.'
           : 'Linked result. Check the details and your platform or services, then save.'
       );
     });
-  }
-  function submit() {
+  };
+
+  const submit = () => {
     if (coverPending) return;
+
     run(async () => {
       const parsedReminders = reminders.trim()
         ? reminders.split(',').map((s) => Number(s.trim()))
@@ -150,23 +179,16 @@ export default function ItemEditor({
         auto_move: autoMove,
         reminder_days: parsedReminders,
       });
+
       if (result.error) throw new Error(result.error);
+
       finish();
     });
-  }
-  const resetButton = (key: keyof MetadataFields) =>
-    metadata && key in overrides ? (
-      <button
-        className="textButton"
-        type="button"
-        disabled={pending || coverPending}
-        onClick={() => restoreFetched(key)}
-      >
-        Use fetched value
-      </button>
-    ) : null;
+  };
+
   const choose = (list: string[], set: (v: string[]) => void, value: string) =>
     set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
+
   return (
     <div className={`editor ${item ? 'itemDetails' : 'itemCreate'}`}>
       {item && (
@@ -227,6 +249,7 @@ export default function ItemEditor({
               disabled={pending}
               onClick={() => {
                 if (kind === value) return;
+
                 setKind(value);
                 setMetadata(null);
                 setResults([]);
@@ -268,8 +291,11 @@ export default function ItemEditor({
                         `/api/search?q=${encodeURIComponent(query)}&kind=${kind}`
                       );
                       const data = await response.json();
+
                       if (!response.ok) throw new Error(data.error);
+
                       setResults(data.results);
+
                       if (!data.results.length)
                         setMessage('No matches. Add a title manually below.');
                     })
@@ -374,7 +400,11 @@ export default function ItemEditor({
                   value={fields.title}
                   onChange={(e) => patch('title', e.target.value)}
                 />
-                {resetButton('title')}
+                <RestoreFetchedButton
+                  available={Boolean(metadata) && 'title' in overrides}
+                  disabled={pending || coverPending}
+                  onRestore={() => restoreFetched('title')}
+                />
               </label>
               <label>
                 Status
@@ -452,7 +482,9 @@ export default function ItemEditor({
                   value={fields.release_precision}
                   onChange={(e) => {
                     const precision = e.target.value as Precision;
+
                     patch('release_precision', precision);
+
                     if (precision === 'unknown') patch('release_date', null);
                   }}
                 >
@@ -462,7 +494,11 @@ export default function ItemEditor({
                     </option>
                   ))}
                 </select>
-                {resetButton('release_precision')}
+                <RestoreFetchedButton
+                  available={Boolean(metadata) && 'release_precision' in overrides}
+                  disabled={pending || coverPending}
+                  onRestore={() => restoreFetched('release_precision')}
+                />
               </label>
               <label>
                 Release {fields.release_precision === 'day' ? 'date' : 'window'}
@@ -499,7 +535,11 @@ export default function ItemEditor({
                     )
                   }
                 />
-                {resetButton('release_date')}
+                <RestoreFetchedButton
+                  available={Boolean(metadata) && 'release_date' in overrides}
+                  disabled={pending || coverPending}
+                  onRestore={() => restoreFetched('release_date')}
+                />
               </label>
             </div>
             <p className="hint">
@@ -573,7 +613,11 @@ export default function ItemEditor({
               </p>
             )}
             <div className="coverActions">
-              {resetButton('artwork')}
+              <RestoreFetchedButton
+                available={Boolean(metadata) && 'artwork' in overrides}
+                disabled={pending || coverPending}
+                onRestore={() => restoreFetched('artwork')}
+              />
               {fields.artwork && (
                 <button
                   className="textButton"
@@ -606,7 +650,11 @@ export default function ItemEditor({
                     patch('metascore', e.target.value === '' ? null : Number(e.target.value))
                   }
                 />
-                {resetButton('metascore')}
+                <RestoreFetchedButton
+                  available={Boolean(metadata) && 'metascore' in overrides}
+                  disabled={pending || coverPending}
+                  onRestore={() => restoreFetched('metascore')}
+                />
               </label>
               <label>
                 {kind === 'game' ? 'Publisher' : 'Studio / network'}
@@ -614,7 +662,11 @@ export default function ItemEditor({
                   value={fields.publisher ?? ''}
                   onChange={(e) => patch('publisher', e.target.value || null)}
                 />
-                {resetButton('publisher')}
+                <RestoreFetchedButton
+                  available={Boolean(metadata) && 'publisher' in overrides}
+                  disabled={pending || coverPending}
+                  onRestore={() => restoreFetched('publisher')}
+                />
               </label>
             </div>
             <label>
@@ -624,7 +676,11 @@ export default function ItemEditor({
                 value={fields.description ?? ''}
                 onChange={(e) => patch('description', e.target.value || null)}
               />
-              {resetButton('description')}
+              <RestoreFetchedButton
+                available={Boolean(metadata) && 'description' in overrides}
+                disabled={pending || coverPending}
+                onRestore={() => restoreFetched('description')}
+              />
             </label>
           </div>
         </details>
@@ -663,7 +719,9 @@ export default function ItemEditor({
               onClick={() =>
                 run(async () => {
                   const result = await deleteItem(item!.id);
+
                   if (result.error) throw new Error(result.error);
+
                   finish();
                 })
               }
@@ -678,4 +736,6 @@ export default function ItemEditor({
       </form>
     </div>
   );
-}
+};
+
+export default ItemEditor;

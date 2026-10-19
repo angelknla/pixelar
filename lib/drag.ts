@@ -1,4 +1,5 @@
 import type { KeyboardCoordinateGetter } from '@dnd-kit/core';
+
 // Jump between visible shelves rather than asking keyboard users to move a card pixel by pixel.
 export const createShelfKeyboardCoordinates =
   (onTarget?: (id: string) => void): KeyboardCoordinateGetter =>
@@ -8,7 +9,9 @@ export const createShelfKeyboardCoordinates =
       : ['ArrowUp', 'ArrowLeft'].includes(event.code)
         ? -1
         : 0;
+
     if (!direction) return;
+
     const targets = context.droppableContainers
       .getEnabled()
       .filter(
@@ -18,14 +21,20 @@ export const createShelfKeyboardCoordinates =
       )
       .flatMap((container) => {
         const rect = context.droppableRects.get(container.id);
+
         return rect ? [{ id: container.id, rect }] : [];
       })
       .sort((a, b) => a.rect.top - b.rect.top || a.rect.left - b.rect.left);
+
     if (!targets.length) return;
+
     event.preventDefault();
+
     let index = targets.findIndex((target) => target.id === context.over?.id);
+
     if (index < 0) {
       const active = context.collisionRect;
+
       index = active
         ? targets.reduce(
             (best, target, i) =>
@@ -36,10 +45,15 @@ export const createShelfKeyboardCoordinates =
           )
         : 0;
     }
+
     const target = targets[Math.max(0, Math.min(targets.length - 1, index + direction))];
+
     onTarget?.(String(target.id));
+
     const active = context.collisionRect;
+
     if (!active) return currentCoordinates;
+
     return {
       x:
         currentCoordinates.x +
@@ -55,4 +69,5 @@ export const createShelfKeyboardCoordinates =
         active.height / 2,
     };
   };
+
 export const shelfKeyboardCoordinates = createShelfKeyboardCoordinates();

@@ -1,4 +1,5 @@
 'use client';
+
 import { Pencil } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -7,21 +8,18 @@ import { saveAvatar } from '@/app/avatar-actions';
 import { shrinkImage } from '@/lib/image';
 import styles from './AvatarUpload.module.css';
 
-export default function AvatarUpload({
-  name,
-  avatarPath,
-}: {
-  name: string;
-  avatarPath: string | null;
-}) {
+const AvatarUpload = ({ name, avatarPath }: { name: string; avatarPath: string | null }) => {
   const router = useRouter();
   const inputId = useId();
   const [state, action, pending] = useActionState(saveAvatar, {});
   const [processing, setProcessing] = useState(false);
+
   const [failedVersion, setFailedVersion] = useState<string | null>(null);
+
   const version = state.version ?? avatarPath;
   const hasPicture = Boolean(version) && failedVersion !== version;
   const busy = processing || pending;
+
   useEffect(() => {
     if (state.version) router.refresh();
   }, [state.version, router]);
@@ -41,11 +39,15 @@ export default function AvatarUpload({
           onChange={async (event) => {
             const input = event.currentTarget;
             const chosen = input.files?.[0];
+
             if (!chosen) return;
+
             setProcessing(true);
+
             try {
               const file = await shrinkImage(chosen);
               const data = new FormData();
+
               data.set('avatarFile', file);
               // Submit the prepared file directly; no DataTransfer support is needed.
               startTransition(() => action(data));
@@ -86,4 +88,6 @@ export default function AvatarUpload({
       )}
     </div>
   );
-}
+};
+
+export default AvatarUpload;

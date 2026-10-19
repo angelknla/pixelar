@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { lock } from '@/app/auth-actions';
 import styles from './Header.module.css';
 
-export default function Header({ signedIn }: { signedIn: boolean }) {
+const Header = ({ signedIn }: { signedIn: boolean }) => {
   return (
     <header className={styles.header}>
       <Link className={styles.brand} href="/">
@@ -29,4 +29,6 @@ export default function Header({ signedIn }: { signedIn: boolean }) {
       </nav>
     </header>
   );
-}
+};
+
+export default Header;

@@ -2,17 +2,23 @@ import 'server-only';
 import { apiKey, array, date, fetchJson, record, score, string } from './http';
 import type { MetadataProvider } from './types';
 
-function url(path: string) {
+const url = (path: string) => {
   const u = new URL(`https://api.rawg.io/api/${path}`);
+
   u.searchParams.set('key', apiKey('RAWG_API_KEY'));
+
   return u;
-}
+};
+
 export const rawg: MetadataProvider = {
-  async search(query) {
+  search: async (query) => {
     const u = url('games');
+
     u.searchParams.set('search', query);
     u.searchParams.set('page_size', '12');
+
     const data = record(await fetchJson(u, undefined, 3600));
+
     return array(data.results).flatMap((r) =>
       typeof r.id === 'number' && string(r.name)
         ? [
@@ -28,10 +34,12 @@ export const rawg: MetadataProvider = {
         : []
     );
   },
-  async details(id) {
+  details: async (id) => {
     const r = record(await fetchJson(url(`games/${id}`)));
     const released = date(r.released);
+
     if (!string(r.name)) throw new Error('Game not found.');
+
     return {
       kind: 'game',
       title: String(r.name),

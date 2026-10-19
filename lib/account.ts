@@ -14,13 +14,18 @@ const encode = (bytes: Uint8Array) =>
 const decode = (value: string) => {
   const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
   const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+
   return Uint8Array.from(atob(padded), (character) => character.charCodeAt(0));
 };
 
 export const normalizeUsername = (value: string) => value.trim().toLowerCase();
+
 export const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
 export const isValidUsername = (value: string) => USERNAME.test(normalizeUsername(value));
+
 export const isValidEmail = (value: string) => EMAIL.test(normalizeEmail(value));
+
 export const isValidPassword = (value: string) => value.length >= 8 && value.length <= 128;
 
 export const hashPassword = async (password: string): Promise<string> => {
@@ -33,12 +38,14 @@ export const hashPassword = async (password: string): Promise<string> => {
     key,
     256
   );
+
   return `pbkdf2-sha256$${ITERATIONS}$${encode(salt)}$${encode(new Uint8Array(bits))}`;
 };
 
 export const verifyPassword = async (password: string, encoded: string): Promise<boolean> => {
   const [algorithm, iterationsText, saltText, expected, extra] = encoded.split('$');
   const iterations = Number(iterationsText);
+
   if (
     algorithm !== 'pbkdf2-sha256' ||
     !Number.isInteger(iterations) ||
@@ -59,6 +66,7 @@ export const verifyPassword = async (password: string, encoded: string): Promise
       key,
       256
     );
+
     return tokensMatch(encode(new Uint8Array(bits)), expected);
   } catch {
     return false;

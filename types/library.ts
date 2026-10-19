@@ -1,6 +1,9 @@
 export type ItemKind = 'game' | 'movie' | 'show';
+
 export type Provider = 'rawg' | 'tmdb';
+
 export type Precision = 'unknown' | 'year' | 'month' | 'day';
+
 export type GameStatus =
   | 'anticipated'
   | 'scheduled'
@@ -9,8 +12,11 @@ export type GameStatus =
   | 'replay'
   | 'completed'
   | 'dropped';
+
 export type ScreenStatus = 'upcoming' | 'watchlist' | 'watching' | 'watched' | 'dropped';
+
 export type Status = GameStatus | ScreenStatus;
+
 export interface MetadataFields {
   title: string;
   artwork: string | null;
@@ -20,12 +26,14 @@ export interface MetadataFields {
   release_precision: Precision;
   metascore: number | null;
 }
+
 export interface ProviderMetadata extends MetadataFields {
   kind: ItemKind;
   platforms: string[];
   services: string[];
   source_url: string;
 }
+
 export interface MetadataRow {
   id: string;
   provider: Provider;
@@ -35,6 +43,7 @@ export interface MetadataRow {
   fields: ProviderMetadata;
   fetched_at: string;
 }
+
 export interface ItemRow {
   id: string;
   member_id: string;
@@ -51,10 +60,12 @@ export interface ItemRow {
   created_at: string;
   updated_at: string;
 }
+
 export interface LibraryItem extends ItemRow {
   fields: MetadataFields;
   metadata: MetadataRow | null;
 }
+
 export interface ProfileRow {
   member_id: string;
   region: string;
@@ -68,12 +79,16 @@ export interface ProfileRow {
   avatar_path: string | null;
   shelf_layouts?: ShelfLayouts;
 }
+
 export interface ShelfLayout {
   order: string[];
   collapsed: string[];
 }
+
 export type ShelfView = 'games_status' | 'tv_status' | 'tv_service';
+
 export type ShelfLayouts = Partial<Record<ShelfView, ShelfLayout>>;
+
 export interface ReminderRow {
   id: string;
   item_id: string;
@@ -82,6 +97,7 @@ export interface ReminderRow {
   enabled: boolean;
   channel: 'in_app';
 }
+
 export interface NotificationRow {
   id: string;
   member_id: string;
@@ -91,6 +107,7 @@ export interface NotificationRow {
   created_at: string;
   read_at: string | null;
 }
+
 export interface SearchResult {
   provider: Provider;
   provider_id: string;
@@ -99,6 +116,7 @@ export interface SearchResult {
   artwork: string | null;
   year: string | null;
 }
+
 export interface ItemInput {
   id?: string;
   kind: ItemKind;

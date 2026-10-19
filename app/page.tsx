@@ -6,9 +6,12 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { getCurrentAccount } from '@/lib/session';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
-export default async function HomePage() {
+
+const HomePage = async () => {
   const account = await getCurrentAccount();
+
   if (account) redirect('/games');
+
   return (
     <section className="landing">
       <div className="landingContent">
@@ -46,4 +49,6 @@ export default async function HomePage() {
       </Suspense>
     </section>
   );
-}
+};
+
+export default HomePage;

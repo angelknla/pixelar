@@ -1,10 +1,12 @@
 import Link from 'next/link';
 
-export default function NotFound() {
+const NotFound = () => {
   return (
     <section>
       <h1>Page not found</h1>
       <Link href="/">Go home</Link>
     </section>
   );
-}
+};
+
+export default NotFound;

@@ -9,6 +9,7 @@ export const GAME_STATUSES: Status[] = [
   'completed',
   'dropped',
 ];
+
 export const SCREEN_STATUSES: Status[] = [
   'upcoming',
   'watchlist',
@@ -16,6 +17,7 @@ export const SCREEN_STATUSES: Status[] = [
   'watched',
   'dropped',
 ];
+
 export const PLATFORMS = [
   'PC',
   'PlayStation 5',
@@ -28,6 +30,7 @@ export const PLATFORMS = [
   'iOS',
   'Android',
 ];
+
 export const SERVICES = [
   'Netflix',
   'Prime Video',
@@ -37,15 +40,20 @@ export const SERVICES = [
   'BBC iPlayer',
   'Other',
 ];
-export function serviceLabel(value: string): string {
+
+export const serviceLabel = (value: string): string => {
   if (/^(hbo(?: max)?|max)$/i.test(value)) return 'HBO Max';
   if (/^apple tv(?:\+| plus)?$/i.test(value)) return 'Apple TV';
   if (/^disney(?:\+| plus)$/i.test(value)) return 'Disney+';
   if (/^(?:amazon )?prime\s*(?:video)?$/i.test(value)) return 'Prime Video';
+
   return value;
-}
+};
+
 export const statusesFor = (kind: ItemKind) => (kind === 'game' ? GAME_STATUSES : SCREEN_STATUSES);
+
 export const label = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
+
 export const EMPTY_FIELDS: MetadataFields = {
   title: '',
   artwork: null,
@@ -55,6 +63,7 @@ export const EMPTY_FIELDS: MetadataFields = {
   release_precision: 'unknown',
   metascore: null,
 };
+
 export const defaultProfile = (memberId: string): ProfileRow => ({
   member_id: memberId,
   region: 'GB',
@@ -67,48 +76,60 @@ export const defaultProfile = (memberId: string): ProfileRow => ({
   theme: 'dark',
   avatar_path: null,
 });
-export function effectiveFields(
+
+export const effectiveFields = (
   base: Partial<MetadataFields> | null,
   overrides: Partial<MetadataFields>
-): MetadataFields {
+): MetadataFields => {
   return { ...EMPTY_FIELDS, ...base, ...overrides };
-}
-export function localDay(timezone: string, now = new Date()): string {
+};
+
+export const localDay = (timezone: string, now = new Date()): string => {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: timezone,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
   }).format(now);
-}
-export function releaseLabel(fields: MetadataFields): string {
+};
+
+export const releaseLabel = (fields: MetadataFields): string => {
   if (!fields.release_date || fields.release_precision === 'unknown') return 'Date to be announced';
+
   const date = new Date(`${fields.release_date}T12:00:00Z`);
+
   return new Intl.DateTimeFormat('en-GB', {
     timeZone: 'UTC',
     year: 'numeric',
     ...(fields.release_precision !== 'year' ? { month: 'short' as const } : {}),
     ...(fields.release_precision === 'day' ? { day: 'numeric' as const } : {}),
   }).format(date);
-}
-export function countdown(
+};
+
+export const countdown = (
   fields: MetadataFields,
   timezone: string,
   now = new Date()
-): string | null {
+): string | null => {
   if (fields.release_precision !== 'day' || !fields.release_date) return null;
+
   const days = Math.round(
     (Date.parse(fields.release_date) - Date.parse(localDay(timezone, now))) / 86400000
   );
+
   return days > 0 ? `${days} day${days === 1 ? '' : 's'}` : days === 0 ? 'Out today!' : null;
-}
-export function isUpcoming(item: LibraryItem, timezone: string): boolean {
+};
+
+export const isUpcoming = (item: LibraryItem, timezone: string): boolean => {
   const { release_date: date, release_precision: precision } = item.fields;
+
   if (!date || precision === 'unknown') return false;
+
   const today = localDay(timezone);
+
   return precision === 'year'
     ? date.slice(0, 4) >= today.slice(0, 4)
     : precision === 'month'
       ? date.slice(0, 7) >= today.slice(0, 7)
       : date >= today;
-}
+};

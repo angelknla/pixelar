@@ -7,15 +7,10 @@ import {
   KeyboardSensor,
   PointerSensor,
   rectIntersection,
-  useDraggable,
-  useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
 import {
-  ArrowDown,
-  ArrowUp,
-  ChevronDown,
   GripVertical,
   Layers3,
   LayoutGrid,
@@ -43,140 +38,21 @@ import type {
   Status,
 } from '@/types/library';
 import Artwork from './Artwork';
+import DropTarget from './DropTarget';
+import FilterSelect from './FilterSelect';
 import GameTile from './GameTile';
 import ItemEditor from './ItemEditor';
 import ScreenTile from './ScreenTile';
+import Shelf from './Shelf';
 
-function compareReleaseDates(a: LibraryItem, b: LibraryItem) {
+const compareReleaseDates = (a: LibraryItem, b: LibraryItem) => {
   const date = (item: LibraryItem) =>
     item.fields.release_precision === 'unknown' ? '9999' : (item.fields.release_date ?? '9999');
+
   return date(a).localeCompare(date(b));
-}
+};
 
-function FilterSelect({
-  name,
-  value,
-  display,
-  compactDisplay = display,
-  onChange,
-  children,
-}: {
-  name: string;
-  value: string;
-  display: string;
-  compactDisplay?: string;
-  onChange: (value: string) => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="filterSelect">
-      <span className="filterValue" aria-hidden="true">
-        {display}
-      </span>
-      <span className="filterCompactValue" aria-hidden="true">
-        {compactDisplay}
-      </span>
-      <select
-        aria-label={name}
-        title={`${name}: ${display}`}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {children}
-      </select>
-    </div>
-  );
-}
-
-function Shelf({
-  name,
-  status,
-  children,
-  count,
-  collapsed,
-  onToggle,
-  onReorder,
-  first,
-  last,
-  display,
-}: {
-  name: string;
-  status?: Status;
-  children: React.ReactNode;
-  count: number;
-  collapsed: boolean;
-  onToggle: () => void;
-  onReorder: (direction: number) => void;
-  first: boolean;
-  last: boolean;
-  display: 'grid' | 'list';
-}) {
-  const contentId = useId();
-  const drop = useDroppable({ id: status ?? name, disabled: !status, data: { type: 'item' } });
-  const target = useDroppable({ id: `shelf:${name}`, data: { type: 'shelf', name } });
-  const drag = useDraggable({ id: `shelf:${name}`, data: { type: 'shelf', name } });
-  return (
-    <section
-      ref={drop.setNodeRef}
-      className={`shelf ${status ? `status-${status}` : ''} ${drop.isOver ? 'dropOver' : ''} ${collapsed ? 'shelfCollapsed' : ''} ${target.isOver ? 'shelfReorderTarget' : ''}`}
-    >
-      <div className="shelfHeading" ref={target.setNodeRef}>
-        <h2>
-          <button
-            type="button"
-            className="shelfToggle"
-            aria-expanded={!collapsed}
-            aria-controls={contentId}
-            onClick={onToggle}
-          >
-            <span className="shelfDot" />
-            <span className="shelfName">{name}</span> <span className="countBadge">{count}</span>
-            <ChevronDown size={16} aria-hidden="true" />
-          </button>
-        </h2>
-        <div className="shelfHeadingActions">
-          {status && <span className="hint">Drop a title here</span>}
-          <button
-            type="button"
-            className="shelfMove"
-            aria-label={`Move ${name} shelf up`}
-            disabled={first}
-            onClick={() => onReorder(-1)}
-          >
-            <ArrowUp size={14} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="shelfMove"
-            aria-label={`Move ${name} shelf down`}
-            disabled={last}
-            onClick={() => onReorder(1)}
-          >
-            <ArrowDown size={14} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="shelfDrag"
-            ref={drag.setNodeRef}
-            {...drag.listeners}
-            {...drag.attributes}
-            aria-label={`Reorder ${name} shelf`}
-            title="Drag to reorder shelf"
-          >
-            <GripVertical size={17} aria-hidden="true" />
-          </button>
-        </div>
-      </div>
-      <div id={contentId} hidden={collapsed}>
-        <div className={`cardGrid ${display === 'list' ? 'listGrid' : ''}`}>
-          {collapsed ? null : children}
-        </div>
-        {count === 0 && <p className="emptyShelf">Room for your next favourite.</p>}
-      </div>
-    </section>
-  );
-}
-export default function Library({
+const Library = ({
   items,
   profile,
   kind,
@@ -184,57 +60,74 @@ export default function Library({
   items: LibraryItem[];
   profile: ProfileRow;
   kind: 'game' | 'screen';
-}) {
+}) => {
   const router = useRouter();
   const [pending, start] = useTransition();
+
   const [view, setView] = useState(kind === 'game' ? 'status' : 'service');
   const [display, setDisplay] = useState<'grid' | 'list'>('grid');
+
   useLayoutEffect(() => {
     if (window.innerWidth <= 650) setDisplay('list');
   }, []);
+
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
   const [platform, setPlatform] = useState('');
   const [service, setService] = useState('');
   const [screenType, setScreenType] = useState<'' | 'movie' | 'show'>('');
   const [sort, setSort] = useState('added');
+
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
   const [moved, setMoved] = useState('');
+
   const [metadataSync, setMetadataSync] = useState(false);
   const [syncMessage, setSyncMessage] = useState('');
   const [syncFailed, setSyncFailed] = useState<string[]>([]);
   const metadataSyncLock = useRef(false);
+
   const [removing, setRemoving] = useState<LibraryItem | null>(null);
   const [removeError, setRemoveError] = useState('');
   const [removePending, startRemove] = useTransition();
   const [removedIds, setRemovedIds] = useState<string[]>([]);
+
   const [layouts, setLayouts] = useState<ShelfLayouts>(profile.shelf_layouts ?? {});
   const [shelfError, setShelfError] = useState('');
   const [syncing, setSyncing] = useState(false);
+
   const [draggingShelf, setDraggingShelf] = useState<string | null>(null);
   const keyboardTarget = useRef<string | null>(null);
+
   const keyboardCoordinates = useRef(
     createShelfKeyboardCoordinates((id) => {
       keyboardTarget.current = id;
     })
   ).current;
+
   const queuedLayouts = useRef(new Map<ShelfView, ShelfLayout>());
   const savingLayouts = useRef(false);
   const failedLayouts = useRef(new Map<ShelfView, ShelfLayout>());
+
   const shelfView: ShelfView =
     kind === 'game' ? 'games_status' : view === 'service' ? 'tv_service' : 'tv_status';
   const currentLayout = shelfLayout(layouts, shelfView);
-  async function syncLayouts() {
+
+  const syncLayouts = async () => {
     if (savingLayouts.current) return;
+
     savingLayouts.current = true;
     setSyncing(true);
     setShelfError('');
+
     try {
       while (queuedLayouts.current.size) {
         const [key, layout] = queuedLayouts.current.entries().next().value!;
+
         queuedLayouts.current.delete(key);
+
         const result = await saveShelfLayout(key, layout);
+
         if (result.error) {
           failedLayouts.current.set(key, layout);
           setShelfError(result.error);
@@ -245,35 +138,46 @@ export default function Library({
     } finally {
       savingLayouts.current = false;
       setSyncing(false);
+
       if (failedLayouts.current.size === 0) setShelfError('');
     }
-  }
-  function updateLayout(next: ShelfLayout) {
+  };
+
+  const updateLayout = (next: ShelfLayout) => {
     setLayouts((previous) => ({ ...previous, [shelfView]: next }));
     queuedLayouts.current.set(shelfView, next);
     failedLayouts.current.set(shelfView, next);
     void syncLayouts();
-  }
+  };
+
   const [visibleArtwork, setVisibleArtwork] = useState<Set<string>>(() => new Set());
   const library = useRef<HTMLDivElement>(null);
+
   useLayoutEffect(() => {
     const root = library.current;
+
     if (!root) return;
+
     const promoted = new Set<string>();
+
     const promote = (visible: HTMLImageElement[]) => {
       const urls = visible
         .flatMap((image) => image.getAttribute('src') ?? [])
         .filter((url) => !promoted.has(url));
+
       if (!urls.length) return;
+
       urls.forEach((url) => {
         promoted.add(url);
       });
       setVisibleArtwork(new Set(promoted));
     };
+
     const checkViewport = () =>
       promote(
         Array.from(root.querySelectorAll<HTMLImageElement>('.artwork img')).filter((image) => {
           const rect = image.getBoundingClientRect();
+
           return (
             rect.width > 0 &&
             rect.height > 0 &&
@@ -284,6 +188,7 @@ export default function Library({
           );
         })
       );
+
     const observer =
       typeof IntersectionObserver === 'undefined'
         ? null
@@ -294,6 +199,7 @@ export default function Library({
                 .map((entry) => entry.target as HTMLImageElement)
             );
           });
+
     const observeImages = () => {
       observer?.disconnect();
       root.querySelectorAll('.artwork img').forEach((image) => {
@@ -301,9 +207,12 @@ export default function Library({
       });
       checkViewport();
     };
+
     observeImages();
+
     // Filters, shelves and search results can replace images without remounting the library.
     const mutations = new MutationObserver(observeImages);
+
     mutations.observe(root, {
       childList: true,
       subtree: true,
@@ -311,35 +220,45 @@ export default function Library({
       attributeFilter: ['src'],
     });
     window.addEventListener('resize', checkViewport);
+
     return () => {
       mutations.disconnect();
       observer?.disconnect();
       window.removeEventListener('resize', checkViewport);
     };
   }, []);
+
   const removeDialog = useRef<HTMLDialogElement>(null);
   const removeCancel = useRef<HTMLButtonElement>(null);
   const removeHeading = useId();
   const removeDescription = useId();
+
   const dialog = useRef<HTMLDialogElement>(null);
   const dialogTitle = useId();
+
   useEffect(() => {
     if (adding) dialog.current?.showModal();
     else dialog.current?.close();
   }, [adding]);
   useEffect(() => {
     if (!removing) return;
+
     const element = removeDialog.current;
+
     if (!element) return;
+
     const overflow = document.body.style.overflow;
+
     document.body.style.overflow = 'hidden';
     element.showModal();
     removeCancel.current?.focus();
+
     return () => {
       element.close();
       document.body.style.overflow = overflow;
     };
   }, [removing]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, {
@@ -347,15 +266,19 @@ export default function Library({
       scrollBehavior: 'auto',
     })
   );
+
   const relevant = items.filter(
     (i) => !removedIds.includes(i.id) && (kind === 'game' ? i.kind === 'game' : i.kind !== 'game')
   );
-  async function syncMetadata(retry = false) {
+
+  const syncMetadata = async (retry = false) => {
     if (metadataSyncLock.current) return;
+
     metadataSyncLock.current = true;
     setMetadataSync(true);
     setError('');
     setSyncFailed([]);
+
     // A single provider link can appear on multiple shelves or saved titles.
     const targets = [
       ...new Map(
@@ -364,12 +287,17 @@ export default function Library({
           .map((item) => [item.metadata_id, item.id])
       ).values(),
     ];
+
     const failed: string[] = [];
+
     let updated = 0;
+
     try {
       for (let offset = 0; offset < targets.length; offset += 4) {
         setSyncMessage(`Syncing ${offset} of ${targets.length} titles…`);
+
         const batch = targets.slice(offset, offset + 4);
+
         try {
           const response = await fetch('/api/metadata/sync', {
             method: 'POST',
@@ -377,11 +305,14 @@ export default function Library({
             body: JSON.stringify({ item_ids: batch }),
           });
           const data = await response.json();
+
           if (!response.ok) throw new Error('Could not sync titles.');
+
           for (const id of batch) {
             const outcome = data.outcomes?.find(
               (entry: { id: string; state: string }) => entry.id === id
             );
+
             if (outcome?.state === 'updated') updated++;
             else if (outcome?.state !== 'skipped') failed.push(id);
           }
@@ -389,26 +320,32 @@ export default function Library({
           failed.push(...batch);
         }
       }
+
       const unmatched = relevant.filter((item) => !item.metadata_id).length;
+
       setSyncMessage(
         `${updated} ${updated === 1 ? 'title' : 'titles'} updated.${unmatched ? ` ${unmatched} unmatched ${unmatched === 1 ? 'title skipped' : 'titles skipped'}.` : ''}`
       );
       setSyncFailed(failed);
+
       if (failed.length)
         setError(
           `${failed.length} ${failed.length === 1 ? 'title could' : 'titles could'} not sync. Cached data is still available.`
         );
+
       router.refresh();
     } finally {
       metadataSyncLock.current = false;
       setMetadataSync(false);
     }
-  }
+  };
+
   const serviceOptions = [
     ...new Set(
       [...SERVICES, ...profile.services, ...relevant.flatMap((i) => i.services)].map(serviceLabel)
     ),
   ];
+
   const featured =
     relevant.find((item) => item.status === (kind === 'game' ? 'playing' : 'watching')) ??
     relevant.find((item) => item.fields.artwork) ??
@@ -436,10 +373,12 @@ export default function Library({
             ? compareReleaseDates(a, b)
             : b.created_at.localeCompare(a.created_at)
     );
+
   const move = (id: string, next: Status) => {
     setError('');
     start(async () => {
       const result = await moveItem(id, next);
+
       if (result.error) setError(result.error);
       else {
         setMoved(`Moved to ${label(next)} ✦`);
@@ -447,6 +386,7 @@ export default function Library({
       }
     });
   };
+
   const statuses = statusesFor(kind === 'game' ? 'game' : 'movie');
   const unsortedGroups: { name: string; status: Status | undefined; items: LibraryItem[] }[] =
     view === 'status'
@@ -477,14 +417,18 @@ export default function Library({
             }))
         : [];
   const groups = orderedShelves(unsortedGroups, currentLayout.order);
-  function reorderShelf(from: string, to: string) {
+
+  const reorderShelf = (from: string, to: string) => {
     if (from === to) return;
+
     const order = [
       ...groups.map((group) => group.name),
       ...currentLayout.order.filter((name) => !groups.some((group) => group.name === name)),
     ];
+
     updateLayout({ ...currentLayout, order: reorderShelves(order, from, to) });
-  }
+  };
+
   const Tile = kind === 'game' ? GameTile : ScreenTile;
   const firstGroup = groups.find(
     (group) => group.items.length && !currentLayout.collapsed.includes(group.name)
@@ -497,6 +441,7 @@ export default function Library({
     ...(featured?.fields.artwork ? [featured.fields.artwork] : []),
     ...firstTitles.slice(0, 6).flatMap((item) => item.fields.artwork ?? []),
   ]);
+
   const cards = (list: LibraryItem[], group?: string) =>
     list.map((item) => (
       <Tile
@@ -514,6 +459,7 @@ export default function Library({
         eager={Boolean(item.fields.artwork && eagerArtwork.has(item.fields.artwork))}
       />
     ));
+
   return (
     <div
       ref={library}
@@ -609,6 +555,7 @@ export default function Library({
                 const title =
                   v === 'status' ? 'Shelves' : v === 'service' ? 'Services' : 'All titles together';
                 const Icon = v === 'status' ? Rows3 : v === 'service' ? MonitorPlay : Layers3;
+
                 return (
                   <button
                     type="button"
@@ -627,6 +574,7 @@ export default function Library({
               {(['grid', 'list'] as const).map((style) => {
                 const title = style === 'grid' ? 'Grid' : 'List';
                 const Icon = style === 'grid' ? LayoutGrid : List;
+
                 return (
                   <button
                     type="button"
@@ -804,12 +752,15 @@ export default function Library({
             const candidates = args.droppableContainers.filter(
               (container) => (container.data.current?.type === 'shelf') === isShelf
             );
+
             if (!args.pointerCoordinates && keyboardTarget.current) {
               const target = candidates.find(
                 (container) => container.id === keyboardTarget.current
               );
+
               if (target) return [{ id: target.id }];
             }
+
             return (isShelf || !args.pointerCoordinates ? closestCenter : rectIntersection)({
               ...args,
               droppableContainers: candidates,
@@ -828,6 +779,7 @@ export default function Library({
           onDragEnd={({ active, over }) => {
             keyboardTarget.current = null;
             setDraggingShelf(null);
+
             if (active.data.current?.type === 'shelf') {
               if (over?.data.current?.type === 'shelf')
                 reorderShelf(String(active.data.current.name), String(over.data.current.name));
@@ -857,6 +809,7 @@ export default function Library({
                 }
                 onReorder={(direction) => {
                   const target = groups[index + direction];
+
                   if (target) reorderShelf(group.name, target.name);
                 }}
                 first={index === 0}
@@ -926,6 +879,7 @@ export default function Library({
         aria-describedby={removeDescription}
         onCancel={(event) => {
           event.preventDefault();
+
           if (!removePending) setRemoving(null);
         }}
       >
@@ -959,10 +913,13 @@ export default function Library({
                   startRemove(async () => {
                     try {
                       const result = await deleteItem(removing.id);
+
                       if (result.error) {
                         setRemoveError(result.error);
+
                         return;
                       }
+
                       setRemovedIds((ids) => [...ids, removing.id]);
                       setRemoving(null);
                       router.refresh();
@@ -980,15 +937,6 @@ export default function Library({
       </dialog>
     </div>
   );
-}
-function DropTarget({ status }: { status: Status }) {
-  const drop = useDroppable({ id: status });
-  return (
-    <div
-      ref={drop.setNodeRef}
-      className={`dropTarget status-${status} ${drop.isOver ? 'dropOver' : ''}`}
-    >
-      {label(status)}
-    </div>
-  );
-}
+};
+
+export default Library;

@@ -1,1 +1,1 @@
-export { ItemLoading as default } from '@components/Loading/Loading';
+export { default } from '@components/Loading/ItemLoading';

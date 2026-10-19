@@ -8,6 +8,7 @@
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
+
 .brand {
   display: flex;
   align-items: center;
@@ -18,6 +19,7 @@
   letter-spacing: -0.055em;
   text-decoration: none;
 }
+
 .brand span {
   margin-left: -0.55rem;
   color: var(--accent);
@@ -29,6 +31,7 @@
   flex-wrap: wrap;
   gap: 1rem;
 }
+
 .header nav a {
   font-size: 0.85rem;
   font-weight: 600;

@@ -1,9 +1,11 @@
 'use client';
+
 import { Gamepad2, MonitorPlay } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import type { ItemKind } from '@/types/library';
-export default function Artwork({
+
+const Artwork = ({
   url,
   title,
   kind,
@@ -17,8 +19,9 @@ export default function Artwork({
   eager?: boolean;
   highPriority?: boolean;
   sizes?: string;
-}) {
+}) => {
   const [failed, setFailed] = useState<string | null>(null);
+
   return (
     <div className={`artwork ${kind === 'game' ? 'gameArt' : 'screenArt'}`}>
       {url && url !== failed ? (
@@ -40,4 +43,6 @@ export default function Artwork({
       )}
     </div>
   );
-}
+};
+
+export default Artwork;
