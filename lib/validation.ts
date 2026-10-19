@@ -1,3 +1,4 @@
+import { coverReference } from '@/lib/cover-path';
 import { statusesFor } from '@/lib/library';
 import type { ItemInput, ItemKind, MetadataFields, Precision, Status } from '@/types/library';
 
@@ -32,7 +33,7 @@ export function parseOverrides(value: unknown): Partial<MetadataFields> {
     if (key === 'title') output.title = text(v, 300, true);
     else output[key] = v === null ? null : text(v, key === 'description' ? 20000 : 2000);
   }
-  if (output.artwork && !/^https:\/\//.test(output.artwork))
+  if (output.artwork && !/^https:\/\//.test(output.artwork) && !coverReference(output.artwork))
     throw new Error('Artwork must use an HTTPS address.');
   if ('metascore' in input) {
     if (

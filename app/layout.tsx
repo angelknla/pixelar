@@ -12,10 +12,11 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [
-      { url: '/favicon-gamepad-16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-gamepad-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico?v=3', sizes: '16x16 32x32 48x48', type: 'image/x-icon' },
+      { url: '/favicon-gamepad-16.png?v=3', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-gamepad-32.png?v=3', sizes: '32x32', type: 'image/png' },
     ],
-    shortcut: '/favicon-gamepad-32.png',
+    shortcut: '/favicon.ico?v=3',
     apple: [{ url: '/apple-icon.png?v=2', sizes: '180x180', type: 'image/png' }],
   },
   appleWebApp: { capable: true, title: 'Pixelar', statusBarStyle: 'default' },

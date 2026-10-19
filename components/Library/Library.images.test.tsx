@@ -9,6 +9,7 @@ vi.mock('@/app/library-actions', () => ({
   saveItem: vi.fn(),
   moveItem: vi.fn(),
   deleteItem: vi.fn(),
+  saveShelfLayout: vi.fn().mockResolvedValue({}),
 }));
 vi.mock('next/image', () => ({
   default: ({ fill, unoptimized, ...props }: ImageProps) => (

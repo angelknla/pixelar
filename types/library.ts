@@ -66,7 +66,14 @@ export interface ProfileRow {
   default_release_reminder: boolean;
   theme: 'system' | 'light' | 'dark';
   avatar_path: string | null;
+  shelf_layouts?: ShelfLayouts;
 }
+export interface ShelfLayout {
+  order: string[];
+  collapsed: string[];
+}
+export type ShelfView = 'games_status' | 'tv_status' | 'tv_service';
+export type ShelfLayouts = Partial<Record<ShelfView, ShelfLayout>>;
 export interface ReminderRow {
   id: string;
   item_id: string;

@@ -58,6 +58,9 @@ beforeAll(async () => {
   const sql = await readFile(new URL('./schema.sql', import.meta.url), 'utf8');
   await db.exec(sql);
   await db.exec(sql);
+  await db.exec(
+    await readFile(new URL('./migrations/20261019_shelf_layouts.sql', import.meta.url), 'utf8')
+  );
 }, 20000);
 afterAll(async () => {
   await db.close();
@@ -88,12 +91,63 @@ describe('additive schema and ownership', () => {
     await expect(db.query('select pixelar_process_releases()')).rejects.toThrow(
       /permission denied/
     );
+    await expect(
+      db.query(
+        'select pixelar_save_shelf_layout($1,\'games_status\',\'{"order":[],"collapsed":[]}\'::jsonb)',
+        [owner]
+      )
+    ).rejects.toThrow(/permission denied/);
     await db.exec('reset role');
     const rows = await db.query<{ relrowsecurity: boolean }>(
       "select relrowsecurity from pg_class where relname in ('pixelar_items','pixelar_profiles','pixelar_metadata_cache','pixelar_reminders','pixelar_notifications','pixelar_item_statuses')"
     );
     expect(rows.rows).toHaveLength(6);
     expect(rows.rows.every((r) => r.relrowsecurity)).toBe(true);
+  });
+  it('updates shelf layouts atomically per owner and view without overwriting profile preferences', async () => {
+    await db.query(
+      "insert into pixelar_profiles(member_id,currency,avatar_path) values($1,'USD','owner/profile.webp'),($2,'EUR',null)",
+      [owner, other]
+    );
+    const games = { order: ['Playing', 'Backlog'], collapsed: ['Anticipated'] };
+    const tv = { order: ['Netflix', 'Prime Video'], collapsed: [] };
+    await Promise.all([
+      db.query('select pixelar_save_shelf_layout($1,$2,$3)', [
+        owner,
+        'games_status',
+        JSON.stringify(games),
+      ]),
+      db.query('select pixelar_save_shelf_layout($1,$2,$3)', [
+        owner,
+        'tv_service',
+        JSON.stringify(tv),
+      ]),
+    ]);
+    const rows = await db.query<{
+      currency: string;
+      avatar_path: string | null;
+      shelf_layouts: unknown;
+    }>('select currency,avatar_path,shelf_layouts from pixelar_profiles where member_id=$1', [
+      owner,
+    ]);
+    expect(rows.rows[0]).toEqual({
+      currency: 'USD',
+      avatar_path: 'owner/profile.webp',
+      shelf_layouts: { games_status: games, tv_service: tv },
+    });
+    expect(
+      (await db.query('select shelf_layouts from pixelar_profiles where member_id=$1', [other]))
+        .rows
+    ).toEqual([{ shelf_layouts: {} }]);
+    await expect(
+      db.query("select pixelar_save_shelf_layout($1,'invalid',$2)", [owner, JSON.stringify(games)])
+    ).rejects.toThrow(/Invalid shelf/);
+    await expect(
+      db.query(
+        'select pixelar_save_shelf_layout($1,\'games_status\',\'{"order":[123],"collapsed":[]}\'::jsonb)',
+        [owner]
+      )
+    ).rejects.toThrow(/Invalid shelf/);
   });
   it('denies Pixelar browser storage access without changing other bucket access', async () => {
     await db.exec(

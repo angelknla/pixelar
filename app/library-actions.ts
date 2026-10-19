@@ -1,7 +1,9 @@
 'use server';
 import { revalidatePath } from 'next/cache';
+import { validateCover } from '@/lib/cover';
 import { db, ownedItem, requireAccount } from '@/lib/data/library';
 import { effectiveFields, statusesFor } from '@/lib/library';
+import { parseShelfLayout, parseShelfView } from '@/lib/shelves';
 import { parseItem, uuid } from '@/lib/validation';
 import type { Json } from '@/types/database';
 import type { Status } from '@/types/library';
@@ -14,6 +16,7 @@ export async function saveItem(value: unknown): Promise<{ id?: string; error?: s
   try {
     const input = parseItem(value);
     if (input.id) await ownedItem(account.memberId, input.id);
+    await validateCover(account.memberId, input.id, input.overrides.artwork);
     let base = null;
     if (input.metadata_id) {
       const result = await db()
@@ -98,5 +101,26 @@ export async function markAllNotificationsRead(): Promise<{ error?: string }> {
     return {};
   } catch {
     return { error: 'Could not mark all notifications read.' };
+  }
+}
+export async function saveShelfLayout(view: unknown, value: unknown): Promise<{ error?: string }> {
+  const account = await requireAccount();
+  try {
+    const viewKey = parseShelfView(view);
+    const layout = parseShelfLayout(value);
+    const { error } = await db().rpc('pixelar_save_shelf_layout', {
+      owner_id: account.memberId,
+      view_key: viewKey,
+      layout: layout as unknown as Json,
+    });
+    if (error)
+      return {
+        error:
+          'Could not sync shelves. Apply the Pixelar shelf layout migration in Supabase, then retry.',
+      };
+    changed();
+    return {};
+  } catch {
+    return { error: 'Could not sync shelves. Please try again.' };
   }
 }

@@ -1,4 +1,10 @@
-import { deleteItem, markAllNotificationsRead, moveItem, saveItem } from './library-actions';
+import {
+  deleteItem,
+  markAllNotificationsRead,
+  moveItem,
+  saveItem,
+  saveShelfLayout,
+} from './library-actions';
 
 const mocks = vi.hoisted(() => ({
   requireAccount: vi.fn(),
@@ -12,7 +18,9 @@ const mocks = vi.hoisted(() => ({
   select: vi.fn(),
   maybeSingle: vi.fn(),
   revalidate: vi.fn(),
+  validateCover: vi.fn(),
 }));
+vi.mock('@/lib/cover', () => ({ validateCover: mocks.validateCover }));
 vi.mock('@/lib/data/library', () => ({
   requireAccount: mocks.requireAccount,
   ownedItem: mocks.ownedItem,
@@ -52,6 +60,7 @@ beforeEach(() => {
   mocks.eq.mockReturnValue(q);
   mocks.is.mockResolvedValue({ error: null });
   mocks.rpc.mockResolvedValue({ data: id, error: null });
+  mocks.validateCover.mockResolvedValue(undefined);
 });
 describe('owner-checked library actions', () => {
   it('passes the verified session owner to atomic save, ignoring input owner', async () => {
@@ -67,6 +76,19 @@ describe('owner-checked library actions', () => {
     expect(await deleteItem(id)).toHaveProperty('error');
     expect(mocks.rpc).not.toHaveBeenCalled();
     expect(mocks.delete).not.toHaveBeenCalled();
+  });
+  it('validates uploaded covers against the verified owner before saving', async () => {
+    const artwork = `/api/covers/${id}?v=${id}`;
+    expect(await saveItem({ ...input, id, overrides: { title: 'Manual', artwork } })).toEqual({
+      id,
+    });
+    expect(mocks.validateCover).toHaveBeenCalledWith('verified-owner', id, artwork);
+    mocks.rpc.mockClear();
+    mocks.validateCover.mockRejectedValueOnce(new Error('Choose a cover uploaded for this title.'));
+    expect(
+      await saveItem({ ...input, id, overrides: { title: 'Manual', artwork } })
+    ).toHaveProperty('error');
+    expect(mocks.rpc).not.toHaveBeenCalled();
   });
   it('filters status changes by owner and item id', async () => {
     expect(await moveItem(id, 'playing')).toEqual({});
@@ -95,5 +117,27 @@ describe('owner-checked library actions', () => {
     mocks.requireAccount.mockRejectedValueOnce(new Error('Sign in required'));
     await expect(markAllNotificationsRead()).rejects.toThrow('Sign in required');
     expect(mocks.update).not.toHaveBeenCalled();
+  });
+  it('syncs shelves using session ownership and only the requested view', async () => {
+    mocks.rpc.mockResolvedValueOnce({ error: null });
+    const layout = { order: ['Playing', 'Backlog'], collapsed: ['Anticipated'] };
+    expect(await saveShelfLayout('games_status', layout)).toEqual({});
+    expect(mocks.rpc).toHaveBeenCalledWith('pixelar_save_shelf_layout', {
+      owner_id: 'verified-owner',
+      view_key: 'games_status',
+      layout,
+    });
+  });
+  it('rejects invalid shelf layouts and reports missing migrations', async () => {
+    expect(await saveShelfLayout('other', { order: [], collapsed: [] })).toHaveProperty('error');
+    expect(await saveShelfLayout('tv_status', { order: [123], collapsed: [] })).toHaveProperty(
+      'error'
+    );
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    mocks.rpc.mockResolvedValueOnce({ error: { message: 'function missing' } });
+    expect(await saveShelfLayout('tv_status', { order: [], collapsed: [] })).toHaveProperty(
+      'error'
+    );
+    expect(mocks.revalidate).not.toHaveBeenCalled();
   });
 });

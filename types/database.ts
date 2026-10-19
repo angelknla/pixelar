@@ -74,6 +74,10 @@ export interface Database {
         Returns: number;
       };
       pixelar_save_item: { Args: { owner_id: string; payload: Json }; Returns: string };
+      pixelar_save_shelf_layout: {
+        Args: { owner_id: string; view_key: string; layout: Json };
+        Returns: undefined;
+      };
       pixelar_update_profile: {
         Args: { owner_id: string; display_name: string; new_email: string; settings: Json };
         Returns: undefined;

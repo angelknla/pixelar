@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { deleteItem, moveItem } from '@/app/library-actions';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { deleteItem, moveItem, saveShelfLayout } from '@/app/library-actions';
 import { defaultProfile, EMPTY_FIELDS } from '@/lib/library';
 import type { LibraryItem } from '@/types/library';
 import Library from './Library';
@@ -8,6 +8,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock('@/app/library-actions', () => ({
   moveItem: vi.fn().mockResolvedValue({}),
   deleteItem: vi.fn().mockResolvedValue({}),
+  saveShelfLayout: vi.fn().mockResolvedValue({}),
 }));
 vi.mock('./ItemEditor', () => ({ default: () => null }));
 vi.mock('./Artwork', () => ({ default: () => null }));
@@ -15,6 +16,7 @@ vi.mock('./Countdown', () => ({ default: () => null }));
 
 beforeEach(() => {
   vi.mocked(deleteItem).mockReset().mockResolvedValue({});
+  vi.mocked(saveShelfLayout).mockReset().mockResolvedValue({});
   Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
     value: function (this: HTMLDialogElement) {
       this.open = true;
@@ -27,6 +29,76 @@ beforeEach(() => {
     },
     configurable: true,
   });
+});
+
+it('restores saved shelf order and collapsed state, and keeps grid titles visible', async () => {
+  let completeSave!: (result: { error?: string }) => void;
+  vi.mocked(saveShelfLayout).mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        completeSave = resolve;
+      })
+  );
+  const profile = {
+    ...defaultProfile('owner'),
+    shelf_layouts: {
+      tv_service: { order: ['Prime Video', 'Netflix'], collapsed: ['Prime Video'] },
+    },
+  };
+  render(
+    <Library
+      kind="screen"
+      profile={profile}
+      items={[
+        tvItem('one', 'Prime title', ['Prime Video']),
+        tvItem('two', 'Netflix title', ['Netflix']),
+      ]}
+    />
+  );
+  expect(document.querySelector('.shelf .shelfName')).toHaveTextContent('Prime Video');
+  expect(screen.queryByRole('heading', { name: 'Prime title' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /Prime Video 1/ }));
+  expect(screen.getByRole('heading', { name: 'Prime title' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Prime Video 1/ })).toBeEnabled();
+  expect(screen.queryByText('Syncing shelves…')).not.toBeInTheDocument();
+  await act(async () => completeSave({}));
+  await waitFor(() =>
+    expect(saveShelfLayout).toHaveBeenCalledWith('tv_service', {
+      order: ['Prime Video', 'Netflix'],
+      collapsed: [],
+    })
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Move Netflix shelf up' }));
+  expect(document.querySelector('.shelf .shelfName')).toHaveTextContent('Netflix');
+  await waitFor(() =>
+    expect(saveShelfLayout).toHaveBeenLastCalledWith('tv_service', {
+      order: ['Netflix', 'Prime Video', 'None'],
+      collapsed: [],
+    })
+  );
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: /Prime Video 1/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Grid' }));
+  });
+  expect(screen.getByRole('heading', { name: 'Prime title' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Netflix title' })).toBeInTheDocument();
+});
+
+it('retains local shelf changes when syncing fails and retries the latest layout', async () => {
+  vi.mocked(saveShelfLayout).mockResolvedValueOnce({ error: 'Could not sync shelves.' });
+  render(
+    <Library
+      kind="screen"
+      profile={defaultProfile('owner')}
+      items={[tvItem('one', 'Netflix title', ['Netflix'])]}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: /Netflix 1/ }));
+  await screen.findByRole('alert');
+  expect(screen.queryByRole('heading', { name: 'Netflix title' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Retry sync' }));
+  await waitFor(() => expect(saveShelfLayout).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
 });
 afterEach(() => {
   Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');

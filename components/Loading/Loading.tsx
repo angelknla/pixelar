@@ -327,35 +327,58 @@ export function ItemLoading() {
   return (
     <LoadingState label="Loading title details">
       <Bar className="skeletonBack" />
-      <div className="editor skeletonEditor">
-        <div className="editorHeading">
-          <div>
+      <div className="editor itemDetails">
+        <header className="itemOverview">
+          <div className="itemDetailArtwork detailGameArt">
+            <div className="artwork skeleton" />
+          </div>
+          <div className="itemOverviewBody">
             <Bar className="skeletonShort" />
             <Bar className="skeletonEditorTitle" />
+            <div className="itemOverviewMeta">
+              <Bar className="skeletonChip" />
+              <Bar className="skeletonStat" />
+            </div>
           </div>
-        </div>
-        <div className="searchBox">
-          <Field label="Find a title" />
-          <Bar className="skeletonHint" />
-        </div>
-        <div className="skeletonForm">
-          <Field label="Title" />
-          <div className="formGrid">
-            <Field label="Status" />
-            <Field label="Metacritic score" />
-            <Field label="Release precision" />
-            <Field label="Release date" />
+        </header>
+        <Bar className="skeletonInput skeletonHint" />
+        <div className="itemDetailForm skeletonForm">
+          <div className="itemDetailColumns">
+            <div className="itemDetailMain">
+              <fieldset className="editorSection">
+                <legend>Your library</legend>
+                <Field label="Title" />
+                <Field label="Status" />
+                <Chips />
+                <div className="formGrid">
+                  <Field label="Price (optional)" />
+                  <Field label="Currency" />
+                </div>
+              </fieldset>
+            </div>
+            <fieldset className="editorSection itemDetailRelease">
+              <legend>Release & reminders</legend>
+              <Field label="Release precision" />
+              <Field label="Release date" />
+              <Bar />
+              <Field label="Reminders" />
+            </fieldset>
           </div>
-          <Chips />
-          <div className="formGrid">
-            <Field label="Price (optional)" />
-            <Field label="Currency" />
+          <div className="itemDetailPersonal">
+            <fieldset className="editorSection">
+              <legend>My notes</legend>
+              <Bar className="skeletonTextarea" />
+            </fieldset>
+            <fieldset className="editorSection">
+              <legend>Cover image</legend>
+              <Bar className="skeletonButton" />
+              <Field label="Cover / poster URL" />
+            </fieldset>
           </div>
-          <Field label="Cover / poster URL" />
-          <Field label="Publisher / studio" />
-          <Field label="Description" tall />
-          <Field label="My notes" tall />
-          <Bar className="skeletonButton" />
+          <Bar className="skeletonInput" />
+          <div className="itemDetailActions formActions">
+            <Bar className="skeletonButton" />
+          </div>
         </div>
       </div>
     </LoadingState>

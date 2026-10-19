@@ -1,22 +1,44 @@
 'use client';
 
 import {
+  closestCenter,
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
+  rectIntersection,
+  useDraggable,
   useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { LayoutGrid, MonitorPlay, Plus, Rows3, Search } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  GripVertical,
+  LayoutGrid,
+  MonitorPlay,
+  Plus,
+  Rows3,
+  Search,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useLayoutEffect, useRef, useState, useTransition } from 'react';
-import { deleteItem, moveItem } from '@/app/library-actions';
-import { shelfKeyboardCoordinates } from '@/lib/drag';
+import { deleteItem, moveItem, saveShelfLayout } from '@/app/library-actions';
+import { createShelfKeyboardCoordinates } from '@/lib/drag';
 import { label, PLATFORMS, SERVICES, serviceLabel, statusesFor } from '@/lib/library';
-import type { LibraryItem, ProfileRow, Status } from '@/types/library';
+import { orderedShelves, reorderShelves, shelfLayout } from '@/lib/shelves';
+import type {
+  LibraryItem,
+  ProfileRow,
+  ShelfLayout,
+  ShelfLayouts,
+  ShelfView,
+  Status,
+} from '@/types/library';
 import Artwork from './Artwork';
 import GameTile from './GameTile';
 import ItemEditor from './ItemEditor';
@@ -62,27 +84,82 @@ function Shelf({
   status,
   children,
   count,
+  collapsed,
+  onToggle,
+  onReorder,
+  first,
+  last,
 }: {
   name: string;
   status?: Status;
   children: React.ReactNode;
   count: number;
+  collapsed: boolean;
+  onToggle: () => void;
+  onReorder: (direction: number) => void;
+  first: boolean;
+  last: boolean;
 }) {
-  const drop = useDroppable({ id: status ?? name, disabled: !status });
+  const contentId = useId();
+  const drop = useDroppable({ id: status ?? name, disabled: !status, data: { type: 'item' } });
+  const target = useDroppable({ id: `shelf:${name}`, data: { type: 'shelf', name } });
+  const drag = useDraggable({ id: `shelf:${name}`, data: { type: 'shelf', name } });
   return (
     <section
       ref={drop.setNodeRef}
-      className={`shelf ${status ? `status-${status}` : ''} ${drop.isOver ? 'dropOver' : ''}`}
+      className={`shelf ${status ? `status-${status}` : ''} ${drop.isOver ? 'dropOver' : ''} ${collapsed ? 'shelfCollapsed' : ''} ${target.isOver ? 'shelfReorderTarget' : ''}`}
     >
-      <div className="shelfHeading">
+      <div className="shelfHeading" ref={target.setNodeRef}>
         <h2>
-          <span className="shelfDot" />
-          {name} <span className="countBadge">{count}</span>
+          <button
+            type="button"
+            className="shelfToggle"
+            aria-expanded={!collapsed}
+            aria-controls={contentId}
+            onClick={onToggle}
+          >
+            <span className="shelfDot" />
+            <span className="shelfName">{name}</span> <span className="countBadge">{count}</span>
+            <ChevronDown size={16} aria-hidden="true" />
+          </button>
         </h2>
-        {status && <span className="hint">Drop a title here</span>}
+        <div className="shelfHeadingActions">
+          {status && <span className="hint">Drop a title here</span>}
+          <button
+            type="button"
+            className="shelfMove"
+            aria-label={`Move ${name} shelf up`}
+            disabled={first}
+            onClick={() => onReorder(-1)}
+          >
+            <ArrowUp size={14} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="shelfMove"
+            aria-label={`Move ${name} shelf down`}
+            disabled={last}
+            onClick={() => onReorder(1)}
+          >
+            <ArrowDown size={14} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="shelfDrag"
+            ref={drag.setNodeRef}
+            {...drag.listeners}
+            {...drag.attributes}
+            aria-label={`Reorder ${name} shelf`}
+            title="Drag to reorder shelf"
+          >
+            <GripVertical size={17} aria-hidden="true" />
+          </button>
+        </div>
       </div>
-      <div className="cardGrid">{children}</div>
-      {count === 0 && <p className="emptyShelf">Room for your next favourite.</p>}
+      <div id={contentId} hidden={collapsed}>
+        <div className="cardGrid">{collapsed ? null : children}</div>
+        {count === 0 && <p className="emptyShelf">Room for your next favourite.</p>}
+      </div>
     </section>
   );
 }
@@ -111,6 +188,51 @@ export default function Library({
   const [removeError, setRemoveError] = useState('');
   const [removePending, startRemove] = useTransition();
   const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const [layouts, setLayouts] = useState<ShelfLayouts>(profile.shelf_layouts ?? {});
+  const [shelfError, setShelfError] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const [draggingShelf, setDraggingShelf] = useState<string | null>(null);
+  const keyboardTarget = useRef<string | null>(null);
+  const keyboardCoordinates = useRef(
+    createShelfKeyboardCoordinates((id) => {
+      keyboardTarget.current = id;
+    })
+  ).current;
+  const queuedLayouts = useRef(new Map<ShelfView, ShelfLayout>());
+  const savingLayouts = useRef(false);
+  const failedLayouts = useRef(new Map<ShelfView, ShelfLayout>());
+  const shelfView: ShelfView =
+    kind === 'game' ? 'games_status' : view === 'service' ? 'tv_service' : 'tv_status';
+  const currentLayout = shelfLayout(layouts, shelfView);
+  async function syncLayouts() {
+    if (savingLayouts.current) return;
+    savingLayouts.current = true;
+    setSyncing(true);
+    setShelfError('');
+    try {
+      while (queuedLayouts.current.size) {
+        const [key, layout] = queuedLayouts.current.entries().next().value!;
+        queuedLayouts.current.delete(key);
+        const result = await saveShelfLayout(key, layout);
+        if (result.error) {
+          failedLayouts.current.set(key, layout);
+          setShelfError(result.error);
+        } else failedLayouts.current.delete(key);
+      }
+    } catch {
+      setShelfError('Could not sync shelves. Please try again.');
+    } finally {
+      savingLayouts.current = false;
+      setSyncing(false);
+      if (failedLayouts.current.size === 0) setShelfError('');
+    }
+  }
+  function updateLayout(next: ShelfLayout) {
+    setLayouts((previous) => ({ ...previous, [shelfView]: next }));
+    queuedLayouts.current.set(shelfView, next);
+    failedLayouts.current.set(shelfView, next);
+    void syncLayouts();
+  }
   const [visibleArtwork, setVisibleArtwork] = useState<Set<string>>(() => new Set());
   const library = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -199,7 +321,10 @@ export default function Library({
   }, [removing]);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: shelfKeyboardCoordinates })
+    useSensor(KeyboardSensor, {
+      coordinateGetter: keyboardCoordinates,
+      scrollBehavior: 'auto',
+    })
   );
   const relevant = items.filter(
     (i) => !removedIds.includes(i.id) && (kind === 'game' ? i.kind === 'game' : i.kind !== 'game')
@@ -248,7 +373,7 @@ export default function Library({
     });
   };
   const statuses = statusesFor(kind === 'game' ? 'game' : 'movie');
-  const groups =
+  const unsortedGroups: { name: string; status: Status | undefined; items: LibraryItem[] }[] =
     view === 'status'
       ? statuses.map((s) => ({
           name: label(s),
@@ -273,8 +398,19 @@ export default function Library({
               ),
             }))
         : [];
+  const groups = orderedShelves(unsortedGroups, currentLayout.order);
+  function reorderShelf(from: string, to: string) {
+    if (from === to) return;
+    const order = [
+      ...groups.map((group) => group.name),
+      ...currentLayout.order.filter((name) => !groups.some((group) => group.name === name)),
+    ];
+    updateLayout({ ...currentLayout, order: reorderShelves(order, from, to) });
+  }
   const Tile = kind === 'game' ? GameTile : ScreenTile;
-  const firstGroup = groups.find((group) => group.items.length)?.name;
+  const firstGroup = groups.find(
+    (group) => group.items.length && !currentLayout.collapsed.includes(group.name)
+  )?.name;
   const firstTitles =
     view === 'grid' ? filtered : (groups.find((group) => group.name === firstGroup)?.items ?? []);
   // Next tracks LCP by URL, so every copy of the hero/visible artwork must agree.
@@ -501,6 +637,23 @@ export default function Library({
           {moved}
         </p>
       )}
+      {shelfError && (
+        <div className="shelfSyncError" role="alert">
+          <p>{shelfError}</p>
+          <button
+            type="button"
+            disabled={syncing}
+            onClick={() => {
+              failedLayouts.current.forEach((layout, key) => {
+                queuedLayouts.current.set(key, layout);
+              });
+              void syncLayouts();
+            }}
+          >
+            Retry sync
+          </button>
+        </div>
+      )}
       {relevant.length === 0 ? (
         <div className="emptyState">
           <Image src="/icon.svg?v=2" alt="" width={48} height={48} unoptimized loading="eager" />
@@ -519,25 +672,79 @@ export default function Library({
         <DndContext
           id={dialogTitle}
           sensors={sensors}
+          collisionDetection={(args) => {
+            const isShelf = args.active.data.current?.type === 'shelf';
+            const candidates = args.droppableContainers.filter(
+              (container) => (container.data.current?.type === 'shelf') === isShelf
+            );
+            if (!args.pointerCoordinates && keyboardTarget.current) {
+              const target = candidates.find(
+                (container) => container.id === keyboardTarget.current
+              );
+              if (target) return [{ id: target.id }];
+            }
+            return (isShelf || !args.pointerCoordinates ? closestCenter : rectIntersection)({
+              ...args,
+              droppableContainers: candidates,
+            });
+          }}
+          onDragStart={({ active }) => {
+            keyboardTarget.current = null;
+            setDraggingShelf(
+              active.data.current?.type === 'shelf' ? String(active.data.current.name) : null
+            );
+          }}
+          onDragCancel={() => {
+            keyboardTarget.current = null;
+            setDraggingShelf(null);
+          }}
           onDragEnd={({ active, over }) => {
-            if (over && statuses.includes(String(over.id) as Status))
+            keyboardTarget.current = null;
+            setDraggingShelf(null);
+            if (active.data.current?.type === 'shelf') {
+              if (over?.data.current?.type === 'shelf')
+                reorderShelf(String(active.data.current.name), String(over.data.current.name));
+            } else if (over && statuses.includes(String(over.id) as Status))
               move(String(active.data.current?.itemId), String(over.id) as Status);
           }}
         >
           {view === 'grid' ? (
             <div className="cardGrid flatGrid">{cards(filtered)}</div>
           ) : (
-            groups.map((group) => (
+            groups.map((group, index) => (
               <Shelf
                 key={group.name}
                 name={group.name}
                 status={group.status}
                 count={group.items.length}
+                collapsed={currentLayout.collapsed.includes(group.name)}
+                onToggle={() =>
+                  updateLayout({
+                    ...currentLayout,
+                    collapsed: currentLayout.collapsed.includes(group.name)
+                      ? currentLayout.collapsed.filter((name) => name !== group.name)
+                      : [...currentLayout.collapsed, group.name],
+                  })
+                }
+                onReorder={(direction) => {
+                  const target = groups[index + direction];
+                  if (target) reorderShelf(group.name, target.name);
+                }}
+                first={index === 0}
+                last={index === groups.length - 1}
               >
                 {cards(group.items, group.name)}
               </Shelf>
             ))
           )}
+          <DragOverlay style={{ width: 'min(280px, calc(100vw - 32px))' }}>
+            {draggingShelf && (
+              <div className="shelfDragOverlay">
+                <GripVertical size={18} aria-hidden="true" />
+                {draggingShelf}
+              </div>
+            )}
+          </DragOverlay>
           {view !== 'status' && (
             <div className="dropTargets">
               <p className="hint">Drag to change status</p>

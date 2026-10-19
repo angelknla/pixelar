@@ -700,6 +700,97 @@ legend {
   min-width: 0;
   flex-wrap: wrap;
 }
+.shelfHeading > h2 {
+  flex: 1;
+}
+.shelfToggle {
+  padding: 0.25rem 0;
+  min-height: 36px;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: var(--text);
+  font-size: inherit;
+  font-weight: inherit;
+  justify-content: flex-start;
+  text-align: left;
+  min-width: 0;
+  gap: 0.6rem;
+}
+.shelfName {
+  overflow-wrap: anywhere;
+}
+.shelfToggle svg {
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+.shelfToggle[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+.shelfHeadingActions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0.25rem;
+}
+.shelfHeadingActions .hint {
+  margin-right: 0.5rem;
+}
+.shelfMove,
+.shelfDrag {
+  width: 32px;
+  min-height: 36px;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+}
+.shelfMove:disabled {
+  opacity: 0.25;
+}
+.shelfDrag {
+  touch-action: none;
+  cursor: grab;
+}
+.shelfCollapsed {
+  min-height: 0;
+}
+.shelfCollapsed .shelfHeading {
+  margin-bottom: 0;
+}
+.shelfReorderTarget .shelfHeading {
+  box-shadow: inset 0 -2px var(--accent);
+}
+.shelfDragOverlay {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-weight: 700;
+}
+.shelfSyncError {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  color: var(--error);
+}
+@media (max-width: 650px) {
+  .shelfHeadingActions .hint {
+    display: none;
+  }
+  .shelfHeading {
+    gap: 0.5rem;
+  }
+  .shelfMove {
+    display: none;
+  }
+}
 .shelfDot {
   width: 3px;
   height: 20px;
@@ -1249,6 +1340,251 @@ legend {
 .backLink {
   display: inline-block;
   margin-bottom: 1.5rem;
+}
+.editor.itemDetails {
+  max-width: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.itemOverview {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  margin-bottom: 1.75rem;
+}
+.itemDetailArtwork {
+  background: var(--background);
+}
+.itemDetailArtwork > .artwork {
+  border-radius: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+.itemDetailArtwork img {
+  object-fit: contain;
+}
+.detailGameArt {
+  height: clamp(180px, 20vw, 320px);
+}
+.detailScreenArt {
+  height: clamp(180px, 20vw, 320px);
+}
+.itemOverviewBody {
+  padding: clamp(1.25rem, 2.5vw, 2.5rem);
+  min-width: 0;
+}
+.itemOverviewBody h1 {
+  margin: 0.5rem 0 1rem;
+  font-size: clamp(1.75rem, 3vw, 3rem);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.itemOverviewMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.detailStatus {
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-weight: 650;
+}
+.itemOverviewBody > .hint {
+  margin: 1rem 0 0;
+}
+.editorSection {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+}
+.editorSection > legend {
+  font-size: 1rem;
+}
+.editorSection > legend,
+.detailChoices > legend,
+.profileForm fieldset > legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+}
+.sectionIntro {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin: 0;
+}
+.itemDetails .itemDetailForm {
+  gap: 1.75rem;
+}
+.itemDetailColumns,
+.itemDetailMain {
+  display: grid;
+  min-width: 0;
+  gap: 1.75rem;
+  align-items: start;
+}
+.itemDetails .itemDetailColumns {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+}
+.itemDetailPersonal {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 1.75rem;
+}
+.itemDetailPersonal > * {
+  min-width: 0;
+}
+.itemDetailNotes {
+  grid-template-rows: auto auto minmax(140px, 1fr);
+}
+.itemDetailNotes > label,
+.itemDetailNotes textarea {
+  height: 100%;
+}
+.itemDetails .editorSection {
+  background: var(--surface);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  gap: 1.5rem;
+}
+.itemDetails .detailChoices {
+  border: 0;
+  padding: 0;
+}
+.detailChoices {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+}
+.itemDetails .detailChoices legend {
+  padding: 0;
+  margin-bottom: 0.75rem;
+}
+.itemDetails .choiceChips {
+  gap: 0.65rem;
+}
+.itemDetails .choiceChips label {
+  padding: 0.65rem 0.75rem;
+}
+.itemDetails .formGrid {
+  gap: 1.25rem;
+}
+.itemDetailRelease .formGrid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.itemDetails label {
+  gap: 0.65rem;
+  line-height: 1.5;
+}
+.itemDetails textarea {
+  min-height: 140px;
+  line-height: 1.7;
+}
+.itemDetails .checkbox {
+  align-items: start;
+}
+.itemProviderTools,
+.itemMetadataFields {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 1.25rem;
+}
+.itemProviderTools > summary,
+.itemMetadataFields > summary {
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.providerToolsBody,
+.itemMetadataBody {
+  padding: 0 1.25rem 1.25rem;
+  min-width: 0;
+}
+.itemMetadataBody {
+  display: grid;
+  gap: 1.5rem;
+}
+.itemDetails .itemDetailActions {
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--border);
+  justify-content: space-between;
+}
+.itemMetadataFields {
+  margin-bottom: 0;
+}
+.coverUploadRow,
+.coverActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+}
+.coverUpload {
+  display: grid;
+  gap: 0.75rem;
+}
+.coverUpload input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.coverUpload .hint,
+.coverUpload [role="status"],
+.coverUpload [role="alert"] {
+  margin: 0;
+}
+@media (max-width: 1100px) {
+  .itemDetailPersonal {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .itemDetails .itemDetailColumns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .itemDetailRelease .formGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 650px) {
+  .itemOverview {
+    border-radius: var(--radius);
+    margin-bottom: 1.25rem;
+  }
+  .itemDetails .editorSection {
+    padding: 1.25rem;
+    gap: 1.25rem;
+  }
+  .itemDetails .itemDetailForm,
+  .itemDetails .itemDetailColumns,
+  .itemDetailMain {
+    gap: 1.25rem;
+  }
+  .itemDetails .formGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .itemDetails .choiceChips label {
+    padding: 0.5rem 0.65rem;
+  }
+  .itemOverviewMeta {
+    gap: 0.65rem 1rem;
+    font-size: 0.8rem;
+  }
+  .itemDetailActions .primary {
+    flex: 1;
+  }
 }
 .deleteConfirm {
   border: 1px solid var(--error);

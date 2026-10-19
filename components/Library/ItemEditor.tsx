@@ -24,6 +24,8 @@ import type {
   Status,
 } from '@/types/library';
 import Artwork from './Artwork';
+import Countdown from './Countdown';
+import CoverUpload from './CoverUpload';
 
 type Props = {
   kind: ItemKind;
@@ -71,6 +73,7 @@ export default function ItemEditor({
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [coverPending, setCoverPending] = useState(false);
   const fields = effectiveFields(metadata?.fields ?? EMPTY_FIELDS, overrides);
   const patch = <K extends keyof MetadataFields>(key: K, value: MetadataFields[K]) =>
     setOverrides((prev) => ({ ...prev, [key]: value }));
@@ -128,6 +131,7 @@ export default function ItemEditor({
     });
   }
   function submit() {
+    if (coverPending) return;
     run(async () => {
       const parsedReminders = reminders.trim()
         ? reminders.split(',').map((s) => Number(s.trim()))
@@ -152,25 +156,61 @@ export default function ItemEditor({
   }
   const resetButton = (key: keyof MetadataFields) =>
     metadata && key in overrides ? (
-      <button className="textButton" type="button" onClick={() => restoreFetched(key)}>
+      <button
+        className="textButton"
+        type="button"
+        disabled={pending || coverPending}
+        onClick={() => restoreFetched(key)}
+      >
         Use fetched value
       </button>
     ) : null;
   const choose = (list: string[], set: (v: string[]) => void, value: string) =>
     set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   return (
-    <div className="editor">
-      <div className="editorHeading">
-        <div>
-          <span className="eyebrow">{item ? 'Make it yours' : 'A new adventure'}</span>
-          <h2>{item ? 'Edit title' : 'Add to your library'}</h2>
+    <div className={`editor ${item ? 'itemDetails' : ''}`}>
+      {item && (
+        <header className="itemOverview">
+          <div
+            className={`itemDetailArtwork ${kind === 'game' ? 'detailGameArt' : 'detailScreenArt'}`}
+          >
+            <Artwork
+              url={fields.artwork}
+              title={fields.title}
+              kind={kind}
+              eager
+              highPriority
+              sizes="(max-width: 650px) calc(100vw - 32px), calc(100vw - 280px)"
+            />
+          </div>
+          <div className="itemOverviewBody">
+            <span className="eyebrow">
+              {kind === 'game' ? 'Game' : kind === 'show' ? 'TV series' : 'Movie'}
+            </span>
+            <h1>{fields.title || 'Untitled'}</h1>
+            <div className="itemOverviewMeta">
+              <span className={`detailStatus status-${status}`}>{label(status)}</span>
+              <span>{releaseLabel(fields)}</span>
+              <Countdown fields={fields} timezone={profile.timezone} />
+              {fields.metascore !== null && <span>Metacritic {fields.metascore}</span>}
+            </div>
+            {fields.publisher && <p className="hint">{fields.publisher}</p>}
+          </div>
+        </header>
+      )}
+      {!item && (
+        <div className="editorHeading">
+          <div>
+            <span className="eyebrow">A new adventure</span>
+            <h2>Add to your library</h2>
+          </div>
+          {onDone && (
+            <button type="button" aria-label="Close editor" onClick={onDone}>
+              ✕
+            </button>
+          )}
         </div>
-        {onDone && (
-          <button type="button" aria-label="Close editor" onClick={onDone}>
-            ✕
-          </button>
-        )}
-      </div>
+      )}
       {!item && initialKind !== 'game' && (
         <fieldset className="screenTypePicker editorTypePicker" aria-label="Title type">
           <legend>What are you adding?</legend>
@@ -200,317 +240,394 @@ export default function ItemEditor({
           ))}
         </fieldset>
       )}
-      {item && kind !== 'game' && (
-        <p className="hint">{kind === 'show' ? 'TV series · Track the whole series.' : 'Movie'}</p>
-      )}
-      <div className="searchBox">
-        <label>
-          Find a {kind === 'game' ? 'game' : kind === 'show' ? 'TV series' : 'movie'}
-          <div className="inline">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search a title…"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  document.getElementById('searchTitles')?.click();
-                }
-              }}
-            />
-            <button
-              id="searchTitles"
-              type="button"
-              disabled={pending || query.trim().length < 2}
-              onClick={() =>
-                run(async () => {
-                  const response = await fetch(
-                    `/api/search?q=${encodeURIComponent(query)}&kind=${kind}`
-                  );
-                  const data = await response.json();
-                  if (!response.ok) throw new Error(data.error);
-                  setResults(data.results);
-                  if (!data.results.length) setMessage('No matches. Add a title manually below.');
-                })
-              }
-            >
-              Search
-            </button>
+      <details className="itemProviderTools" open={item ? undefined : true}>
+        <summary>{item ? 'Search & refresh metadata' : 'Find your title'}</summary>
+        <div className="providerToolsBody">
+          <div className="searchBox">
+            <label>
+              Find a {kind === 'game' ? 'game' : kind === 'show' ? 'TV series' : 'movie'}
+              <div className="inline">
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search a title…"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      document.getElementById('searchTitles')?.click();
+                    }
+                  }}
+                />
+                <button
+                  id="searchTitles"
+                  type="button"
+                  disabled={pending || query.trim().length < 2}
+                  onClick={() =>
+                    run(async () => {
+                      const response = await fetch(
+                        `/api/search?q=${encodeURIComponent(query)}&kind=${kind}`
+                      );
+                      const data = await response.json();
+                      if (!response.ok) throw new Error(data.error);
+                      setResults(data.results);
+                      if (!data.results.length)
+                        setMessage('No matches. Add a title manually below.');
+                    })
+                  }
+                >
+                  Search
+                </button>
+              </div>
+            </label>
+            <p className="hint">
+              {item
+                ? 'Search to link another match. Your manual edits are kept.'
+                : 'Or enter just a title below. You can link it to a match later.'}
+            </p>
           </div>
-        </label>
-        <p className="hint">Or enter just a title below. You can link it to a match later.</p>
-      </div>
-      {results.length > 0 && (
-        <div className="searchResults">
-          {results.map((result, index) => (
-            <button
-              type="button"
-              className="searchResult"
-              key={`${result.provider}:${result.provider_id}`}
-              onClick={() => load(result)}
-              disabled={pending}
-            >
-              <Artwork
-                url={result.artwork}
-                title={result.title}
-                kind={kind}
-                eager={index < 4 || Boolean(result.artwork && eagerArtwork?.has(result.artwork))}
-                sizes="50px"
-              />
+          {results.length > 0 && (
+            <div className="searchResults">
+              {results.map((result, index) => (
+                <button
+                  type="button"
+                  className="searchResult"
+                  key={`${result.provider}:${result.provider_id}`}
+                  onClick={() => load(result)}
+                  disabled={pending}
+                >
+                  <Artwork
+                    url={result.artwork}
+                    title={result.title}
+                    kind={kind}
+                    eager={
+                      index < 4 ||
+                      result.artwork === fields.artwork ||
+                      Boolean(result.artwork && eagerArtwork?.has(result.artwork))
+                    }
+                    sizes="50px"
+                  />
+                  <span>
+                    <strong>{result.title}</strong>
+                    <small>{result.year ?? 'Date unknown'}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+          {metadata && (
+            <div className="metadataInfo">
               <span>
-                <strong>{result.title}</strong>
-                <small>{result.year ?? 'Date unknown'}</small>
+                Linked to{' '}
+                <a href={metadata.fields.source_url} target="_blank" rel="noreferrer">
+                  {metadata.provider === 'rawg' ? 'RAWG' : 'TMDB'}
+                </a>{' '}
+                · fetched {new Date(metadata.fetched_at).toLocaleDateString('en-GB')}
               </span>
-            </button>
-          ))}
-        </div>
-      )}
-      {metadata && (
-        <div className="metadataInfo">
-          <span>
-            Linked to{' '}
-            <a href={metadata.fields.source_url} target="_blank" rel="noreferrer">
-              {metadata.provider === 'rawg' ? 'RAWG' : 'TMDB'}
-            </a>{' '}
-            · fetched {new Date(metadata.fetched_at).toLocaleDateString('en-GB')}
-          </span>
-          {item && (
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() =>
-                load(
-                  {
-                    provider: metadata.provider,
-                    provider_id: metadata.provider_id,
-                    kind,
-                    title: fields.title,
-                    artwork: fields.artwork,
-                    year: null,
-                  },
-                  true
-                )
-              }
-            >
-              Refresh metadata
-            </button>
+              {item && (
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() =>
+                    load(
+                      {
+                        provider: metadata.provider,
+                        provider_id: metadata.provider_id,
+                        kind,
+                        title: fields.title,
+                        artwork: fields.artwork,
+                        year: null,
+                      },
+                      true
+                    )
+                  }
+                >
+                  Refresh metadata
+                </button>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </details>
       <form
+        className="itemDetailForm"
         onSubmit={(e) => {
           e.preventDefault();
           submit();
         }}
       >
-        <label>
-          Title
-          <input
-            required
-            maxLength={300}
-            value={fields.title}
-            onChange={(e) => patch('title', e.target.value)}
-          />
-          {resetButton('title')}
-        </label>
-        <div className="formGrid">
-          <label>
-            Status
-            <select value={status} onChange={(e) => setStatus(e.target.value as Status)}>
-              {statusesFor(kind).map((s) => (
-                <option key={s} value={s}>
-                  {label(s)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Metacritic score
-            <input
-              type="number"
-              min={0}
-              max={100}
-              value={fields.metascore ?? ''}
-              onChange={(e) =>
-                patch('metascore', e.target.value === '' ? null : Number(e.target.value))
-              }
-            />
-            {resetButton('metascore')}
-          </label>
-        </div>
-        <div className="formGrid">
-          <label>
-            Release precision
-            <select
-              value={fields.release_precision}
-              onChange={(e) => {
-                const precision = e.target.value as Precision;
-                patch('release_precision', precision);
-                if (precision === 'unknown') patch('release_date', null);
-              }}
-            >
-              {(['unknown', 'year', 'month', 'day'] as const).map((p) => (
-                <option key={p} value={p}>
-                  {p === 'day' ? 'Exact date' : label(p)}
-                </option>
-              ))}
-            </select>
-            {resetButton('release_precision')}
-          </label>
-          <label>
-            Release {fields.release_precision === 'day' ? 'date' : 'window'}
-            <input
-              disabled={fields.release_precision === 'unknown'}
-              type={
-                fields.release_precision === 'day'
-                  ? 'date'
-                  : fields.release_precision === 'month'
-                    ? 'month'
-                    : 'number'
-              }
-              min={fields.release_precision === 'year' ? 1900 : undefined}
-              max={fields.release_precision === 'year' ? 2200 : undefined}
-              value={
-                fields.release_date
-                  ? fields.release_precision === 'year'
-                    ? fields.release_date.slice(0, 4)
-                    : fields.release_precision === 'month'
-                      ? fields.release_date.slice(0, 7)
-                      : fields.release_date
-                  : ''
-              }
-              onChange={(e) =>
-                patch(
-                  'release_date',
-                  e.target.value
-                    ? fields.release_precision === 'year'
-                      ? `${e.target.value.padStart(4, '0')}-01-01`
-                      : fields.release_precision === 'month'
-                        ? `${e.target.value}-01`
-                        : e.target.value
-                    : null
-                )
-              }
-            />
-            {resetButton('release_date')}
-          </label>
-        </div>
-        <p className="hint">
-          {releaseLabel(fields)} · Year/month windows don’t trigger reminders or automatic moves.
-        </p>
-        <fieldset>
-          <legend>{kind === 'game' ? 'Your platforms' : 'Your streaming services'}</legend>
-          <div className="choiceChips">
-            {[
-              ...new Set(
-                kind === 'game'
-                  ? [...PLATFORMS, ...(metadata?.fields.platforms ?? []), ...platforms]
-                  : [...SERVICES, ...(metadata?.fields.services ?? []), ...services]
-              ),
-            ].map((v) => (
-              <label key={v}>
+        <div className="itemDetailColumns">
+          <div className="itemDetailMain">
+            <fieldset className="editorSection">
+              <legend>Your library</legend>
+              <p className="sectionIntro">
+                {kind === 'game'
+                  ? 'Choose how and where you want to play.'
+                  : kind === 'show'
+                    ? 'Track the whole series and where you’ll watch.'
+                    : 'Keep your next movie night organised.'}
+              </p>
+              <label>
+                Title
                 <input
-                  type="checkbox"
-                  checked={(kind === 'game' ? platforms : services).includes(v)}
-                  onChange={() =>
-                    kind === 'game'
-                      ? choose(platforms, setPlatforms, v)
-                      : choose(services, setServices, v)
+                  required
+                  maxLength={300}
+                  value={fields.title}
+                  onChange={(e) => patch('title', e.target.value)}
+                />
+                {resetButton('title')}
+              </label>
+              <label>
+                Status
+                <select value={status} onChange={(e) => setStatus(e.target.value as Status)}>
+                  {statusesFor(kind).map((s) => (
+                    <option key={s} value={s}>
+                      {label(s)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <fieldset className="detailChoices">
+                <legend>{kind === 'game' ? 'Your platforms' : 'Your streaming services'}</legend>
+                <div className="choiceChips">
+                  {[
+                    ...new Set(
+                      kind === 'game'
+                        ? [...PLATFORMS, ...(metadata?.fields.platforms ?? []), ...platforms]
+                        : [...SERVICES, ...(metadata?.fields.services ?? []), ...services]
+                    ),
+                  ].map((v) => (
+                    <label key={v}>
+                      <input
+                        type="checkbox"
+                        checked={(kind === 'game' ? platforms : services).includes(v)}
+                        onChange={() =>
+                          kind === 'game'
+                            ? choose(platforms, setPlatforms, v)
+                            : choose(services, setServices, v)
+                        }
+                      />
+                      <span>{kind === 'game' ? v : serviceLabel(v)}</span>
+                    </label>
+                  ))}
+                </div>
+                {kind !== 'game' && (
+                  <p className="hint">
+                    No selections means None. Availability suggestions are for {profile.region}.
+                    Choose the services you intend to use.
+                  </p>
+                )}
+              </fieldset>
+              {kind === 'game' && (
+                <div className="formGrid">
+                  <label>
+                    Price (optional)
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    Currency
+                    <input
+                      maxLength={3}
+                      pattern="[A-Za-z]{3}"
+                      value={currency}
+                      onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+                    />
+                  </label>
+                </div>
+              )}
+            </fieldset>
+          </div>
+          <fieldset className="editorSection itemDetailRelease">
+            <legend>Release & reminders</legend>
+            <p className="sectionIntro">Plan ahead for the next release.</p>
+            <div className="formGrid">
+              <label>
+                Release precision
+                <select
+                  value={fields.release_precision}
+                  onChange={(e) => {
+                    const precision = e.target.value as Precision;
+                    patch('release_precision', precision);
+                    if (precision === 'unknown') patch('release_date', null);
+                  }}
+                >
+                  {(['unknown', 'year', 'month', 'day'] as const).map((p) => (
+                    <option key={p} value={p}>
+                      {p === 'day' ? 'Exact date' : label(p)}
+                    </option>
+                  ))}
+                </select>
+                {resetButton('release_precision')}
+              </label>
+              <label>
+                Release {fields.release_precision === 'day' ? 'date' : 'window'}
+                <input
+                  disabled={fields.release_precision === 'unknown'}
+                  type={
+                    fields.release_precision === 'day'
+                      ? 'date'
+                      : fields.release_precision === 'month'
+                        ? 'month'
+                        : 'number'
+                  }
+                  min={fields.release_precision === 'year' ? 1900 : undefined}
+                  max={fields.release_precision === 'year' ? 2200 : undefined}
+                  value={
+                    fields.release_date
+                      ? fields.release_precision === 'year'
+                        ? fields.release_date.slice(0, 4)
+                        : fields.release_precision === 'month'
+                          ? fields.release_date.slice(0, 7)
+                          : fields.release_date
+                      : ''
+                  }
+                  onChange={(e) =>
+                    patch(
+                      'release_date',
+                      e.target.value
+                        ? fields.release_precision === 'year'
+                          ? `${e.target.value.padStart(4, '0')}-01-01`
+                          : fields.release_precision === 'month'
+                            ? `${e.target.value}-01`
+                            : e.target.value
+                        : null
+                    )
                   }
                 />
-                <span>{kind === 'game' ? v : serviceLabel(v)}</span>
+                {resetButton('release_date')}
               </label>
-            ))}
-          </div>
-          {kind !== 'game' && (
+            </div>
             <p className="hint">
-              No selections means None. Availability suggestions are for {profile.region}; choose
-              the services you intend to use.
+              {releaseLabel(fields)} · Year/month windows don’t trigger reminders or automatic
+              moves.
             </p>
-          )}
-        </fieldset>
-        {kind === 'game' && (
-          <div className="formGrid">
-            <label>
-              Price (optional)
+            <label className="checkbox">
               <input
-                type="number"
-                min={0}
-                step="0.01"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                type="checkbox"
+                checked={autoMove}
+                onChange={(e) => setAutoMove(e.target.checked)}
               />
+              Move {kind === 'game' ? 'Scheduled → Backlog' : 'Upcoming → Watchlist'} on release day
             </label>
             <label>
-              Currency
+              Remind me this many days before release
               <input
-                maxLength={3}
-                pattern="[A-Za-z]{3}"
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+                value={reminders}
+                onChange={(e) => setReminders(e.target.value)}
+                placeholder="0, 7"
               />
+            </label>
+            <p className="hint">
+              Comma-separated days, 0 for release day. In-app reminders appear at 9am in{' '}
+              {profile.timezone}.
+            </p>
+          </fieldset>
+        </div>
+        <div className="itemDetailPersonal">
+          <fieldset className="editorSection itemDetailNotes">
+            <legend>My notes</legend>
+            <p className="sectionIntro">
+              A space for your thoughts, progress, and recommendations.
+            </p>
+            <label>
+              <span className="srOnly">My notes</span>
+              <textarea
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Why it caught your eye, where you left off…"
+              />
+            </label>
+          </fieldset>
+          <fieldset className="editorSection itemCoverSection">
+            <legend>Cover image</legend>
+            <p className="sectionIntro">
+              Use your own artwork or keep the image from your linked title.
+            </p>
+            {item && (
+              <CoverUpload
+                itemId={item.id}
+                disabled={pending}
+                onBusy={setCoverPending}
+                onUploaded={(url) => patch('artwork', url)}
+              />
+            )}
+            <label>
+              Cover / poster URL
+              <input
+                type="url"
+                disabled={coverPending}
+                placeholder="https://…"
+                value={fields.artwork?.startsWith('/api/covers/') ? '' : (fields.artwork ?? '')}
+                onChange={(e) => patch('artwork', e.target.value || null)}
+              />
+            </label>
+            {fields.artwork?.startsWith('/api/covers/') && (
+              <p className="hint">
+                Your uploaded image is selected. Paste a URL above to replace it.
+              </p>
+            )}
+            <div className="coverActions">
+              {resetButton('artwork')}
+              {fields.artwork && (
+                <button
+                  className="textButton"
+                  type="button"
+                  disabled={pending || coverPending}
+                  onClick={() => patch('artwork', null)}
+                >
+                  Remove image
+                </button>
+              )}
+            </div>
+          </fieldset>
+        </div>
+        <details className="itemMetadataFields" open={item ? undefined : true}>
+          <summary>Title information</summary>
+          <div className="itemMetadataBody">
+            <p className="sectionIntro">
+              Edit the description and fetched details. Your changes are preserved when refreshing
+              metadata.
+            </p>
+            <div className="formGrid">
+              <label>
+                Metacritic score
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={fields.metascore ?? ''}
+                  onChange={(e) =>
+                    patch('metascore', e.target.value === '' ? null : Number(e.target.value))
+                  }
+                />
+                {resetButton('metascore')}
+              </label>
+              <label>
+                {kind === 'game' ? 'Publisher' : 'Studio / network'}
+                <input
+                  value={fields.publisher ?? ''}
+                  onChange={(e) => patch('publisher', e.target.value || null)}
+                />
+                {resetButton('publisher')}
+              </label>
+            </div>
+            <label>
+              Description
+              <textarea
+                rows={4}
+                value={fields.description ?? ''}
+                onChange={(e) => patch('description', e.target.value || null)}
+              />
+              {resetButton('description')}
             </label>
           </div>
-        )}
-        <label>
-          Cover / poster URL
-          <input
-            type="url"
-            placeholder="https://…"
-            value={fields.artwork ?? ''}
-            onChange={(e) => patch('artwork', e.target.value || null)}
-          />
-          {resetButton('artwork')}
-        </label>
-        <label>
-          {kind === 'game' ? 'Publisher' : 'Studio / network'}
-          <input
-            value={fields.publisher ?? ''}
-            onChange={(e) => patch('publisher', e.target.value || null)}
-          />
-          {resetButton('publisher')}
-        </label>
-        <label>
-          Description
-          <textarea
-            rows={4}
-            value={fields.description ?? ''}
-            onChange={(e) => patch('description', e.target.value || null)}
-          />
-          {resetButton('description')}
-        </label>
-        <label>
-          My notes
-          <textarea
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Why it caught your eye, where you left off…"
-          />
-        </label>
-        <fieldset>
-          <legend>Release & reminders</legend>
-          <label className="checkbox">
-            <input
-              type="checkbox"
-              checked={autoMove}
-              onChange={(e) => setAutoMove(e.target.checked)}
-            />
-            Move {kind === 'game' ? 'Scheduled → Backlog' : 'Upcoming → Watchlist'} on release day
-          </label>
-          <label>
-            Remind me this many days before release
-            <input
-              value={reminders}
-              onChange={(e) => setReminders(e.target.value)}
-              placeholder="0, 7"
-            />
-          </label>
-          <p className="hint">
-            Comma-separated days, 0 for release day. In-app reminders appear at 9am in{' '}
-            {profile.timezone}.
-          </p>
-        </fieldset>
+        </details>
         {error && (
           <p role="alert" className="errorMessage">
             {error}
@@ -521,15 +638,15 @@ export default function ItemEditor({
             {message}
           </p>
         )}
-        <div className="formActions">
-          <button className="primary" type="submit" disabled={pending}>
+        <div className="formActions itemDetailActions">
+          <button className="primary" type="submit" disabled={pending || coverPending}>
             {pending ? 'Working…' : item ? 'Save changes' : 'Add title'}
           </button>
           {item && (
             <button
               className="danger"
               type="button"
-              disabled={pending}
+              disabled={pending || coverPending}
               onClick={() => setConfirmDelete(true)}
             >
               Delete title
