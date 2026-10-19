@@ -21,7 +21,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState, useTransition } from 'react';
-import { moveItem } from '@/app/library-actions';
+import { deleteItem, moveItem } from '@/app/library-actions';
 import { shelfKeyboardCoordinates } from '@/lib/drag';
 import { label, PLATFORMS, SERVICES, serviceLabel, statusesFor } from '@/lib/library';
 import type { LibraryItem, ProfileRow, Status } from '@/types/library';
@@ -120,17 +120,40 @@ export default function Library({
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
   const [moved, setMoved] = useState('');
+  const [removing, setRemoving] = useState<LibraryItem | null>(null);
+  const [removeError, setRemoveError] = useState('');
+  const [removePending, startRemove] = useTransition();
+  const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const removeDialog = useRef<HTMLDialogElement>(null);
+  const removeCancel = useRef<HTMLButtonElement>(null);
+  const removeHeading = useId();
+  const removeDescription = useId();
   const dialog = useRef<HTMLDialogElement>(null);
   const dialogTitle = useId();
   useEffect(() => {
     if (adding) dialog.current?.showModal();
     else dialog.current?.close();
   }, [adding]);
+  useEffect(() => {
+    if (!removing) return;
+    const element = removeDialog.current;
+    if (!element) return;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    element.showModal();
+    removeCancel.current?.focus();
+    return () => {
+      element.close();
+      document.body.style.overflow = overflow;
+    };
+  }, [removing]);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: shelfKeyboardCoordinates })
   );
-  const relevant = items.filter((i) => (kind === 'game' ? i.kind === 'game' : i.kind !== 'game'));
+  const relevant = items.filter(
+    (i) => !removedIds.includes(i.id) && (kind === 'game' ? i.kind === 'game' : i.kind !== 'game')
+  );
   const serviceOptions = [
     ...new Set(
       [...SERVICES, ...profile.services, ...relevant.flatMap((i) => i.services)].map(serviceLabel)
@@ -209,6 +232,10 @@ export default function Library({
         profile={profile}
         move={move}
         pending={pending}
+        onRemove={(item) => {
+          setRemoveError('');
+          setRemoving(item);
+        }}
         group={group}
       />
     ));
@@ -470,6 +497,65 @@ export default function Library({
             profile={profile}
             onDone={() => setAdding(false)}
           />
+        )}
+      </dialog>
+      <dialog
+        ref={removeDialog}
+        className="removeDialog"
+        aria-labelledby={removeHeading}
+        aria-describedby={removeDescription}
+        onCancel={(event) => {
+          event.preventDefault();
+          if (!removePending) setRemoving(null);
+        }}
+      >
+        {removing && (
+          <>
+            <h2 id={removeHeading}>Remove title?</h2>
+            <p id={removeDescription}>
+              Remove <strong>{removing.fields.title}</strong> from your library? Its notes and
+              reminders will also be deleted. This cannot be undone.
+            </p>
+            {removeError && (
+              <p className="errorMessage" role="alert">
+                {removeError}
+              </p>
+            )}
+            <div className="removeDialogActions">
+              <button
+                ref={removeCancel}
+                type="button"
+                disabled={removePending}
+                onClick={() => setRemoving(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="danger"
+                disabled={removePending}
+                onClick={() => {
+                  setRemoveError('');
+                  startRemove(async () => {
+                    try {
+                      const result = await deleteItem(removing.id);
+                      if (result.error) {
+                        setRemoveError(result.error);
+                        return;
+                      }
+                      setRemovedIds((ids) => [...ids, removing.id]);
+                      setRemoving(null);
+                      router.refresh();
+                    } catch {
+                      setRemoveError('Could not remove title. Please try again.');
+                    }
+                  });
+                }}
+              >
+                {removePending ? 'Removing…' : 'Remove title'}
+              </button>
+            </div>
+          </>
         )}
       </dialog>
     </div>

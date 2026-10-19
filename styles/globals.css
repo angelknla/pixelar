@@ -802,14 +802,29 @@ legend {
   touch-action: none;
   flex-shrink: 0;
 }
+.cardActions {
+  display: flex;
+  flex-shrink: 0;
+}
+.cardActions button {
+  width: 28px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+}
+.cardActions .removeTile:hover {
+  color: var(--error);
+  background: var(--surface-soft);
+}
 .cardMeta {
   margin: 0;
   line-height: 1.4;
-  height: 2lh;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  height: 1lh;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .cardRelease {
   display: flex;
@@ -834,7 +849,7 @@ legend {
 }
 .cardRelease .cardDate {
   min-width: 0;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
 }
 .cardDateCompact {
   display: none;
@@ -847,25 +862,6 @@ legend {
   gap: 0.25rem;
   padding-top: 0.5rem;
   border-top: 1px solid var(--border);
-}
-.gameTile .cardBody {
-  display: flex;
-  flex-direction: column;
-  min-height: 12.5rem;
-}
-.gameTile .cardTop,
-.gameTile .cardMeta,
-.gameTile .cardRelease,
-.gameTile .cardFoot {
-  flex-shrink: 0;
-}
-.gameTile .cardTop h3,
-.gameTile .cardMeta {
-  height: auto;
-  max-height: 2lh;
-}
-.gameTile .cardRelease {
-  margin-top: auto;
 }
 .gameTile .cardFoot {
   margin-top: 0;
@@ -997,6 +993,32 @@ legend {
 .editorDialog::backdrop {
   background: #03070dcc;
   backdrop-filter: blur(8px);
+}
+.removeDialog {
+  width: min(440px, calc(100vw - 32px));
+  max-height: 90svh;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+.removeDialog::backdrop {
+  background: #03070dcc;
+  backdrop-filter: blur(8px);
+}
+.removeDialog h2 {
+  margin: 0 0 0.75rem;
+}
+.removeDialog p {
+  overflow-wrap: anywhere;
+}
+.removeDialogActions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
 }
 .editor {
   max-width: 760px;
@@ -1313,7 +1335,7 @@ legend {
 }
 @media (max-width: 400px) {
   .cardRelease {
-    gap: 0.2rem;
+    gap: 0.15rem;
   }
   .cardDateFull {
     display: none;
@@ -1322,11 +1344,11 @@ legend {
     display: inline;
   }
   .cardRelease .cardDate {
-    font-size: 0.6rem;
+    font-size: 0.7rem;
   }
   .cardRelease .countdown {
     font-size: 0.6rem;
-    padding-inline: 0.25rem;
+    padding-inline: 0.15rem;
   }
   .landingActions {
     align-items: stretch;
@@ -1365,6 +1387,12 @@ legend {
   }
   .cardGrid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  .screenTile .cardDateFull {
+    display: none;
+  }
+  .screenTile .cardDateCompact {
+    display: inline;
   }
   .libraryStats {
     gap: 1rem;
@@ -1525,9 +1553,6 @@ legend {
   }
   .cardBody {
     padding: 0.65rem;
-  }
-  .gameTile .cardBody {
-    min-height: 11.75rem;
   }
   .cardTop h3 {
     font-size: 0.85rem;

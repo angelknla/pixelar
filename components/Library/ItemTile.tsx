@@ -1,7 +1,7 @@
 'use client';
 
 import { useDraggable } from '@dnd-kit/core';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { label, releaseLabel, statusesFor } from '@/lib/library';
 import type { LibraryItem, ProfileRow, Status } from '@/types/library';
@@ -13,6 +13,7 @@ export interface ItemTileProps {
   profile: ProfileRow;
   move: (id: string, status: Status) => void;
   pending: boolean;
+  onRemove: (item: LibraryItem) => void;
   group?: string;
 }
 
@@ -21,6 +22,7 @@ export default function ItemTile({
   profile,
   move,
   pending,
+  onRemove,
   group = 'grid',
   className,
   metadata,
@@ -69,15 +71,27 @@ export default function ItemTile({
           <Link href={`/items/${item.id}`} title={item.fields.title}>
             <h3>{item.fields.title}</h3>
           </Link>
-          <button
-            type="button"
-            className="dragHandle"
-            {...drag.attributes}
-            {...drag.listeners}
-            aria-label={`Drag ${item.fields.title} to a status shelf`}
-          >
-            <GripVertical size={18} />
-          </button>
+          <div className="cardActions">
+            <button
+              type="button"
+              className="dragHandle"
+              {...drag.attributes}
+              {...drag.listeners}
+              aria-label={`Drag ${item.fields.title} to a status shelf`}
+            >
+              <GripVertical size={16} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="removeTile"
+              aria-label={`Remove ${item.fields.title}`}
+              title="Remove title"
+              disabled={pending}
+              onClick={() => onRemove(item)}
+            >
+              <Trash2 size={16} aria-hidden="true" />
+            </button>
+          </div>
         </div>
         <p className="cardMeta" title={metadata}>
           {metadata}

@@ -1,23 +1,93 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { moveItem } from '@/app/library-actions';
+import { deleteItem, moveItem } from '@/app/library-actions';
 import { defaultProfile, EMPTY_FIELDS } from '@/lib/library';
 import type { LibraryItem } from '@/types/library';
 import Library from './Library';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-vi.mock('@/app/library-actions', () => ({ moveItem: vi.fn().mockResolvedValue({}) }));
+vi.mock('@/app/library-actions', () => ({
+  moveItem: vi.fn().mockResolvedValue({}),
+  deleteItem: vi.fn().mockResolvedValue({}),
+}));
 vi.mock('./ItemEditor', () => ({ default: () => null }));
 vi.mock('./Artwork', () => ({ default: () => null }));
 vi.mock('./Countdown', () => ({ default: () => null }));
 
 beforeEach(() => {
+  vi.mocked(deleteItem).mockReset().mockResolvedValue({});
+  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+    value: function (this: HTMLDialogElement) {
+      this.open = true;
+    },
+    configurable: true,
+  });
   Object.defineProperty(HTMLDialogElement.prototype, 'close', {
-    value: vi.fn(),
+    value: function (this: HTMLDialogElement) {
+      this.open = false;
+    },
     configurable: true,
   });
 });
 afterEach(() => {
+  Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
   Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
+});
+
+it.each([
+  'game',
+  'movie',
+  'show',
+] as const)('confirms %s removal and lets users cancel safely', async (kind) => {
+  const item = {
+    ...tvItem('one', 'My title', ['Netflix']),
+    kind,
+    status: kind === 'game' ? ('backlog' as const) : ('watchlist' as const),
+  };
+  render(
+    <Library
+      items={[item]}
+      profile={defaultProfile('owner')}
+      kind={kind === 'game' ? 'game' : 'screen'}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Remove My title' }));
+  const dialog = screen.getByRole('dialog', { name: 'Remove title?' });
+  const cancel = within(dialog).getByRole('button', { name: 'Cancel' });
+  expect(cancel).toHaveFocus();
+  expect(deleteItem).not.toHaveBeenCalled();
+  fireEvent.click(cancel);
+  expect(screen.queryByRole('dialog', { name: 'Remove title?' })).not.toBeInTheDocument();
+  expect(deleteItem).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Remove My title' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Remove title' }));
+  await waitFor(() => expect(deleteItem).toHaveBeenCalledWith('one'));
+  await waitFor(() =>
+    expect(screen.queryByRole('heading', { name: 'My title' })).not.toBeInTheDocument()
+  );
+  expect(screen.getByRole('heading', { name: 'Your collection starts here.' })).toBeInTheDocument();
+});
+
+it('keeps failed deletions in the library and allows retrying from the confirmation', async () => {
+  vi.mocked(deleteItem).mockResolvedValueOnce({ error: 'Could not delete item.' });
+  render(
+    <Library
+      items={[tvItem('one', 'Shared title', ['Netflix', 'Prime Video'])]}
+      profile={defaultProfile('owner')}
+      kind="screen"
+    />
+  );
+  expect(screen.getAllByRole('button', { name: 'Remove Shared title' })).toHaveLength(2);
+  fireEvent.click(screen.getAllByRole('button', { name: 'Remove Shared title' })[0]);
+  fireEvent.click(screen.getByRole('button', { name: 'Remove title' }));
+  await waitFor(() =>
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not delete item.')
+  );
+  expect(screen.getAllByRole('heading', { name: 'Shared title' })).toHaveLength(2);
+  fireEvent.click(screen.getByRole('button', { name: 'Remove title' }));
+  await waitFor(() =>
+    expect(screen.queryAllByRole('heading', { name: 'Shared title' })).toHaveLength(0)
+  );
+  expect(deleteItem).toHaveBeenCalledTimes(2);
 });
 
 it('offers platform choices before any games have platform assignments', () => {
