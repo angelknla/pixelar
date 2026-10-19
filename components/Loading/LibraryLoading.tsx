@@ -1,6 +1,7 @@
 import LoadingState from './LoadingState';
 import SkeletonBar from './SkeletonBar';
 import SkeletonTile from './SkeletonTile';
+import styles from './LibraryLoading.module.css';
 
 const LibraryLoading = ({ kind }: { kind: 'game' | 'screen' }) => {
   const game = kind === 'game';
@@ -71,23 +72,30 @@ const LibraryLoading = ({ kind }: { kind: 'game' | 'screen' }) => {
                 <SkeletonBar className="skeletonCount" />
               </div>
             </div>
-            {game ? (
-              <div className="cardGrid">
-                {Array.from({ length: 6 }, (_, i) => (
-                  <SkeletonTile game key={i} />
-                ))}
-              </div>
-            ) : (
-              <div className="skeletonPosterRows">
-                {Array.from({ length: 2 }, (_, row) => (
-                  <div className="cardGrid skeletonPosterRow" key={row}>
-                    {Array.from({ length: 16 }, (_, i) => (
-                      <SkeletonTile game={false} key={i} />
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className={`cardGrid listGrid ${styles.mobileList}`}>
+              {Array.from({ length: 6 }, (_, i) => (
+                <SkeletonTile game={game} display="list" key={i} />
+              ))}
+            </div>
+            <div className={styles.desktopGrid}>
+              {game ? (
+                <div className="cardGrid">
+                  {Array.from({ length: 6 }, (_, i) => (
+                    <SkeletonTile game key={i} />
+                  ))}
+                </div>
+              ) : (
+                <div className="skeletonPosterRows">
+                  {Array.from({ length: 2 }, (_, row) => (
+                    <div className="cardGrid skeletonPosterRow" key={row}>
+                      {Array.from({ length: 16 }, (_, i) => (
+                        <SkeletonTile game={false} key={i} />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </section>
         ))}
       </div>

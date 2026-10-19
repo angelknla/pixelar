@@ -1,0 +1,30 @@
+.mobileList:global(.cardGrid) {
+  display: none;
+}
+
+@media (max-width: 650px) {
+  .mobileList:global(.cardGrid) {
+    display: grid;
+  }
+
+  .desktopGrid {
+    display: none;
+  }
+
+  .mobileList :global(.skeletonTileTitle) {
+    height: 20px;
+    align-content: center;
+  }
+
+  .mobileList :global(.skeletonTileTitle .skeletonShort) {
+    display: none;
+  }
+
+  .mobileList :global(.skeletonInput) {
+    height: 32px;
+  }
+
+  .mobileList :global(.gameTile .skeletonInput) {
+    height: 28px;
+  }
+}

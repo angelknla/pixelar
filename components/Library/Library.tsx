@@ -25,6 +25,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useLayoutEffect, useRef, useState, useTransition } from 'react';
+import LibraryLoading from '@components/Loading/LibraryLoading';
 import { deleteItem, moveItem, saveShelfLayout } from '@/app/library-actions';
 import { createShelfKeyboardCoordinates } from '@/lib/drag';
 import { label, PLATFORMS, SERVICES, serviceLabel, statusesFor } from '@/lib/library';
@@ -65,10 +66,11 @@ const Library = ({
   const [pending, start] = useTransition();
 
   const [view, setView] = useState(kind === 'game' ? 'status' : 'service');
-  const [display, setDisplay] = useState<'grid' | 'list'>('grid');
+  const [display, setDisplay] = useState<'grid' | 'list' | null>(null);
+  const displayReady = display !== null;
 
   useLayoutEffect(() => {
-    if (window.innerWidth <= 650) setDisplay('list');
+    setDisplay(window.innerWidth <= 650 ? 'list' : 'grid');
   }, []);
 
   const [query, setQuery] = useState('');
@@ -154,6 +156,8 @@ const Library = ({
   const library = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
+    if (!displayReady) return;
+
     const root = library.current;
 
     if (!root) return;
@@ -226,7 +230,7 @@ const Library = ({
       observer?.disconnect();
       window.removeEventListener('resize', checkViewport);
     };
-  }, []);
+  }, [displayReady]);
 
   const removeDialog = useRef<HTMLDialogElement>(null);
   const removeCancel = useRef<HTMLButtonElement>(null);
@@ -441,6 +445,8 @@ const Library = ({
     ...(featured?.fields.artwork ? [featured.fields.artwork] : []),
     ...firstTitles.slice(0, 6).flatMap((item) => item.fields.artwork ?? []),
   ]);
+
+  if (display === null) return <LibraryLoading kind={kind} />;
 
   const cards = (list: LibraryItem[], group?: string) =>
     list.map((item) => (

@@ -1,8 +1,10 @@
 import SkeletonBar from './SkeletonBar';
 
-const SkeletonTile = ({ game }: { game: boolean }) => {
+const SkeletonTile = ({ game, display = 'grid' }: { game: boolean; display?: 'grid' | 'list' }) => {
   return (
-    <div className={`itemCard skeletonTile ${game ? 'gameTile' : 'screenTile'}`}>
+    <div
+      className={`itemCard skeletonTile ${game ? 'gameTile' : 'screenTile'} ${display === 'list' ? 'listTile' : ''}`}
+    >
       <div className="cardArtLink">
         <div className={`artwork skeleton ${game ? 'gameArt' : 'screenArt'}`} />
       </div>

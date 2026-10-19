@@ -1,4 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { hydrateRoot } from 'react-dom/client';
+import { renderToString } from 'react-dom/server';
 import { deleteItem, moveItem, saveShelfLayout } from '@/app/library-actions';
 import { defaultProfile, EMPTY_FIELDS } from '@/lib/library';
 import type { LibraryItem } from '@/types/library';
@@ -413,6 +415,51 @@ const tvItem = (id: string, title: string, services: string[]): LibraryItem => {
     updated_at: '2026-10-18',
   };
 };
+
+it.each([
+  'game',
+  'screen',
+] as const)('keeps the responsive skeleton until hydration, then shows the correct %s display', async (kind) => {
+  for (const width of [390, 650, 651, 1440]) {
+    vi.stubGlobal('innerWidth', width);
+
+    const item: LibraryItem = {
+      ...tvItem('one', 'Responsive title', ['Netflix']),
+      kind: kind === 'game' ? 'game' : 'show',
+      status: kind === 'game' ? 'backlog' : 'watchlist',
+    };
+    const props = { items: [item], profile: defaultProfile('owner'), kind };
+    const container = document.createElement('div');
+    container.innerHTML = renderToString(<Library {...props} />);
+    document.body.append(container);
+
+    expect(within(container).getByRole('status')).toHaveAttribute('aria-busy', 'true');
+    expect(within(container).queryByRole('group', { name: 'Title display' })).toBeNull();
+    expect(container.querySelector('.cardGrid.listGrid')).not.toBeNull();
+
+    const onRecoverableError = vi.fn();
+    let root!: ReturnType<typeof hydrateRoot>;
+
+    try {
+      await act(async () => {
+        root = hydrateRoot(container, <Library {...props} />, { onRecoverableError });
+      });
+
+      const chosen = width <= 650 ? 'List' : 'Grid';
+      expect(within(container).getByRole('button', { name: chosen })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+      expect(container.querySelector('.itemCard')?.classList.contains('listTile')).toBe(
+        width <= 650
+      );
+      expect(onRecoverableError).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => root?.unmount());
+      container.remove();
+    }
+  }
+});
 
 it.each([
   'game',
