@@ -2,7 +2,7 @@
 
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { ArrowDown, ArrowUp, ChevronDown, GripVertical } from 'lucide-react';
-import { useId, type ReactNode } from 'react';
+import { type ReactNode, useId } from 'react';
 import type { Status } from '@/types/library';
 
 const Shelf = ({
@@ -29,14 +29,12 @@ const Shelf = ({
   display: 'grid' | 'list';
 }) => {
   const contentId = useId();
-  const drop = useDroppable({ id: status ?? name, disabled: !status, data: { type: 'item' } });
   const target = useDroppable({ id: `shelf:${name}`, data: { type: 'shelf', name } });
   const drag = useDraggable({ id: `shelf:${name}`, data: { type: 'shelf', name } });
 
   return (
     <section
-      ref={drop.setNodeRef}
-      className={`shelf ${status ? `status-${status}` : ''} ${drop.isOver ? 'dropOver' : ''} ${collapsed ? 'shelfCollapsed' : ''} ${target.isOver ? 'shelfReorderTarget' : ''}`}
+      className={`shelf ${status ? `status-${status}` : ''} ${collapsed ? 'shelfCollapsed' : ''} ${target.isOver ? 'shelfReorderTarget' : ''}`}
     >
       <div className="shelfHeading" ref={target.setNodeRef}>
         <h2>
@@ -53,7 +51,6 @@ const Shelf = ({
           </button>
         </h2>
         <div className="shelfHeadingActions">
-          {status && <span className="hint">Drop a title here</span>}
           <button
             type="button"
             className="shelfMove"

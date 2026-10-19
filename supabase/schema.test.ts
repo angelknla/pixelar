@@ -69,6 +69,9 @@ beforeAll(async () => {
   await db.exec(
     await readFile(new URL('./migrations/20261019_shelf_layouts.sql', import.meta.url), 'utf8')
   );
+  await db.exec(
+    await readFile(new URL('./migrations/20261019_library_banners.sql', import.meta.url), 'utf8')
+  );
 }, 20000);
 
 afterAll(async () => {
@@ -110,6 +113,10 @@ describe('additive schema and ownership', () => {
         [owner]
       )
     ).rejects.toThrow(/permission denied/);
+
+    await expect(db.query("select pixelar_save_banner($1,'game',null)", [owner])).rejects.toThrow(
+      /permission denied/
+    );
 
     await db.exec('reset role');
 
@@ -170,6 +177,83 @@ describe('additive schema and ownership', () => {
         [owner]
       )
     ).rejects.toThrow(/Invalid shelf/);
+  });
+
+  it('saves independent banners without changing profile settings or another owner’s selections', async () => {
+    await insert({}, 'playing');
+    await db.query(
+      "insert into pixelar_items(id,member_id,kind,status) values($1,$2,'show','watching')",
+      [other, owner]
+    );
+    await db.query(
+      "insert into pixelar_profiles(member_id,currency,shelf_layouts) values($1,'USD',$2)",
+      [owner, JSON.stringify({ games_status: { order: ['Playing'], collapsed: [] } })]
+    );
+
+    await Promise.all([
+      db.query("select pixelar_save_banner($1,'game',$2)", [owner, item]),
+      db.query("select pixelar_save_banner($1,'screen',$2)", [owner, other]),
+    ]);
+
+    expect(
+      (
+        await db.query(
+          'select banner_items,currency,shelf_layouts from pixelar_profiles where member_id=$1',
+          [owner]
+        )
+      ).rows
+    ).toEqual([
+      {
+        banner_items: { game: item, screen: other },
+        currency: 'USD',
+        shelf_layouts: { games_status: { order: ['Playing'], collapsed: [] } },
+      },
+    ]);
+    expect(
+      (await db.query('select * from pixelar_profiles where member_id=$1', [other])).rows
+    ).toEqual([]);
+
+    await db.query("select pixelar_save_banner($1,'game',null)", [owner]);
+
+    expect(
+      (await db.query('select banner_items from pixelar_profiles where member_id=$1', [owner])).rows
+    ).toEqual([{ banner_items: { game: null, screen: other } }]);
+  });
+
+  it('rejects banners belonging to another owner or library and handles deleted titles', async () => {
+    await insert({}, 'playing');
+
+    await expect(
+      db.query("select pixelar_save_banner($1,'game',$2)", [other, item])
+    ).rejects.toThrow(/not found/);
+    await expect(
+      db.query("select pixelar_save_banner($1,'screen',$2)", [owner, item])
+    ).rejects.toThrow(/not found/);
+    await expect(
+      db.query("select pixelar_save_banner($1,'other',$2)", [owner, item])
+    ).rejects.toThrow(/Invalid library/);
+    await expect(db.query('select pixelar_save_banner($1,null,null)', [owner])).rejects.toThrow(
+      /Invalid library/
+    );
+
+    await db.query("select pixelar_save_banner($1,'game',$2)", [owner, item]);
+    await db.query("update pixelar_items set status='completed' where id=$1", [item]);
+
+    await expect(
+      db.query("select pixelar_save_banner($1,'game',$2)", [owner, item])
+    ).rejects.toThrow(/not found/);
+
+    await db.query('delete from pixelar_items where id=$1', [item]);
+
+    await expect(
+      db.query("select pixelar_save_banner($1,'game',$2)", [owner, item])
+    ).rejects.toThrow(/not found/);
+
+    await db.query("select pixelar_save_banner($1,'game',null)", [owner]);
+
+    expect(
+      (await db.query('select banner_items from pixelar_profiles where member_id=$1', [owner])).rows
+    ).toEqual([{ banner_items: { game: null } }]);
   });
 
   it('denies Pixelar browser storage access without changing other bucket access', async () => {

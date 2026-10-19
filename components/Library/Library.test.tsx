@@ -40,6 +40,60 @@ beforeEach(() => {
 
 afterEach(() => vi.unstubAllGlobals());
 
+it.each([
+  'game',
+  'screen',
+] as const)('uses the saved %s banner independently of filters and display', (kind) => {
+  const items: LibraryItem[] = ['First title', 'Chosen title'].map((title, index) => ({
+    ...tvItem(String(index), title, ['Netflix']),
+    kind: kind === 'game' ? 'game' : 'show',
+    status: kind === 'game' ? 'playing' : 'watching',
+  }));
+  const profile = {
+    ...defaultProfile('owner'),
+    banner_items: {
+      game: kind === 'game' ? '1' : 'other',
+      screen: kind === 'screen' ? '1' : 'other',
+    },
+  };
+
+  render(<Library items={items} profile={profile} kind={kind} />);
+
+  expect(document.querySelector('.heroFeature')).toHaveAttribute('href', '/items/1');
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+
+  fireEvent.change(screen.getByRole('textbox', { name: 'Search your library' }), {
+    target: { value: 'First title' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'List' }));
+  fireEvent.click(screen.getByRole('button', { name: 'All titles together' }));
+
+  expect(document.querySelector('.heroFeature')).toHaveAttribute('href', '/items/1');
+});
+
+it('uses Automatic if the pinned title is deleted, inactive, or cleared', () => {
+  const chosen = { ...tvItem('chosen', 'Chosen title', ['Netflix']), status: 'watching' as const };
+  const active = { ...tvItem('active', 'Active title', ['Netflix']), status: 'watching' as const };
+  const profile = { ...defaultProfile('owner'), banner_items: { screen: 'chosen' } };
+  const props = { items: [active, chosen], profile, kind: 'screen' as const };
+
+  const { rerender } = render(<Library {...props} />);
+
+  expect(document.querySelector('.heroFeature')).toHaveAttribute('href', '/items/chosen');
+
+  rerender(<Library {...props} items={[active, { ...chosen, status: 'watched' }]} />);
+
+  expect(document.querySelector('.heroFeature')).toHaveAttribute('href', '/items/active');
+
+  rerender(<Library {...props} items={[active]} />);
+
+  expect(document.querySelector('.heroFeature')).toHaveAttribute('href', '/items/active');
+
+  rerender(<Library {...props} profile={{ ...profile, banner_items: { screen: null } }} />);
+
+  expect(document.querySelector('.heroFeature')).toHaveAttribute('href', '/items/active');
+});
+
 it('syncs all movies and series despite filters, deduplicates sources, and skips manual titles', async () => {
   const linked = (id: string, kind: 'movie' | 'show', metadataId: string): LibraryItem => ({
     ...tvItem(id, id, ['Netflix']),
@@ -586,7 +640,10 @@ it.each([
   await waitFor(() => expect(saveShelfLayout).toHaveBeenCalledTimes(1));
 });
 
-it('keeps status changes and removal available in list rows', async () => {
+it.each([
+  'Grid',
+  'List',
+])('keeps status changes and removal available in %s view', async (display) => {
   render(
     <Library
       items={[tvItem('one', 'List title', ['Netflix'])]}
@@ -594,19 +651,26 @@ it('keeps status changes and removal available in list rows', async () => {
       kind="screen"
     />
   );
-  fireEvent.click(screen.getByRole('button', { name: 'List' }));
+  fireEvent.click(screen.getByRole('button', { name: display }));
+
   fireEvent.change(screen.getByRole('combobox', { name: 'Status of List title' }), {
     target: { value: 'watching' },
   });
+
   await waitFor(() => expect(moveItem).toHaveBeenCalledWith('one', 'watching'));
   await waitFor(() =>
     expect(screen.getByRole('button', { name: 'Remove List title' })).toBeEnabled()
   );
 
-  expect(screen.getByRole('button', { name: 'Drag List title to a status shelf' })).toBeEnabled();
+  expect(
+    screen.queryByRole('button', { name: 'Drag List title to a status shelf' })
+  ).not.toBeInTheDocument();
+  expect(screen.queryByText('Drag to change status')).not.toBeInTheDocument();
+  expect(screen.queryByText('Drop a title here')).not.toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('button', { name: 'Remove List title' }));
   fireEvent.click(screen.getByRole('button', { name: 'Remove title' }));
+
   await waitFor(() => expect(deleteItem).toHaveBeenCalledWith('one'));
   await waitFor(() =>
     expect(screen.queryByRole('heading', { name: 'List title' })).not.toBeInTheDocument()

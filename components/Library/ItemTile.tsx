@@ -1,7 +1,6 @@
 'use client';
 
-import { useDraggable } from '@dnd-kit/core';
-import { GripVertical, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { label, releaseLabel, statusesFor } from '@/lib/library';
 import type { LibraryItem, ProfileRow, Status } from '@/types/library';
@@ -14,7 +13,6 @@ export interface ItemTileProps {
   move: (id: string, status: Status) => void;
   pending: boolean;
   onRemove: (item: LibraryItem) => void;
-  group?: string;
   eager?: boolean;
   display?: 'grid' | 'list';
 }
@@ -25,7 +23,6 @@ const ItemTile = ({
   move,
   pending,
   onRemove,
-  group = 'grid',
   eager = false,
   display = 'grid',
   className,
@@ -34,8 +31,6 @@ const ItemTile = ({
   className: string;
   metadata: string;
 }) => {
-  const drag = useDraggable({ id: `${group}:${item.id}`, data: { itemId: item.id } });
-
   const release = releaseLabel(item.fields);
   const compactRelease =
     item.fields.release_date && item.fields.release_precision === 'day'
@@ -51,13 +46,7 @@ const ItemTile = ({
 
   return (
     <article
-      ref={drag.setNodeRef}
-      className={`itemCard ${className} ${display === 'list' ? 'listTile' : ''} status-${item.status} ${drag.isDragging ? 'dragging' : ''}`}
-      style={
-        drag.transform
-          ? { transform: `translate3d(${drag.transform.x}px,${drag.transform.y}px,0)`, zIndex: 20 }
-          : undefined
-      }
+      className={`itemCard ${className} ${display === 'list' ? 'listTile' : ''} status-${item.status}`}
     >
       <Link href={`/items/${item.id}`} className="cardArtLink" aria-label={item.fields.title}>
         <Artwork
@@ -96,15 +85,6 @@ const ItemTile = ({
           <Link href={`/items/${item.id}`} title={item.fields.title}>
             <h3>{item.fields.title}</h3>
           </Link>
-          <button
-            type="button"
-            className="dragHandle"
-            {...drag.attributes}
-            {...drag.listeners}
-            aria-label={`Drag ${item.fields.title} to a status shelf`}
-          >
-            <GripVertical size={16} aria-hidden="true" />
-          </button>
         </div>
         <p className="cardMeta" title={metadata}>
           {metadata}

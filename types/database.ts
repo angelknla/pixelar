@@ -81,6 +81,10 @@ export interface Database {
         Args: { owner_id: string; view_key: string; layout: Json };
         Returns: undefined;
       };
+      pixelar_save_banner: {
+        Args: { owner_id: string; library_kind: string; selected_item: string | null };
+        Returns: undefined;
+      };
       pixelar_update_profile: {
         Args: { owner_id: string; display_name: string; new_email: string; settings: Json };
         Returns: undefined;

@@ -2,6 +2,7 @@ import {
   deleteItem,
   markAllNotificationsRead,
   moveItem,
+  saveBanner,
   saveItem,
   saveShelfLayout,
 } from './library-actions';
@@ -164,6 +165,80 @@ describe('owner-checked library actions', () => {
     expect(await saveShelfLayout('tv_status', { order: [], collapsed: [] })).toHaveProperty(
       'error'
     );
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+
+  it('saves a banner only for a title owned by the verified session', async () => {
+    mocks.ownedItem.mockResolvedValueOnce({ kind: 'game', status: 'playing' });
+
+    expect(await saveBanner('game', id)).toEqual({});
+    expect(mocks.ownedItem).toHaveBeenCalledWith('verified-owner', id);
+    expect(mocks.rpc).toHaveBeenCalledWith('pixelar_save_banner', {
+      owner_id: 'verified-owner',
+      library_kind: 'game',
+      selected_item: id,
+    });
+    expect(mocks.revalidate).toHaveBeenCalledWith('/', 'layout');
+  });
+
+  it('restores automatic banner selection without looking up an item', async () => {
+    expect(await saveBanner('screen', null)).toEqual({});
+    expect(mocks.ownedItem).not.toHaveBeenCalled();
+    expect(mocks.rpc).toHaveBeenCalledWith('pixelar_save_banner', {
+      owner_id: 'verified-owner',
+      library_kind: 'screen',
+      selected_item: null,
+    });
+  });
+
+  it.each(['movie', 'show'])('allows a %s banner in the screen library', async (kind) => {
+    mocks.ownedItem.mockResolvedValueOnce({ kind, status: 'watching' });
+
+    expect(await saveBanner('screen', id)).toEqual({});
+    expect(mocks.rpc).toHaveBeenCalledWith('pixelar_save_banner', {
+      owner_id: 'verified-owner',
+      library_kind: 'screen',
+      selected_item: id,
+    });
+  });
+
+  it('rejects invalid libraries, invalid IDs, and titles from another library before saving', async () => {
+    expect(await saveBanner('other', id)).toHaveProperty('error');
+    expect(await saveBanner('game', '')).toHaveProperty('error');
+    expect(await saveBanner('game', undefined)).toHaveProperty('error');
+    expect(await saveBanner('screen', id)).toHaveProperty('error');
+
+    mocks.ownedItem.mockResolvedValueOnce({ kind: 'show' });
+
+    expect(await saveBanner('game', id)).toHaveProperty('error');
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+
+  it('rejects another owner’s banner title and reports database failures', async () => {
+    mocks.ownedItem.mockRejectedValueOnce(new Error('Item not found.'));
+
+    expect(await saveBanner('game', id)).toHaveProperty('error');
+    expect(mocks.rpc).not.toHaveBeenCalled();
+
+    mocks.ownedItem.mockResolvedValueOnce({ kind: 'game', status: 'playing' });
+    mocks.rpc.mockResolvedValueOnce({ error: { message: 'function missing' } });
+
+    expect(await saveBanner('game', id)).toEqual({
+      error: 'Could not save banner. Please try again.',
+    });
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+
+  it('rejects banner choices outside Playing and Watching before saving', async () => {
+    mocks.ownedItem.mockResolvedValueOnce({ kind: 'game', status: 'completed' });
+
+    expect(await saveBanner('game', id)).toHaveProperty('error');
+
+    mocks.ownedItem.mockResolvedValueOnce({ kind: 'show', status: 'watchlist' });
+
+    expect(await saveBanner('screen', id)).toHaveProperty('error');
+    expect(mocks.rpc).not.toHaveBeenCalled();
     expect(mocks.revalidate).not.toHaveBeenCalled();
   });
 });

@@ -135,6 +135,28 @@ it('keeps the hero URL eager in every shelf, with one high-priority hero and laz
   expectLoading('Title 17', 'lazy');
 });
 
+it('loads saved banner artwork eagerly with only one high-priority image', () => {
+  const items = Array.from({ length: 18 }, (_, index) => item(index));
+
+  items[17].status = 'playing';
+
+  render(
+    <Library
+      items={items}
+      profile={{ ...defaultProfile('owner'), banner_items: { game: items[17].id } }}
+      kind="game"
+    />
+  );
+
+  expectLoading('Title 17', 'eager');
+  expect(
+    images('Title 17').filter((image) => image.getAttribute('fetchpriority') === 'high')
+  ).toHaveLength(1);
+  expect(
+    images('Title 12').filter((image) => image.getAttribute('fetchpriority') === 'high')
+  ).toHaveLength(0);
+});
+
 it('promotes visible images beyond six columns and shares that setting across service shelves', () => {
   visible.add('Title 8');
   library(true);

@@ -2,8 +2,8 @@
 
 import { Film, Tv } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
-import { deleteItem, saveItem } from '@/app/library-actions';
+import { useEffect, useState, useTransition } from 'react';
+import { deleteItem, saveBanner, saveItem } from '@/app/library-actions';
 import {
   EMPTY_FIELDS,
   effectiveFields,
@@ -54,6 +54,14 @@ const ItemEditor = ({
 }: Props) => {
   const router = useRouter();
   const [pending, start] = useTransition();
+
+  const libraryKind = initialKind === 'game' ? 'game' : 'screen';
+  const savedBannerId = profile.banner_items?.[libraryKind] ?? null;
+  const [bannerId, setBannerId] = useState(savedBannerId);
+
+  useEffect(() => {
+    setBannerId(savedBannerId);
+  }, [savedBannerId]);
 
   const [kind, setKind] = useState(initialKind);
   const [metadata, setMetadata] = useState<MetadataRow | null>(item?.metadata ?? null);
@@ -191,6 +199,28 @@ const ItemEditor = ({
 
   return (
     <div className={`editor ${item ? 'itemDetails' : 'itemCreate'}`}>
+      {item && item.status === (kind === 'game' ? 'playing' : 'watching') && (
+        <label className="itemBannerSetting">
+          <input
+            type="checkbox"
+            checked={bannerId === item.id}
+            disabled={pending || coverPending}
+            onChange={(event) => {
+              const selectedId = event.target.checked ? item.id : null;
+
+              run(async () => {
+                const result = await saveBanner(libraryKind, selectedId);
+
+                if (result.error) throw new Error(result.error);
+
+                setBannerId(selectedId);
+                router.refresh();
+              });
+            }}
+          />
+          <span>Show in banner</span>
+        </label>
+      )}
       {item && (
         <header className="itemOverview">
           <div

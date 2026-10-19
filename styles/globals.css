@@ -262,6 +262,30 @@ legend {
   overflow-wrap: anywhere;
 }
 
+.itemBannerSetting {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  margin-bottom: 0.75rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.editor .itemBannerSetting input {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 .successMessage {
   padding: 1rem;
   background: var(--accent-soft);
@@ -913,10 +937,6 @@ legend {
   gap: 0.25rem;
 }
 
-.shelfHeadingActions .hint {
-  margin-right: 0.5rem;
-}
-
 .shelfMove,
 .shelfDrag {
   width: 32px;
@@ -969,10 +989,6 @@ legend {
 }
 
 @media (max-width: 650px) {
-  .shelfHeadingActions .hint {
-    display: none;
-  }
-
   .shelfHeading {
     gap: 0.5rem;
   }
@@ -1027,12 +1043,6 @@ legend {
 .itemCard:focus-within {
   border-color: var(--accent);
   box-shadow: var(--shadow);
-}
-
-.itemCard.dragging {
-  opacity: 0.7;
-  box-shadow: 0 15px 35px #00000025;
-  pointer-events: none;
 }
 
 .cardArtLink {
@@ -1152,17 +1162,6 @@ legend {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-}
-
-.dragHandle {
-  border: 0;
-  background: transparent;
-  width: 28px;
-  min-height: 32px;
-  padding: 0;
-  color: var(--muted);
-  touch-action: none;
-  flex-shrink: 0;
 }
 
 .removeTile {
@@ -1348,11 +1347,6 @@ legend {
   height: auto;
 }
 
-.listTile .dragHandle {
-  min-height: 24px;
-  width: 24px;
-}
-
 .listTile .cardMeta {
   grid-column: 1 / -1;
   min-width: 0;
@@ -1476,10 +1470,6 @@ legend {
     overflow: hidden;
   }
 
-  .listTile.gameTile .dragHandle {
-    min-height: 20px;
-  }
-
   .listTile.gameTile .cardFoot {
     grid-template-rows: 28px;
   }
@@ -1516,32 +1506,6 @@ legend {
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--surface) 55%, transparent);
   border-radius: var(--radius-small);
-}
-
-.dropOver {
-  background: var(--accent-soft);
-  outline: 2px dashed var(--accent);
-  outline-offset: 6px;
-}
-
-.dropTargets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  padding: 1rem 0;
-}
-
-.dropTargets p {
-  width: 100%;
-  margin: 0;
-}
-
-.dropTarget {
-  --shelf-color: var(--accent);
-  padding: 0.65rem 0.8rem;
-  border: 1px dashed var(--shelf-color);
-  border-radius: var(--radius-small);
-  font-size: 0.8rem;
 }
 
 .emptyState {

@@ -169,3 +169,36 @@ export const saveShelfLayout = async (
     return { error: 'Could not sync shelves. Please try again.' };
   }
 };
+
+export const saveBanner = async (kind: unknown, itemId: unknown): Promise<{ error?: string }> => {
+  const account = await requireAccount();
+
+  try {
+    if (kind !== 'game' && kind !== 'screen') throw new Error('Choose a library.');
+
+    const selectedItem = itemId === null ? null : uuid(itemId);
+
+    if (selectedItem) {
+      const item = await ownedItem(account.memberId, selectedItem);
+
+      if ((kind === 'game') !== (item.kind === 'game'))
+        throw new Error('Choose a title from this library.');
+      if (item.status !== (kind === 'game' ? 'playing' : 'watching'))
+        throw new Error('Choose a title you’re currently playing or watching.');
+    }
+
+    const { error } = await db().rpc('pixelar_save_banner', {
+      owner_id: account.memberId,
+      library_kind: kind,
+      selected_item: selectedItem,
+    });
+
+    if (error) throw new Error('Could not save banner. Please try again.');
+
+    changed();
+
+    return {};
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Could not save banner.' };
+  }
+};

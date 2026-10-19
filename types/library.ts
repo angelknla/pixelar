@@ -1,5 +1,9 @@
 export type ItemKind = 'game' | 'movie' | 'show';
 
+export type LibraryKind = 'game' | 'screen';
+
+export type BannerItems = Partial<Record<LibraryKind, string | null>>;
+
 export type Provider = 'rawg' | 'tmdb';
 
 export type Precision = 'unknown' | 'year' | 'month' | 'day';
@@ -78,6 +82,7 @@ export interface ProfileRow {
   theme: 'system' | 'light' | 'dark';
   avatar_path: string | null;
   shelf_layouts?: ShelfLayouts;
+  banner_items?: BannerItems;
 }
 
 export interface ShelfLayout {

@@ -1,12 +1,12 @@
 'use client';
 
+import LibraryLoading from '@components/Loading/LibraryLoading';
 import {
   closestCenter,
   DndContext,
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
-  rectIntersection,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -25,7 +25,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useLayoutEffect, useRef, useState, useTransition } from 'react';
-import LibraryLoading from '@components/Loading/LibraryLoading';
 import { deleteItem, moveItem, saveShelfLayout } from '@/app/library-actions';
 import { createShelfKeyboardCoordinates } from '@/lib/drag';
 import { label, PLATFORMS, SERVICES, serviceLabel, statusesFor } from '@/lib/library';
@@ -39,7 +38,6 @@ import type {
   Status,
 } from '@/types/library';
 import Artwork from './Artwork';
-import DropTarget from './DropTarget';
 import FilterSelect from './FilterSelect';
 import GameTile from './GameTile';
 import ItemEditor from './ItemEditor';
@@ -350,7 +348,13 @@ const Library = ({
     ),
   ];
 
+  const selectedBanner = relevant.find(
+    (item) =>
+      item.id === profile.banner_items?.[kind] &&
+      item.status === (kind === 'game' ? 'playing' : 'watching')
+  );
   const featured =
+    selectedBanner ??
     relevant.find((item) => item.status === (kind === 'game' ? 'playing' : 'watching')) ??
     relevant.find((item) => item.fields.artwork) ??
     relevant[0];
@@ -448,7 +452,7 @@ const Library = ({
 
   if (display === null) return <LibraryLoading kind={kind} />;
 
-  const cards = (list: LibraryItem[], group?: string) =>
+  const cards = (list: LibraryItem[]) =>
     list.map((item) => (
       <Tile
         key={item.id}
@@ -460,7 +464,6 @@ const Library = ({
           setRemoveError('');
           setRemoving(item);
         }}
-        group={group}
         display={display}
         eager={Boolean(item.fields.artwork && eagerArtwork.has(item.fields.artwork))}
       />
@@ -754,9 +757,8 @@ const Library = ({
           id={dialogTitle}
           sensors={sensors}
           collisionDetection={(args) => {
-            const isShelf = args.active.data.current?.type === 'shelf';
             const candidates = args.droppableContainers.filter(
-              (container) => (container.data.current?.type === 'shelf') === isShelf
+              (container) => container.data.current?.type === 'shelf'
             );
 
             if (!args.pointerCoordinates && keyboardTarget.current) {
@@ -767,7 +769,7 @@ const Library = ({
               if (target) return [{ id: target.id }];
             }
 
-            return (isShelf || !args.pointerCoordinates ? closestCenter : rectIntersection)({
+            return closestCenter({
               ...args,
               droppableContainers: candidates,
             });
@@ -786,11 +788,8 @@ const Library = ({
             keyboardTarget.current = null;
             setDraggingShelf(null);
 
-            if (active.data.current?.type === 'shelf') {
-              if (over?.data.current?.type === 'shelf')
-                reorderShelf(String(active.data.current.name), String(over.data.current.name));
-            } else if (over && statuses.includes(String(over.id) as Status))
-              move(String(active.data.current?.itemId), String(over.id) as Status);
+            if (active.data.current?.type === 'shelf' && over?.data.current?.type === 'shelf')
+              reorderShelf(String(active.data.current.name), String(over.data.current.name));
           }}
         >
           {view === 'all' ? (
@@ -822,7 +821,7 @@ const Library = ({
                 last={index === groups.length - 1}
                 display={display}
               >
-                {cards(group.items, group.name)}
+                {cards(group.items)}
               </Shelf>
             ))
           )}
@@ -834,14 +833,6 @@ const Library = ({
               </div>
             )}
           </DragOverlay>
-          {view !== 'status' && (
-            <div className="dropTargets">
-              <p className="hint">Drag to change status</p>
-              {statuses.map((s) => (
-                <DropTarget key={s} status={s} />
-              ))}
-            </div>
-          )}
         </DndContext>
       )}
       <div className="attribution">

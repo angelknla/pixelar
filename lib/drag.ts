@@ -1,6 +1,6 @@
 import type { KeyboardCoordinateGetter } from '@dnd-kit/core';
 
-// Jump between visible shelves rather than asking keyboard users to move a card pixel by pixel.
+// Jump between visible shelves rather than moving a shelf pixel by pixel.
 export const createShelfKeyboardCoordinates =
   (onTarget?: (id: string) => void): KeyboardCoordinateGetter =>
   (event, { context, currentCoordinates }) => {
@@ -14,11 +14,7 @@ export const createShelfKeyboardCoordinates =
 
     const targets = context.droppableContainers
       .getEnabled()
-      .filter(
-        (container) =>
-          (container.data.current?.type === 'shelf') ===
-          (context.active?.data.current?.type === 'shelf')
-      )
+      .filter((container) => container.data.current?.type === 'shelf')
       .flatMap((container) => {
         const rect = context.droppableRects.get(container.id);
 
