@@ -45,6 +45,12 @@ import GameTile from './GameTile';
 import ItemEditor from './ItemEditor';
 import ScreenTile from './ScreenTile';
 
+function compareReleaseDates(a: LibraryItem, b: LibraryItem) {
+  const date = (item: LibraryItem) =>
+    item.fields.release_precision === 'unknown' ? '9999' : (item.fields.release_date ?? '9999');
+  return date(a).localeCompare(date(b));
+}
+
 function FilterSelect({
   name,
   value,
@@ -416,8 +422,8 @@ export default function Library({
         ? (b.fields.metascore ?? -1) - (a.fields.metascore ?? -1)
         : sort === 'price'
           ? (a.price ?? Infinity) - (b.price ?? Infinity)
-          : sort === 'release'
-            ? (a.fields.release_date ?? '9999').localeCompare(b.fields.release_date ?? '9999')
+          : sort === 'release' || (kind === 'game' && status === 'scheduled')
+            ? compareReleaseDates(a, b)
             : b.created_at.localeCompare(a.created_at)
     );
   const move = (id: string, next: Status) => {
@@ -437,7 +443,10 @@ export default function Library({
       ? statuses.map((s) => ({
           name: label(s),
           status: s,
-          items: filtered.filter((i) => i.status === s),
+          items:
+            kind === 'game' && s === 'scheduled' && sort === 'added'
+              ? filtered.filter((i) => i.status === s).sort(compareReleaseDates)
+              : filtered.filter((i) => i.status === s),
         }))
       : view === 'service'
         ? [

@@ -466,6 +466,65 @@ it('filters movies and TV series across views and combines type with service and
   expect(document.querySelectorAll('.itemCard')).toHaveLength(2);
 });
 
+it('orders scheduled games by earliest release by default, with unannounced dates last', () => {
+  const game = (
+    id: string,
+    releaseDate: string | null,
+    createdAt: string,
+    precision: LibraryItem['fields']['release_precision'] = 'day'
+  ): LibraryItem => ({
+    ...tvItem(id, id, []),
+    kind: 'game',
+    status: 'scheduled',
+    created_at: createdAt,
+    fields: {
+      ...EMPTY_FIELDS,
+      title: id,
+      release_date: releaseDate,
+      release_precision: precision,
+    },
+  });
+  const items = [
+    game('Later release', '2027-02-10', '2026-10-19'),
+    game('Missing date', null, '2026-10-18'),
+    game('Unannounced date', '2026-01-01', '2026-10-17', 'unknown'),
+    game('Nearest release', '2026-10-20', '2026-10-16'),
+    game('Next release', '2026-11-01', '2026-10-15'),
+    { ...game('Older backlog', '2026-10-20', '2026-10-15'), status: 'backlog' as const },
+    { ...game('Newer backlog', '2027-02-10', '2026-10-19'), status: 'backlog' as const },
+  ];
+  render(<Library items={items} profile={defaultProfile('owner')} kind="game" />);
+  const titles = (element: HTMLElement) =>
+    within(element)
+      .getAllByRole('heading', { level: 3 })
+      .map((heading) => heading.textContent);
+  const scheduled = screen.getByRole('button', { name: /Scheduled 5/ }).closest('section')!;
+  const expected = [
+    'Nearest release',
+    'Next release',
+    'Later release',
+    'Missing date',
+    'Unannounced date',
+  ];
+  expect(titles(scheduled)).toEqual(expected);
+  const backlog = screen.getByRole('button', { name: /Backlog 2/ }).closest('section')!;
+  expect(titles(backlog)).toEqual(['Newer backlog', 'Older backlog']);
+
+  fireEvent.change(screen.getByRole('combobox', { name: 'Filter by status' }), {
+    target: { value: 'scheduled' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Grid' }));
+  expect(titles(document.querySelector('.libraryPage')!)).toEqual(expected);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Shelves' }));
+  fireEvent.change(screen.getByRole('combobox', { name: 'Sort titles' }), {
+    target: { value: 'score' },
+  });
+  expect(titles(screen.getByRole('button', { name: /Scheduled 5/ }).closest('section')!)).toEqual(
+    items.slice(0, 5).map((item) => item.fields.title)
+  );
+});
+
 it('keeps prices off game tiles while preserving detail links and status changes in both views', async () => {
   const game: LibraryItem = {
     ...tvItem('game', 'Fable', []),
