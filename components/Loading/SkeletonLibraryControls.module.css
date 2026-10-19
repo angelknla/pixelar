@@ -1,0 +1,13 @@
+.controls :global(.skeletonSearch) {
+  flex: 1 1 0;
+}
+
+.controls :global(.skeletonViews) {
+  flex-shrink: 0;
+}
+
+@media (max-width: 650px) {
+  .controls :global(.skeletonView) {
+    width: clamp(28px, 9vw, 36px);
+  }
+}

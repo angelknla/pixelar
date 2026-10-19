@@ -1,5 +1,6 @@
 import LoadingState from './LoadingState';
 import SkeletonBar from './SkeletonBar';
+import SkeletonLibraryControls from './SkeletonLibraryControls';
 import SkeletonTile from './SkeletonTile';
 import styles from './LibraryLoading.module.css';
 
@@ -36,33 +37,7 @@ const LibraryLoading = ({ kind }: { kind: 'game' | 'screen' }) => {
           <SkeletonBar className="skeletonStat" />
           <SkeletonBar className="skeletonStat skeletonStatLink" />
         </div>
-        <div className="libraryControls">
-          <div className="toolbar">
-            <SkeletonBar className="skeletonSearch" />
-            <div className="skeletonViews">
-              {Array.from({ length: game ? 2 : 3 }, (_, i) => (
-                <SkeletonBar className="skeletonView" key={i} />
-              ))}
-            </div>
-          </div>
-          <div className="libraryFilterRow">
-            {!game && (
-              <div className="screenTypePicker libraryTypePicker skeletonTypes">
-                <span>All titles</span>
-                <span>Movies</span>
-                <span>TV series</span>
-              </div>
-            )}
-            <div className="filters">
-              <SkeletonBar className="skeletonFilter" />
-              <SkeletonBar className="skeletonFilter" />
-              <SkeletonBar className="skeletonFilter" />
-              <span className="filterCount">
-                <SkeletonBar className="skeletonCount" />
-              </span>
-            </div>
-          </div>
-        </div>
+        <SkeletonLibraryControls kind={kind} />
         {Array.from({ length: 2 }, (_, shelf) => (
           <section className="shelf" key={shelf}>
             <div className="shelfHeading">
