@@ -1197,10 +1197,14 @@ legend {
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--text);
-  width: min(760px, calc(100vw - 24px));
-  max-height: 90svh;
-  padding: 1.75rem;
+  width: min(960px, calc(100vw - 48px));
+  max-height: calc(100dvh - 64px);
+  padding: 2rem;
+  overflow-y: auto;
   overscroll-behavior: contain;
+}
+:root:has(.editorDialog[open]) {
+  overflow: hidden;
 }
 .editorDialog::backdrop {
   background: #03070dcc;
@@ -1240,6 +1244,7 @@ legend {
   border-radius: var(--radius);
 }
 .editorDialog .editor {
+  max-width: none;
   border: 0;
   padding: 0;
 }
@@ -1589,6 +1594,58 @@ legend {
 .coverUpload [role="alert"] {
   margin: 0;
 }
+.itemCreate .itemDetailForm,
+.itemCreate .itemDetailColumns,
+.itemCreate .itemDetailPersonal {
+  gap: 2rem;
+}
+.itemCreate .itemDetailColumns {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+}
+.itemCreate .editorSection {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  padding: 1.5rem 0 0;
+}
+.itemCreate .detailChoices {
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.itemCreate .choiceChips label {
+  min-height: 44px;
+  padding: 0.6rem 0.75rem;
+}
+.itemCreate .itemProviderTools,
+.itemCreate .itemMetadataFields {
+  border: 0;
+  border-radius: 0;
+}
+.itemCreate .itemProviderTools > summary {
+  padding: 0 0 1rem;
+}
+.itemCreate .providerToolsBody,
+.itemCreate .searchBox {
+  padding: 0;
+}
+.itemCreate .searchBox {
+  background: transparent;
+}
+.itemCreate .itemMetadataFields {
+  border-top: 1px solid var(--border);
+}
+.itemCreate .itemMetadataFields > summary {
+  padding: 1.5rem 0;
+}
+.itemCreate .itemMetadataBody {
+  padding: 0;
+}
+.itemCreate .itemDetailActions {
+  border-top: 1px solid var(--border);
+  padding-top: 1.5rem;
+}
 @media (max-width: 1100px) {
   .itemDetailPersonal {
     grid-template-columns: minmax(0, 1fr);
@@ -1601,6 +1658,11 @@ legend {
   }
 }
 @media (max-width: 650px) {
+  .itemCreate .itemDetailColumns,
+  .itemCreate .itemDetailPersonal,
+  .itemCreate .formGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .itemOverview {
     border-radius: var(--radius);
     margin-bottom: 1.25rem;
@@ -2313,8 +2375,30 @@ legend {
     gap: 0.7rem;
   }
   .editorDialog {
-    padding: 1rem;
-    max-height: 94svh;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+      max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  }
+  .editorDialog .editorHeading {
+    position: sticky;
+    top: calc(-1 * max(1rem, env(safe-area-inset-top)));
+    z-index: 2;
+    background: var(--surface);
+    margin-top: calc(-1 * max(1rem, env(safe-area-inset-top)));
+    padding: max(1rem, env(safe-area-inset-top)) 0 1rem;
+  }
+  .editorDialog .itemDetailActions {
+    position: sticky;
+    bottom: calc(-1 * max(1rem, env(safe-area-inset-bottom)));
+    background: var(--surface);
+    padding: 1rem 0 max(1rem, env(safe-area-inset-bottom));
+    margin-bottom: calc(-1 * max(1rem, env(safe-area-inset-bottom)));
   }
   .searchResults {
     grid-template-columns: 1fr;

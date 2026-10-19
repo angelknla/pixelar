@@ -168,7 +168,7 @@ export default function ItemEditor({
   const choose = (list: string[], set: (v: string[]) => void, value: string) =>
     set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   return (
-    <div className={`editor ${item ? 'itemDetails' : ''}`}>
+    <div className={`editor ${item ? 'itemDetails' : 'itemCreate'}`}>
       {item && (
         <header className="itemOverview">
           <div
