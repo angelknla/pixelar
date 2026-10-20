@@ -57,4 +57,32 @@ describe('notes import', () => {
   it('does not infer types below unknown headings', () => {
     expect(parseNotes('Mystery:\n• Something')[0]).toMatchObject({ kind: null, ambiguous: true });
   });
+
+  it('sets one default type for a plain list and uses a valid starting status', () => {
+    const rows = parseNotes('Hades\nFable', [], 'game');
+
+    expect(rows.map((row) => [row.kind, row.status, row.ambiguous])).toEqual([
+      ['game', 'backlog', false],
+      ['game', 'backlog', false],
+    ]);
+  });
+
+  it('keeps explicit type headings while service headings respect the default type', () => {
+    const rows = parseNotes('Netflix\nDune\nTV series\nThe Sandman\nGames\nHades', [], 'movie');
+
+    expect(rows.map((row) => [row.kind, row.status, row.services])).toEqual([
+      ['movie', 'watchlist', ['Netflix']],
+      ['show', 'watchlist', []],
+      ['game', 'backlog', []],
+    ]);
+  });
+
+  it('uses the default type below an unfamiliar heading and preserves uncertainty', () => {
+    const rows = parseNotes('Favourites:\nDune\nDune?', [], 'movie');
+
+    expect(rows.map((row) => [row.kind, row.uncertain])).toEqual([
+      ['movie', true],
+      ['movie', true],
+    ]);
+  });
 });

@@ -3482,10 +3482,64 @@ legend {
 .importPaste {
   max-width: 800px;
   margin-top: 2rem;
+  display: grid;
+  gap: 1rem;
 }
 
 .importPaste textarea {
   width: 100%;
+}
+
+.importOptions,
+.importBulkType {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: end;
+  gap: 1rem;
+}
+
+.importReviewTools {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.importReviewTools .hint,
+.importOptions .hint {
+  margin: 0;
+}
+
+.importReviewFilters {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.importReviewFilters button[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.importBulkType {
+  max-width: 650px;
+}
+
+.importReviewTools .inline {
+  flex-wrap: wrap;
+}
+
+.importReviewTools progress {
+  flex: 1;
+  min-width: 120px;
+  accent-color: var(--accent);
 }
 
 .importRow {
@@ -3511,12 +3565,27 @@ legend {
   width: auto;
 }
 
-.importRow > .inline {
+.importRowSummary {
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.importRow .importRowSummary .hint {
+  margin-left: 0.75rem;
+}
+
+.importRowDetails {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.importRowDetails > .inline {
   flex-wrap: wrap;
   gap: 0.65rem;
 }
 
-.importRow > .inline > button {
+.importRowDetails > .inline > button {
   flex-shrink: 0;
 }
 
@@ -3541,6 +3610,16 @@ legend {
 }
 
 @media (max-width: 650px) {
+  .importOptions,
+  .importBulkType {
+    grid-template-columns: 1fr;
+  }
+
+  .importRow .importRowSummary .hint {
+    display: block;
+    margin-left: 0;
+  }
+
   .importFields {
     grid-template-columns: 1fr 1fr;
   }

@@ -1,4 +1,5 @@
 import type { ItemKind, LibraryItem, Status } from '@/types/library';
+import { statusesFor } from './library';
 
 export interface ImportRow {
   id: string;
@@ -9,6 +10,7 @@ export interface ImportRow {
   services: string[];
   duplicate: boolean;
   ambiguous: boolean;
+  uncertain: boolean;
   date_hint: string | null;
 }
 
@@ -25,6 +27,9 @@ const headings: Record<string, { kind?: ItemKind; status?: Status; service?: str
   screen: { kind: 'show', status: 'watchlist' },
   streaming: { kind: 'show', status: 'watchlist' },
   movies: { kind: 'movie', status: 'watchlist' },
+  films: { kind: 'movie', status: 'watchlist' },
+  series: { kind: 'show', status: 'watchlist' },
+  'tv series': { kind: 'show', status: 'watchlist' },
   'tv shows': { kind: 'show', status: 'watchlist' },
   'watching now': { kind: 'show', status: 'watching' },
   upcoming: { status: 'upcoming' },
@@ -57,14 +62,22 @@ const datePrefix = new RegExp(
 
 export const titleKey = (title: string) => title.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 
+export const importStatusFor = (kind: ItemKind | null, status: Status): Status => {
+  if (!kind || statusesFor(kind).includes(status)) return status;
+  if (kind === 'game') return status === 'upcoming' ? 'anticipated' : 'backlog';
+
+  return status === 'scheduled' || status === 'anticipated' ? 'upcoming' : 'watchlist';
+};
+
 export const parseNotes = (
   notes: string,
-  existing: Pick<LibraryItem, 'fields' | 'kind'>[] = []
+  existing: Pick<LibraryItem, 'fields' | 'kind'>[] = [],
+  defaultKind: ItemKind | null = null
 ): ImportRow[] => {
   const rows: ImportRow[] = [];
 
-  let kind: ItemKind | null = null,
-    status: Status = 'watchlist',
+  let kind: ItemKind | null = defaultKind,
+    status: Status = defaultKind === 'game' ? 'backlog' : 'watchlist',
     services: string[] = [];
 
   let uncertain = false;
@@ -74,7 +87,7 @@ export const parseNotes = (
     .split(/\r?\n/)
     .some((line) => /\s[-–]\s*(Netflix|Prime|Apple TV)\s*$/i.test(line));
 
-  if (openingMovieList) kind = 'movie';
+  if (openingMovieList && !defaultKind) kind = 'movie';
 
   for (const raw of notes.split(/\r?\n/)) {
     const source = raw.trim();
@@ -90,7 +103,7 @@ export const parseNotes = (
     if (headings[heading]) {
       const hint = headings[heading];
 
-      kind = hint.kind ?? kind;
+      kind = (hint.service ? defaultKind : null) ?? hint.kind ?? kind;
       status = hint.status ?? status;
       services = hint.service ? [hint.service] : [];
       uncertain = heading === 'available and replay titles';
@@ -98,7 +111,7 @@ export const parseNotes = (
     }
 
     if (/:$/.test(line) || /^#/.test(line)) {
-      kind = null;
+      kind = defaultKind;
       services = [];
       uncertain = true;
       continue;
@@ -138,28 +151,18 @@ export const parseNotes = (
     title = title.slice(0, 300);
 
     const key = kind ? `${kind}:${titleKey(title)}` : `unknown:${titleKey(title)}`;
-    const ambiguous =
-      rowUncertain || !kind || /[?]/.test(title) || /\b(or|maybe|tbc)\b/i.test(title);
-    const safeStatus =
-      kind === 'game'
-        ? rowStatus === 'upcoming'
-          ? 'anticipated'
-          : rowStatus
-        : rowStatus === 'scheduled'
-          ? 'upcoming'
-          : ['backlog', 'playing', 'replay', 'completed', 'anticipated'].includes(rowStatus)
-            ? 'watchlist'
-            : rowStatus;
+    const needsReview = rowUncertain || /[?]/.test(title) || /\b(or|maybe|tbc)\b/i.test(title);
 
     rows.push({
       id: `line-${rows.length}`,
       source,
       title,
       kind,
-      status: safeStatus,
+      status: importStatusFor(kind, rowStatus),
       services: rowServices,
       duplicate: seen.has(key),
-      ambiguous,
+      ambiguous: needsReview || !kind,
+      uncertain: needsReview,
       date_hint: dateHint,
     });
     seen.add(key);

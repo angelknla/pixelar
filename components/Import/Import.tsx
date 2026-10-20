@@ -1,58 +1,151 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { saveReviewedImport } from '@/app/import-actions';
-import { type ImportRow, parseNotes } from '@/lib/import';
-import { label, releaseLabel, statusesFor } from '@/lib/library';
-import type {
-  ItemInput,
-  ItemKind,
-  LibraryItem,
-  MetadataRow,
-  ProfileRow,
-  SearchResult,
-  Status,
-} from '@/types/library';
+import { importStatusFor, parseNotes } from '@/lib/import';
+import {
+  type ImportMatchOutcome,
+  importDuplicates,
+  needsImportReview,
+  type ReviewRow,
+} from '@/lib/import-matching';
+import type { ItemInput, ItemKind, LibraryItem, ProfileRow, SearchResult } from '@/types/library';
+import ImportReviewRow from './ImportReviewRow';
 
-interface ReviewRow extends ImportRow {
-  skip: boolean;
-  results: SearchResult[];
-  metadata: MetadataRow | null;
-  error: string;
-}
+type ReviewFilter = 'attention' | 'all' | 'matched' | 'skipped';
 
 const Import = ({ items, profile }: { items: LibraryItem[]; profile: ProfileRow }) => {
   const router = useRouter();
-
   const [notes, setNotes] = useState('');
+  const [defaultKind, setDefaultKind] = useState<ItemKind | null>(null);
+  const [autoMatch, setAutoMatch] = useState(true);
   const [rows, setRows] = useState<ReviewRow[]>([]);
+  const [reviewing, setReviewing] = useState(false);
+  const [filter, setFilter] = useState<ReviewFilter>('all');
+  const [bulkKind, setBulkKind] = useState<ItemKind | null>(null);
 
   const [pending, start] = useTransition();
+  const [matching, setMatching] = useState(false);
+  const [progress, setProgress] = useState({ completed: 0, total: 0 });
+  const matchController = useRef<AbortController | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [reviewing, setReviewing] = useState(false);
+
+  useEffect(() => () => matchController.current?.abort(), []);
 
   const patch = (id: string, value: Partial<ReviewRow>) =>
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...value } : r)));
+    setRows((previous) =>
+      importDuplicates(
+        previous.map((row) => (row.id === id ? { ...row, ...value } : row)),
+        items
+      )
+    );
 
-  const suggest = async (row: ReviewRow) => {
-    if (!row.kind) return;
+  const matchRows = async (selection: ReviewRow[], autoLink = true) => {
+    const selected = selection.filter((row) => !row.skip && (!autoLink || !row.metadata));
+
+    if (!selected.length) return;
+
+    const controller = new AbortController();
+
+    matchController.current = controller;
+    setMatching(true);
+    setProgress({ completed: 0, total: selected.length });
 
     try {
-      const response = await fetch(
-        `/api/search?q=${encodeURIComponent(row.title)}&kind=${row.kind}`
-      );
-      const data = await response.json();
+      for (let index = 0; index < selected.length; index += 3) {
+        if (controller.signal.aborted) break;
 
-      if (!response.ok) throw new Error(data.error);
+        const batch = selected.slice(index, index + 3);
+        const batchController = new AbortController();
+        const abortBatch = () => batchController.abort();
+        const timeout = setTimeout(abortBatch, 45000);
 
-      patch(row.id, {
-        results: data.results,
-        error: data.results.length ? '' : 'No match found. This title can be saved unmatched.',
-      });
-    } catch (e) {
-      patch(row.id, { error: e instanceof Error ? e.message : 'Search unavailable.' });
+        controller.signal.addEventListener('abort', abortBatch, { once: true });
+
+        try {
+          const response = await fetch('/api/import/match', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: batchController.signal,
+            body: JSON.stringify({
+              rows: batch.map(({ id, title, kind, uncertain, date_hint }) => ({
+                id,
+                title,
+                kind,
+                uncertain,
+                date_hint,
+              })),
+              auto_link: autoLink,
+            }),
+          });
+          const data = await response.json();
+
+          if (!response.ok) throw new Error(data.error || 'Matching unavailable.');
+          if (controller.signal.aborted) break;
+
+          const outcomes = data.outcomes as ImportMatchOutcome[];
+
+          setRows((previous) =>
+            importDuplicates(
+              previous.map((row) => {
+                const outcome = outcomes.find((candidate) => candidate.id === row.id);
+
+                if (!outcome) return row;
+
+                const metadata = autoLink ? outcome.metadata : row.metadata;
+                const kind = metadata?.kind ?? row.kind;
+
+                return {
+                  ...row,
+                  ...outcome,
+                  metadata,
+                  kind,
+                  status: importStatusFor(kind, row.status),
+                  ambiguous: metadata ? false : row.ambiguous,
+                  services: kind === 'game' ? [] : row.services,
+                  error:
+                    outcome.error ||
+                    (!outcome.results.length
+                      ? 'No match found. This title can be saved unmatched.'
+                      : !outcome.metadata && autoLink
+                        ? 'Choose the right result, or keep this title unmatched.'
+                        : ''),
+                };
+              }),
+              items
+            )
+          );
+        } catch (cause) {
+          if (controller.signal.aborted) break;
+
+          const error = batchController.signal.aborted
+            ? 'Matching took too long. Retry or keep these titles unmatched.'
+            : cause instanceof Error
+              ? cause.message
+              : 'Matching unavailable. Retry or keep unmatched.';
+
+          setRows((previous) =>
+            previous.map((row) =>
+              batch.some((candidate) => candidate.id === row.id) ? { ...row, error } : row
+            )
+          );
+        } finally {
+          clearTimeout(timeout);
+          controller.signal.removeEventListener('abort', abortBatch);
+        }
+
+        setProgress({
+          completed: Math.min(index + batch.length, selected.length),
+          total: selected.length,
+        });
+      }
+    } finally {
+      if (matchController.current === controller) {
+        matchController.current = null;
+        setMatching(false);
+      }
     }
   };
 
@@ -67,11 +160,131 @@ const Import = ({ items, profile }: { items: LibraryItem[]; profile: ProfileRow 
 
       if (!response.ok) throw new Error(data.error);
 
-      patch(row.id, { metadata: data.metadata, error: '' });
-    } catch (e) {
-      patch(row.id, { error: e instanceof Error ? e.message : 'Could not load details.' });
+      patch(row.id, {
+        metadata: data.metadata,
+        kind: result.kind,
+        status: importStatusFor(result.kind, row.status),
+        services: result.kind === 'game' ? [] : row.services,
+        ambiguous: false,
+        uncertain: false,
+        error: '',
+      });
+    } catch (cause) {
+      patch(row.id, { error: cause instanceof Error ? cause.message : 'Could not load details.' });
     }
   };
+
+  const reviewNotes = () => {
+    const parsed = parseNotes(notes, items, defaultKind);
+
+    if (parsed.length > 200) {
+      setError('Please import at most 200 titles at a time.');
+
+      return;
+    }
+    if (!parsed.length) {
+      setError('No titles found. Paste one title per line.');
+
+      return;
+    }
+
+    const review: ReviewRow[] = parsed.map((row) => ({
+      ...row,
+      skip: row.duplicate,
+      results: [],
+      metadata: null,
+      error: '',
+    }));
+
+    setRows(review);
+    setReviewing(true);
+    setFilter(autoMatch ? 'attention' : 'all');
+    setError('');
+    setMessage('');
+
+    if (autoMatch) void matchRows(review);
+  };
+
+  const save = async (selected: ReviewRow[]) => {
+    setError('');
+    setMessage('');
+
+    if (selected.some((row) => !row.kind)) {
+      setError(
+        'Choose a type for the remaining titles, use the bulk type setting, or import only ready titles.'
+      );
+      setFilter('attention');
+
+      return;
+    }
+
+    const values = selected.map((row) => {
+      const item: ItemInput = {
+        kind: row.kind!,
+        status: row.status,
+        metadata_id: row.metadata?.id ?? null,
+        overrides: { title: row.title },
+        platforms:
+          row.kind === 'game'
+            ? profile.platforms.filter(
+                (platform) => !row.metadata || row.metadata.fields.platforms.includes(platform)
+              )
+            : [],
+        services: row.kind === 'game' ? [] : row.services,
+        price: null,
+        currency: profile.currency,
+        notes: row.date_hint
+          ? `Original release hint: ${row.date_hint}. Imported from: ${row.source}`
+          : '',
+        auto_move: true,
+        reminder_days: profile.default_release_reminder ? [0] : [],
+      };
+
+      return { key: row.id, item };
+    });
+
+    try {
+      const result = await saveReviewedImport(values);
+
+      setRows((previous) =>
+        previous
+          .filter((row) => !result.saved.includes(row.id))
+          .map((row) => ({
+            ...row,
+            error: result.errors.find((failure) => failure.key === row.id)?.error ?? row.error,
+          }))
+      );
+      setMessage(
+        `${result.saved.length} ${result.saved.length === 1 ? 'title' : 'titles'} imported.`
+      );
+
+      if (result.errors.length) {
+        setError(
+          'Some titles could not be saved. They remain below for correction; saved titles will not be retried.'
+        );
+        setFilter('attention');
+      }
+
+      router.refresh();
+    } catch {
+      setError('Import interrupted. Check your library before retrying to avoid duplicates.');
+    }
+  };
+
+  const busy = pending || matching;
+  const selected = rows.filter((row) => !row.skip);
+  const attention = rows.filter(needsImportReview);
+  const ready = selected.filter((row) => !needsImportReview(row));
+  const skipped = rows.filter((row) => row.skip);
+  const untyped = selected.filter((row) => !row.kind);
+  const visible =
+    filter === 'attention'
+      ? attention
+      : filter === 'matched'
+        ? ready
+        : filter === 'skipped'
+          ? skipped
+          : rows;
 
   return (
     <>
@@ -79,11 +292,32 @@ const Import = ({ items, profile }: { items: LibraryItem[]; profile: ProfileRow 
         <div>
           <span className="eyebrow">From your notes to your next night in</span>
           <h1>Bring your list along.</h1>
-          <p>Paste your notes, check the titles, and give them a new home.</p>
+          <p>
+            Paste your notes. We’ll find matches so you can focus on the titles that need a
+            decision.
+          </p>
         </div>
       </header>
       {!reviewing ? (
         <section className="importPaste">
+          <div className="importOptions">
+            <label>
+              Default type
+              <select
+                value={defaultKind ?? ''}
+                onChange={(e) => setDefaultKind((e.target.value || null) as ItemKind | null)}
+              >
+                <option value="">Mixed list — detect automatically</option>
+                <option value="movie">Movies</option>
+                <option value="show">TV series</option>
+                <option value="game">Games</option>
+              </select>
+            </label>
+            <p className="hint">
+              Set a type once for your whole list. Movies, TV series, and Games headings can still
+              set a different type for a section.
+            </p>
+          </div>
           <label>
             Your notes
             <textarea
@@ -92,297 +326,179 @@ const Import = ({ items, profile }: { items: LibraryItem[]; profile: ProfileRow 
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={
-                'Anticipated Games\n• Kemuri?\n\nPlaying now\n• Hades II\n\nNetflix\n• The Sandman'
+                'Dune (2021)\nThe Sandman\nHades II\n\nOr paste notes with headings such as Movies, Netflix, or Playing now.'
               }
             />
           </label>
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              checked={autoMatch}
+              onChange={(e) => setAutoMatch(e.target.checked)}
+            />
+            Find and link clear matches automatically
+          </label>
           <p className="hint">
-            Headings such as Netflix, HBO, Playing now, and Anticipated Games set helpful defaults.
-            Nothing is saved until you review and confirm.
+            Paste one title per line. Add a year in brackets to distinguish versions. Uncertain
+            matches stay for review, duplicates are skipped, and nothing is saved until you confirm.
           </p>
           <button
             type="button"
             className="primary"
-            disabled={!notes.trim() || pending}
-            onClick={() => {
-              const parsed = parseNotes(notes, items);
-
-              if (parsed.length > 200) {
-                setError('Please import at most 200 titles at a time.');
-
-                return;
-              }
-
-              if (!parsed.length) {
-                setError('No titles found. Add a title below a heading.');
-
-                return;
-              }
-
-              const review = parsed.map((r) => ({
-                ...r,
-                skip: r.duplicate,
-                results: [],
-                metadata: null,
-                error: '',
-              }));
-
-              setRows(review);
-              setReviewing(true);
-              setError('');
-            }}
+            disabled={!notes.trim() || busy}
+            onClick={reviewNotes}
           >
-            Review titles
+            {autoMatch ? 'Find and review titles' : 'Review titles'}
           </button>
         </section>
       ) : (
         <>
           <div className="sectionHeading">
-            <h2>{rows.length} titles to review</h2>
+            <h2>
+              {rows.length} {rows.length === 1 ? 'title' : 'titles'} to review
+            </h2>
             <button
               type="button"
-              disabled={pending}
+              disabled={busy}
               onClick={() => {
                 setReviewing(false);
                 setRows([]);
+                setError('');
+                setMessage('');
               }}
             >
               Start over
             </button>
           </div>
-          <p className="hint">
-            Find matches for the titles you want to link, then confirm each match. Unclear lines
-            stay unmatched. Change any type, status, service or title below; use the item editor
-            after import for other details.
-          </p>
-          {rows.map((row) => (
-            <section className={`importRow ${row.skip ? 'skipped' : ''}`} key={row.id}>
-              <div className="importRowHeading">
-                <label className="checkbox">
-                  <input
-                    type="checkbox"
-                    checked={!row.skip}
-                    onChange={(e) => patch(row.id, { skip: !e.target.checked })}
-                  />
-                  Import this title
-                </label>
-                <span className="hint">
-                  {row.duplicate
-                    ? 'Already in your library or this paste'
-                    : row.ambiguous
-                      ? 'Needs your review'
-                      : ''}
-                </span>
-              </div>
-              <div className="importFields">
-                <label>
-                  Title
-                  <input
-                    disabled={row.skip}
-                    value={row.title}
-                    onChange={(e) =>
-                      patch(row.id, { title: e.target.value, metadata: null, results: [] })
-                    }
-                  />
-                </label>
-                <label>
-                  Type
-                  <select
-                    disabled={row.skip}
-                    value={row.kind ?? ''}
-                    onChange={(e) => {
-                      const kind = e.target.value as ItemKind;
-
-                      patch(row.id, {
-                        kind,
-                        status: kind === 'game' ? 'backlog' : 'watchlist',
-                        services: kind === 'game' ? [] : row.services,
-                        metadata: null,
-                        results: [],
-                      });
-                    }}
-                  >
-                    <option value="">Choose a type…</option>
-                    <option value="game">Game</option>
-                    <option value="movie">Movie</option>
-                    <option value="show">TV series</option>
-                  </select>
-                </label>
-                <label>
-                  Status
-                  <select
-                    disabled={row.skip || !row.kind}
-                    value={row.status}
-                    onChange={(e) => patch(row.id, { status: e.target.value as Status })}
-                  >
-                    {statusesFor(row.kind ?? 'game').map((s) => (
-                      <option key={s} value={s}>
-                        {label(s)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              {row.kind && row.kind !== 'game' && (
-                <label>
-                  Services (comma-separated)
-                  <input
-                    disabled={row.skip}
-                    value={row.services.join(', ')}
-                    onChange={(e) =>
-                      patch(row.id, {
-                        services: e.target.value
-                          .split(',')
-                          .map((s) => s.trim())
-                          .filter(Boolean),
-                      })
-                    }
-                  />
-                </label>
-              )}
-              {row.date_hint && (
-                <p className="hint">
-                  Your notes: {row.date_hint} (year unconfirmed).{' '}
-                  {row.metadata
-                    ? `Fetched release: ${releaseLabel(row.metadata.fields)}. Review any disagreement before importing.`
-                    : 'Select a match to fetch its release year and date.'}
-                </p>
-              )}
+          <div className="importReviewTools">
+            <p className="hint" role="status">
+              {matching
+                ? `Matching ${progress.completed} of ${progress.total} titles…`
+                : `${ready.length} ready · ${attention.length} need attention · ${skipped.length} skipped`}
+            </p>
+            {matching && (
               <div className="inline">
+                <progress
+                  aria-label="Title matching progress"
+                  value={progress.completed}
+                  max={progress.total}
+                />
+                <button type="button" onClick={() => matchController.current?.abort()}>
+                  Stop matching
+                </button>
+              </div>
+            )}
+            <fieldset className="importReviewFilters" aria-label="Filter imported titles">
+              {(
+                [
+                  ['attention', `Needs attention (${attention.length})`],
+                  ['matched', `Ready (${ready.length})`],
+                  ['all', `All titles (${rows.length})`],
+                  ['skipped', `Skipped (${skipped.length})`],
+                ] as const
+              ).map(([value, name]) => (
                 <button
                   type="button"
-                  disabled={pending || row.skip || !row.kind}
-                  onClick={() => start(() => suggest(row))}
+                  key={value}
+                  aria-pressed={filter === value}
+                  onClick={() => setFilter(value)}
                 >
-                  Find matches
+                  {name}
                 </button>
-                <span className="hint">
-                  {row.metadata
-                    ? `Linked: ${row.metadata.fields.title}`
-                    : 'Unmatched — will keep your title'}
-                </span>
-                {row.metadata && (
-                  <>
-                    <button
-                      type="button"
-                      className="textButton"
-                      onClick={() => patch(row.id, { title: row.metadata!.fields.title })}
-                    >
-                      Use matched title
-                    </button>
-                    <button
-                      className="textButton"
-                      type="button"
-                      onClick={() => patch(row.id, { metadata: null })}
-                    >
-                      Remove match
-                    </button>
-                  </>
-                )}
-              </div>
-              {!row.skip && row.results.length > 0 && (
+              ))}
+            </fieldset>
+            {untyped.length > 0 && (
+              <div className="importBulkType">
                 <label>
-                  Choose a result
+                  Type for remaining titles
                   <select
-                    value={row.metadata?.provider_id ?? ''}
-                    disabled={pending}
-                    onChange={(e) => {
-                      const result = row.results.find((r) => r.provider_id === e.target.value);
-
-                      if (result) start(() => link(row, result));
-                      else patch(row.id, { metadata: null });
-                    }}
+                    disabled={busy}
+                    value={bulkKind ?? ''}
+                    onChange={(e) => setBulkKind((e.target.value || null) as ItemKind | null)}
                   >
-                    <option value="">Keep unmatched</option>
-                    {row.results.map((r) => (
-                      <option key={r.provider_id} value={r.provider_id}>
-                        {r.title}
-                        {r.year ? ` (${r.year})` : ''}
-                      </option>
-                    ))}
+                    <option value="">Choose a type…</option>
+                    <option value="movie">Movies</option>
+                    <option value="show">TV series</option>
+                    <option value="game">Games</option>
                   </select>
                 </label>
-              )}
-              {row.error && (
-                <p className="hint" role="status">
-                  {row.error}
-                </p>
-              )}
-            </section>
+                <button
+                  type="button"
+                  disabled={busy || !bulkKind}
+                  onClick={() => {
+                    setRows((previous) =>
+                      importDuplicates(
+                        previous.map((row) =>
+                          row.skip || row.kind
+                            ? row
+                            : {
+                                ...row,
+                                kind: bulkKind,
+                                status: importStatusFor(bulkKind, row.status),
+                                services: bulkKind === 'game' ? [] : row.services,
+                                results: [],
+                                error: '',
+                                ambiguous: row.uncertain,
+                              }
+                        ),
+                        items
+                      )
+                    );
+                  }}
+                >
+                  Apply to {untyped.length} {untyped.length === 1 ? 'title' : 'titles'}
+                </button>
+              </div>
+            )}
+            <div className="inline">
+              <p className="hint">
+                Clear matches are ready to import. You can edit any title or import typed titles
+                without a match.
+              </p>
+              <button
+                type="button"
+                disabled={busy || !selected.some((row) => !row.metadata)}
+                onClick={() => void matchRows(rows)}
+              >
+                Match remaining titles
+              </button>
+            </div>
+          </div>
+          {!visible.length && (
+            <p className="hint">
+              {matching
+                ? 'Matching your list. Titles needing a decision will appear here.'
+                : filter === 'attention'
+                  ? 'No titles need attention. Your matched titles are ready to import.'
+                  : 'No titles in this view.'}
+            </p>
+          )}
+          {visible.map((row) => (
+            <ImportReviewRow
+              key={row.id}
+              row={row}
+              disabled={busy}
+              patch={patch}
+              suggest={(row) => void matchRows([row], false)}
+              link={(row, result) => start(() => link(row, result))}
+            />
           ))}
           <div className="formActions">
             <button
               type="button"
               className="primary"
-              disabled={pending || rows.every((r) => r.skip)}
-              onClick={() => {
-                setError('');
-                setMessage('');
-                start(async () => {
-                  const selected = rows.filter((r) => !r.skip);
-
-                  if (selected.some((r) => !r.kind)) {
-                    setError('Choose a type for every title you want to import.');
-
-                    return;
-                  }
-
-                  const values = selected.map((row) => {
-                    const item: ItemInput = {
-                      kind: row.kind!,
-                      status: row.status,
-                      metadata_id: row.metadata?.id ?? null,
-                      overrides: { title: row.title },
-                      platforms:
-                        row.kind === 'game'
-                          ? profile.platforms.filter(
-                              (p) => !row.metadata || row.metadata.fields.platforms.includes(p)
-                            )
-                          : [],
-                      services: row.kind === 'game' ? [] : row.services,
-                      price: null,
-                      currency: profile.currency,
-                      notes: row.date_hint
-                        ? `Original release hint: ${row.date_hint}. Imported from: ${row.source}`
-                        : '',
-                      auto_move: true,
-                      reminder_days: profile.default_release_reminder ? [0] : [],
-                    };
-
-                    return { key: row.id, item };
-                  });
-
-                  try {
-                    const result = await saveReviewedImport(values);
-
-                    setRows((prev) =>
-                      prev
-                        .filter((r) => !result.saved.includes(r.id))
-                        .map((r) => ({
-                          ...r,
-                          error: result.errors.find((e) => e.key === r.id)?.error ?? r.error,
-                        }))
-                    );
-                    setMessage(`${result.saved.length} titles imported.`);
-
-                    if (result.errors.length)
-                      setError(
-                        'Some titles could not be saved. They remain below for correction; saved titles will not be retried.'
-                      );
-
-                    router.refresh();
-                  } catch {
-                    setError(
-                      'Import interrupted. Check your library before retrying to avoid duplicates.'
-                    );
-                  }
-                });
-              }}
+              disabled={busy || !selected.length}
+              onClick={() => start(() => save(selected))}
             >
               {pending
                 ? 'Working through your list…'
-                : `Import ${rows.filter((r) => !r.skip).length} titles`}
+                : `Import ${selected.length} ${selected.length === 1 ? 'title' : 'titles'}`}
             </button>
+            {attention.length > 0 && ready.length > 0 && (
+              <button type="button" disabled={busy} onClick={() => start(() => save(ready))}>
+                Import {ready.length} ready {ready.length === 1 ? 'title' : 'titles'}
+              </button>
+            )}
           </div>
         </>
       )}
