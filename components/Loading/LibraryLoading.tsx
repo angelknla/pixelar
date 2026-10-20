@@ -1,8 +1,8 @@
+import styles from './LibraryLoading.module.css';
 import LoadingState from './LoadingState';
 import SkeletonBar from './SkeletonBar';
 import SkeletonLibraryControls from './SkeletonLibraryControls';
 import SkeletonTile from './SkeletonTile';
-import styles from './LibraryLoading.module.css';
 
 const LibraryLoading = ({ kind }: { kind: 'game' | 'screen' }) => {
   const game = kind === 'game';

@@ -1,6 +1,6 @@
+import LoadingHeading from './LoadingHeading';
 import LoadingState from './LoadingState';
 import SkeletonBar from './SkeletonBar';
-import LoadingHeading from './LoadingHeading';
 
 const CalendarLoading = () => {
   return (

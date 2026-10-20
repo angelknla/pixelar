@@ -1,8 +1,8 @@
+import LoadingHeading from './LoadingHeading';
 import LoadingState from './LoadingState';
 import SkeletonBar from './SkeletonBar';
-import LoadingHeading from './LoadingHeading';
-import SkeletonField from './SkeletonField';
 import SkeletonChips from './SkeletonChips';
+import SkeletonField from './SkeletonField';
 
 const ProfileLoading = () => {
   return (

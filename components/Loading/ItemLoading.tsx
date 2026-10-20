@@ -1,7 +1,7 @@
 import LoadingState from './LoadingState';
 import SkeletonBar from './SkeletonBar';
-import SkeletonField from './SkeletonField';
 import SkeletonChips from './SkeletonChips';
+import SkeletonField from './SkeletonField';
 
 const ItemLoading = () => {
   return (
